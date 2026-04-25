@@ -139,7 +139,7 @@ function HomePage() {
           {vendors.map((v) => (
             <Link
               key={v.id}
-              to={v.accepting ? "/vendors/$vendorId" : "/"}
+              to="/vendors/$vendorId"
               params={{ vendorId: v.id }}
               disabled={!v.accepting}
               className={`group relative overflow-hidden rounded-3xl bg-card shadow-card transition-all ${

@@ -25,8 +25,10 @@ const badge: Record<OrderStatus, string> = {
 
 function VendorDashboard() {
   const [vendorId, setVendorId] = useState(vendors[0].id);
-  const orders = useApp(s => s.orders.filter(o => o.vendorId === vendorId));
+  const allOrders = useApp(s => s.orders);
   const update = useApp(s => s.updateOrderStatus);
+
+  const orders = allOrders.filter(o => o.vendorId === vendorId);
 
   const counts = {
     Pending: orders.filter(o => o.status === "Pending").length,
