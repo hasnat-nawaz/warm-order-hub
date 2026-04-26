@@ -1,8 +1,9 @@
 import { createFileRoute, Link, redirect, useNavigate } from "@tanstack/react-router";
-import { useApp, format12, suggestedPickupForVendor } from "@/store/useApp";
-import { menu, getItem, getVendor } from "@/data/menu";
+import { useApp, format12, useLiveMenu } from "@/store/useApp";
+import { getVendor } from "@/data/menu";
 import { Heart, Zap, ArrowLeft, Clock, Repeat } from "lucide-react";
 import { toast } from "sonner";
+import { motion } from "framer-motion";
 
 export const Route = createFileRoute("/quick-order")({
   head: () => ({
@@ -10,7 +11,7 @@ export const Route = createFileRoute("/quick-order")({
       { title: "Quick Order — Campus Dhaba" },
       {
         name: "description",
-        content: "Repeat your last order or tap a favourite to send it instantly.",
+        content: "Repeat your last order or tap a favourite to send it to checkout.",
       },
     ],
   }),
@@ -29,8 +30,10 @@ function QuickOrderPage() {
   const orders = useApp((s) => s.orders);
   const role = useApp((s) => s.role);
   const vendorAccepting = useApp((s) => s.vendorAccepting);
-  const quickOrder = useApp((s) => s.quickOrder);
+  const addToCart = useApp((s) => s.addToCart);
+  const clearCart = useApp((s) => s.clearCart);
   const toggleFavorite = useApp((s) => s.toggleFavorite);
+  const liveMenu = useLiveMenu();
   const navigate = useNavigate();
 
   const lastOrder = orders[0];
@@ -45,24 +48,48 @@ function QuickOrderPage() {
     return true;
   };
 
-  const handleQuick = (itemId: string) => {
+  /**
+   * Drop the chosen items into the cart and route to /cart so the customer
+   * can pick a time, leave a note, and choose a payment method — same as a
+   * regular checkout. Nothing is placed until they confirm there.
+   */
+  const sendToCheckout = (lines: { itemId: string; qty: number }[]) => {
     if (!requireLogin()) return;
-    const item = getItem(itemId);
-    if (!item) return;
-    if ((vendorAccepting[item.vendorId] ?? true) === false) {
-      toast.error(`${getVendor(item.vendorId)?.name ?? "This dhaba"} is closed right now.`);
+    if (!lines.length) return;
+    const first = liveMenu.find((m) => m.id === lines[0].itemId);
+    if (!first) {
+      toast.error("Item is no longer available.");
       return;
     }
-    const suggested = suggestedPickupForVendor(item.vendorId, orders);
-    const order = quickOrder(itemId, suggested);
-    toast.success(`Order #${order.id} placed!`, {
-      description: `Pickup at ${format12(order.pickupTime)}`,
-    });
-    navigate({ to: "/orders/$orderId", params: { orderId: order.id } });
+    if ((vendorAccepting[first.vendorId] ?? true) === false) {
+      toast.error(`${getVendor(first.vendorId)?.name ?? "This dhaba"} is closed right now.`);
+      return;
+    }
+
+    // Reset cart so quick order doesn't accidentally merge with another vendor.
+    clearCart();
+    let failed = false;
+    for (const line of lines) {
+      const item = liveMenu.find((m) => m.id === line.itemId);
+      if (!item) continue;
+      const res = addToCart(item, line.qty);
+      if (!res.ok) {
+        failed = true;
+        toast.error(res.reason ?? "Could not add item.");
+        break;
+      }
+    }
+    if (failed) return;
+    navigate({ to: "/cart" });
   };
 
   return (
-    <main className="mx-auto max-w-3xl px-4 py-8 sm:px-6 sm:py-10">
+    <motion.main
+      initial={{ opacity: 0, y: 6 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.25 }}
+      className="mx-auto max-w-3xl px-4 py-8 sm:px-6 sm:py-10"
+    >
       <Link
         to="/"
         className="inline-flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground"
@@ -76,7 +103,7 @@ function QuickOrderPage() {
         <div>
           <h1 className="font-display text-3xl font-bold leading-tight sm:text-4xl">Quick Order</h1>
           <p className="text-sm text-muted-foreground">
-            One tap. We'll suggest the fastest pickup time.
+            One tap to checkout — pick your time and pay your way.
           </p>
         </div>
       </div>
@@ -92,7 +119,11 @@ function QuickOrderPage() {
               <div className="min-w-0">
                 <div className="font-display text-2xl font-bold">{lastVendor.name}</div>
                 <p className="mt-1 text-sm text-muted-foreground">
-                  {lastOrder.lines.map((l) => `${l.qty}× ${getItem(l.itemId)?.name}`).join(", ")}
+                  {lastOrder.lines
+                    .map(
+                      (l) => `${l.qty}× ${liveMenu.find((m) => m.id === l.itemId)?.name ?? "Item"}`,
+                    )
+                    .join(", ")}
                 </p>
                 <div className="mt-2 inline-flex items-center gap-1 text-xs text-muted-foreground">
                   <Clock className="h-3 w-3" /> Total Rs. {lastOrder.total} · Last pickup{" "}
@@ -100,11 +131,8 @@ function QuickOrderPage() {
                 </div>
               </div>
               <button
-                onClick={() => {
-                  if (lastOrder.lines.length === 1) handleQuick(lastOrder.lines[0].itemId);
-                  else toast.info("Multi-item repeat coming soon — try a favourite below.");
-                }}
-                className="rounded-full bg-primary px-5 py-2.5 text-sm font-bold text-primary-foreground hover:-translate-y-0.5 transition-transform"
+                onClick={() => sendToCheckout(lastOrder.lines)}
+                className="rounded-full bg-primary px-5 py-2.5 text-sm font-bold text-primary-foreground transition-transform hover:-translate-y-0.5"
               >
                 Reorder →
               </button>
@@ -117,7 +145,7 @@ function QuickOrderPage() {
       <section className="mt-10">
         <div className="mb-4 flex items-end justify-between">
           <h2 className="font-display text-2xl font-bold">Saved favourites</h2>
-          <span className="text-xs text-muted-foreground">Tap to order instantly</span>
+          <span className="text-xs text-muted-foreground">Tap to checkout</span>
         </div>
         <div className="grid gap-3">
           {favorites.length === 0 && (
@@ -126,13 +154,14 @@ function QuickOrderPage() {
             </div>
           )}
           {favorites.map((id) => {
-            const item = getItem(id);
+            const item = liveMenu.find((m) => m.id === id);
             if (!item) return null;
             const vendor = getVendor(item.vendorId);
             const open = vendorAccepting[item.vendorId] ?? true;
             return (
-              <div
+              <motion.div
                 key={id}
+                layout
                 className="flex flex-wrap items-center gap-3 rounded-2xl border border-border bg-card p-3 shadow-card sm:gap-4"
               >
                 <img
@@ -160,13 +189,13 @@ function QuickOrderPage() {
                   <Heart className="h-5 w-5 fill-current" />
                 </button>
                 <button
-                  onClick={() => handleQuick(id)}
+                  onClick={() => sendToCheckout([{ itemId: id, qty: 1 }])}
                   disabled={!open}
                   className="rounded-full bg-foreground px-4 py-2.5 text-xs font-bold text-background hover:bg-foreground/90 disabled:cursor-not-allowed disabled:opacity-50"
                 >
                   {open ? "Tap to order" : "Closed"}
                 </button>
-              </div>
+              </motion.div>
             );
           })}
         </div>
@@ -176,7 +205,7 @@ function QuickOrderPage() {
       <section className="mt-12">
         <h2 className="mb-4 font-display text-2xl font-bold">Add more favourites</h2>
         <div className="grid gap-3 sm:grid-cols-2">
-          {menu
+          {liveMenu
             .filter((m) => !favorites.includes(m.id))
             .map((item) => (
               <button
@@ -204,6 +233,6 @@ function QuickOrderPage() {
             ))}
         </div>
       </section>
-    </main>
+    </motion.main>
   );
 }

@@ -42,6 +42,10 @@
   --color-chili: var(--chili);
   --color-cream: var(--cream);
   --color-charcoal: var(--charcoal);
+  --color-success: var(--success);
+  --color-success-foreground: var(--success-foreground);
+  --color-warning: var(--warning);
+  --color-warning-foreground: var(--warning-foreground);
 
   --font-display: "Fraunces", "Georgia", serif;
   --font-sans: "Inter", system-ui, sans-serif;
@@ -82,6 +86,16 @@
   --cream: oklch(0.98 0.02 80);
   --charcoal: oklch(0.2 0.03 40);
 
+  /* Status palette — warm, on-brand variants for order states.
+     - warning  -> "Preparing" (saffron-leaning yellow)
+     - success  -> "Ready"     (warm sage green)
+     - destructive (above) reused for "Cancelled"
+     - primary  (above) reused for "Picked up" */
+  --warning: oklch(0.88 0.16 92);
+  --warning-foreground: oklch(0.3 0.07 60);
+  --success: oklch(0.74 0.14 152);
+  --success-foreground: oklch(0.2 0.06 150);
+
   --gradient-hero: linear-gradient(
     135deg,
     oklch(0.55 0.2 30) 0%,
@@ -111,11 +125,29 @@
   --border: oklch(1 0 0 / 12%);
   --input: oklch(1 0 0 / 15%);
   --ring: oklch(0.72 0.18 50);
+  --warning: oklch(0.78 0.14 92);
+  --warning-foreground: oklch(0.18 0.04 35);
+  --success: oklch(0.7 0.14 152);
+  --success-foreground: oklch(0.16 0.05 150);
 }
 
 @layer base {
   * {
     border-color: var(--color-border);
+  }
+
+  html {
+    /* Anchor jumps and programmatic scrolls slide instead of jumping. */
+    scroll-behavior: smooth;
+    /* Sticky 4rem header — keep anchored sections out from behind it. */
+    scroll-padding-top: 5rem;
+  }
+
+  /* Respect users with prefers-reduced-motion. */
+  @media (prefers-reduced-motion: reduce) {
+    html {
+      scroll-behavior: auto;
+    }
   }
 
   html,

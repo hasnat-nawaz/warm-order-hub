@@ -1,9 +1,9 @@
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
-import { menu, vendors, getVendor, type MenuItem } from "@/data/menu";
+import { baseMenu, vendors, getVendor, type Category, type MenuItem } from "@/data/menu";
 
 export type CartLine = { itemId: string; qty: number };
-export type OrderStatus = "Pending" | "Preparing" | "Ready" | "Picked up";
+export type OrderStatus = "Pending" | "Preparing" | "Ready" | "Picked up" | "Cancelled";
 export type Role = "customer" | "vendor" | null;
 
 export type Order = {
@@ -19,6 +19,8 @@ export type Order = {
   notes?: string;
 };
 
+export type StoredMenuItem = MenuItem & { custom?: boolean };
+
 type Store = {
   cart: CartLine[];
   cartVendorId: string | null;
@@ -28,15 +30,31 @@ type Store = {
 
   // Auth
   role: Role;
-  vendorLogin: string | null; // vendor id when role === "vendor"
+  vendorLogin: string | null;
+  username: string | null;
+  displayName: string | null;
 
   // Vendor state
   vendorAccepting: Record<string, boolean>;
 
+  // Menu state — vendor-managed extensions to the base menu
+  customItems: StoredMenuItem[];
+  itemOverrides: Record<string, Partial<MenuItem>>; // edits on baseMenu items
+  removedItemIds: string[]; // soft-delete for both base and custom items
+
   // Sequential id counter
   orderCounter: number;
+  itemCounter: number;
 
-  setRole: (role: Role, opts?: { vendorId?: string; customer?: string }) => void;
+  setRole: (
+    role: Role,
+    opts?: {
+      vendorId?: string;
+      customer?: string;
+      username?: string;
+      displayName?: string;
+    },
+  ) => void;
   logout: () => void;
   toggleVendorAccepting: (vendorId: string) => void;
 
@@ -46,6 +64,11 @@ type Store = {
   clearCart: () => void;
 
   toggleFavorite: (itemId: string) => void;
+
+  // Menu CRUD
+  addMenuItem: (item: Omit<MenuItem, "id">) => StoredMenuItem;
+  updateMenuItem: (id: string, patch: Partial<MenuItem>) => void;
+  deleteMenuItem: (id: string) => void;
 
   placeOrder: (opts: {
     pickupTime: string;
@@ -73,29 +96,55 @@ export const useApp = create<Store>()(
 
       role: null,
       vendorLogin: null,
+      username: null,
+      displayName: null,
 
       vendorAccepting: defaultAccepting,
+
+      customItems: [],
+      itemOverrides: {},
+      removedItemIds: [],
+
       orderCounter: 1001,
+      itemCounter: 1,
 
       setRole: (role, opts) => {
         if (role === "vendor") {
           set({
             role: "vendor",
             vendorLogin: opts?.vendorId ?? vendors[0].id,
+            username: opts?.username ?? null,
+            displayName: opts?.displayName ?? null,
             cart: [],
             cartVendorId: null,
           });
         } else if (role === "customer") {
+          const display = opts?.displayName?.trim() || opts?.customer?.trim() || "Guest";
           set({
             role: "customer",
             vendorLogin: null,
-            customer: opts?.customer?.trim() || get().customer || "Guest",
+            username: opts?.username ?? null,
+            displayName: display,
+            customer: display,
           });
         } else {
-          set({ role: null, vendorLogin: null });
+          set({
+            role: null,
+            vendorLogin: null,
+            username: null,
+            displayName: null,
+          });
         }
       },
-      logout: () => set({ role: null, vendorLogin: null, cart: [], cartVendorId: null }),
+      logout: () =>
+        set({
+          role: null,
+          vendorLogin: null,
+          username: null,
+          displayName: null,
+          cart: [],
+          cartVendorId: null,
+        }),
 
       toggleVendorAccepting: (vendorId) => {
         const map = { ...get().vendorAccepting };
@@ -143,11 +192,48 @@ export const useApp = create<Store>()(
         });
       },
 
+      addMenuItem: (input) => {
+        const { itemCounter } = get();
+        const item: StoredMenuItem = {
+          ...input,
+          id: `custom-${itemCounter}`,
+          custom: true,
+        };
+        set({
+          customItems: [...get().customItems, item],
+          itemCounter: itemCounter + 1,
+        });
+        return item;
+      },
+      updateMenuItem: (id, patch) => {
+        const { customItems, itemOverrides } = get();
+        // If it's a custom item, edit in place. Otherwise persist an override.
+        const isCustom = customItems.some((c) => c.id === id);
+        if (isCustom) {
+          set({
+            customItems: customItems.map((c) => (c.id === id ? { ...c, ...patch, id: c.id } : c)),
+          });
+        } else {
+          set({
+            itemOverrides: { ...itemOverrides, [id]: { ...itemOverrides[id], ...patch } },
+          });
+        }
+      },
+      deleteMenuItem: (id) => {
+        const { customItems, removedItemIds } = get();
+        const isCustom = customItems.some((c) => c.id === id);
+        if (isCustom) {
+          set({ customItems: customItems.filter((c) => c.id !== id) });
+        } else if (!removedItemIds.includes(id)) {
+          set({ removedItemIds: [...removedItemIds, id] });
+        }
+      },
+
       placeOrder: ({ pickupTime, payment, notes }) => {
         const { cart, cartVendorId, customer, orderCounter } = get();
         if (!cart.length || !cartVendorId) return null;
         const total = cart.reduce((s, l) => {
-          const it = menu.find((m) => m.id === l.itemId);
+          const it = liveMenuFromState(get())().find((m) => m.id === l.itemId);
           return s + (it?.price ?? 0) * l.qty;
         }, 0);
         const order: Order = {
@@ -172,7 +258,7 @@ export const useApp = create<Store>()(
       },
 
       quickOrder: (itemId, pickupTime) => {
-        const item = menu.find((m) => m.id === itemId)!;
+        const item = liveMenuFromState(get())().find((m) => m.id === itemId)!;
         const { orderCounter } = get();
         const order: Order = {
           id: String(orderCounter),
@@ -200,15 +286,20 @@ export const useApp = create<Store>()(
     }),
     {
       name: "campus-dhaba",
-      version: 2,
-      // Migrate older stored shape that lacked the new fields.
+      version: 3,
       migrate: (persisted: unknown) => {
         const state = (persisted ?? {}) as Partial<Store>;
         return {
           ...state,
           role: state.role ?? null,
           vendorLogin: state.vendorLogin ?? null,
+          username: state.username ?? null,
+          displayName: state.displayName ?? null,
           vendorAccepting: { ...defaultAccepting, ...(state.vendorAccepting ?? {}) },
+          customItems: state.customItems ?? [],
+          itemOverrides: state.itemOverrides ?? {},
+          removedItemIds: state.removedItemIds ?? [],
+          itemCounter: state.itemCounter ?? 1,
           orderCounter:
             state.orderCounter && state.orderCounter >= 1001
               ? state.orderCounter
@@ -219,9 +310,7 @@ export const useApp = create<Store>()(
   ),
 );
 
-// Cross-tab sync: when another tab updates persisted state (e.g. vendor marks
-// an order ready), rehydrate this tab's store so the customer view updates
-// in real time without a refresh.
+// Cross-tab sync.
 if (typeof window !== "undefined") {
   window.addEventListener("storage", (e) => {
     if (e.key === "campus-dhaba") {
@@ -230,11 +319,40 @@ if (typeof window !== "undefined") {
   });
 }
 
-// ---------- Selectors / helpers ----------
+// ---------- Live menu selectors ----------
+// The "live" menu = base seed (with overrides) ∪ vendor-added custom items,
+// minus anything in removedItemIds. We expose both a hook-friendly selector
+// and a low-level helper for places that already have raw state.
 
-export const cartTotal = (cart: CartLine[]) =>
+const liveMenuFromState = (state: Store) => (): MenuItem[] => {
+  const removed = new Set(state.removedItemIds);
+  const overrides = state.itemOverrides;
+  const basePart = baseMenu
+    .filter((m) => !removed.has(m.id))
+    .map((m) => (overrides[m.id] ? { ...m, ...overrides[m.id] } : m));
+  const customPart = state.customItems.filter((c) => !removed.has(c.id));
+  return [...basePart, ...customPart];
+};
+
+/** Selector helper: returns the live menu computed from store state. */
+export const selectLiveMenu = (s: Store): MenuItem[] => liveMenuFromState(s)();
+
+/** React hook returning the live, vendor-edited menu. */
+export const useLiveMenu = (): MenuItem[] => useApp(selectLiveMenu);
+
+/** Look up a single item against the live menu (state version). */
+export const findLiveItem = (state: Store, id: string) =>
+  liveMenuFromState(state)().find((m) => m.id === id);
+
+/** Re-export categories helper for convenience. */
+export const itemsForVendorCategory = (list: MenuItem[], vendorId: string, cat: Category) =>
+  list.filter((m) => m.vendorId === vendorId && m.category === cat);
+
+// ---------- Cart helpers ----------
+
+export const cartTotal = (cart: CartLine[], list: MenuItem[]) =>
   cart.reduce((s, l) => {
-    const it = menu.find((m) => m.id === l.itemId);
+    const it = list.find((m) => m.id === l.itemId);
     return s + (it?.price ?? 0) * l.qty;
   }, 0);
 
@@ -280,17 +398,13 @@ export const addMinutes24 = (t: string, mins: number) => {
   return `${pad(d.getHours())}:${pad(d.getMinutes())}`;
 };
 
-/** Compare two HH:MM (24h) strings: returns negative if a<b, 0 if equal, positive if a>b. */
+/** Compare two HH:MM (24h) strings: negative if a<b, 0 if equal, positive if a>b. */
 export const compareTime24 = (a: string, b: string) => {
   const [ah, am] = a.split(":").map(Number);
   const [bh, bm] = b.split(":").map(Number);
   return ah * 60 + am - (bh * 60 + bm);
 };
 
-/**
- * Pull the upper-bound prep time (in minutes) from a vendor's "8–12 min" or
- * "10-15 min" string. Falls back to 10 if it can't be parsed.
- */
 const vendorPrepUpperMinutes = (vendorId: string): number => {
   const v = getVendor(vendorId);
   if (!v) return 10;
@@ -301,11 +415,10 @@ const vendorPrepUpperMinutes = (vendorId: string): number => {
 };
 
 /**
- * Suggested earliest pickup time for a vendor based on its current queue.
+ * Suggested earliest pickup time based on the vendor's active queue.
  *
- * Logic: count active (not picked up) orders for that vendor and add the
- * vendor's per-order prep upper bound to "now". Also adds a small buffer so
- * the customer has time to walk over.
+ * Cancelled / Picked up orders don't count. Each remaining order adds about
+ * half a prep cycle to the wait, on top of one full prep cycle baseline.
  */
 export const suggestedPickupForVendor = (
   vendorId: string | null | undefined,
@@ -316,7 +429,6 @@ export const suggestedPickupForVendor = (
     (o) => o.vendorId === vendorId && (o.status === "Pending" || o.status === "Preparing"),
   ).length;
   const prep = vendorPrepUpperMinutes(vendorId);
-  // first order = prep time only; each extra in queue adds half a prep cycle.
   const wait = prep + Math.max(0, queue) * Math.max(3, Math.floor(prep / 2));
   return addMinutes24(nowTime24(), wait);
 };

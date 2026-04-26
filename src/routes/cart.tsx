@@ -5,12 +5,14 @@ import {
   format12,
   compareTime24,
   suggestedPickupForVendor,
+  useLiveMenu,
 } from "@/store/useApp";
-import { getItem, getVendor } from "@/data/menu";
-import { ArrowLeft, Minus, Plus, Trash2, Clock, MessageSquare, Sparkles } from "lucide-react";
-import { useEffect, useMemo, useState } from "react";
+import { getVendor } from "@/data/menu";
+import { ArrowLeft, Minus, Plus, Trash2, Calendar, MessageSquare, CreditCard } from "lucide-react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { toast } from "sonner";
 import { useNow } from "@/hooks/use-now";
+import { motion, AnimatePresence } from "framer-motion";
 
 export const Route = createFileRoute("/cart")({
   head: () => ({ meta: [{ title: "Your cart — Campus Dhaba" }] }),
@@ -32,6 +34,7 @@ function CartPage() {
   const setQty = useApp((s) => s.setQty);
   const removeFromCart = useApp((s) => s.removeFromCart);
   const placeOrder = useApp((s) => s.placeOrder);
+  const liveMenu = useLiveMenu();
   const navigate = useNavigate();
 
   // Recompute the queue-based suggestion every minute as time/queue change.
@@ -45,6 +48,7 @@ function CartPage() {
   const [edited, setEdited] = useState(false);
   const [notes, setNotes] = useState("");
   const [payment, setPayment] = useState<"EasyPaisa" | "JazzCash" | "Cash on Pickup">("EasyPaisa");
+  const timeInputRef = useRef<HTMLInputElement>(null);
 
   // Keep pickup auto-synced to the suggestion until the user manually changes it.
   useEffect(() => {
@@ -52,16 +56,35 @@ function CartPage() {
   }, [suggested, edited]);
 
   const vendor = cartVendorId ? getVendor(cartVendorId) : null;
-  const total = useMemo(() => cartTotal(cart), [cart]);
+  const total = useMemo(() => cartTotal(cart, liveMenu), [cart, liveMenu]);
 
   const handlePickupChange = (value: string) => {
+    if (!value) return;
     setEdited(true);
     if (compareTime24(value, suggested) < 0) {
-      toast.error(`Earliest possible pickup is ${format12(suggested)} based on the current queue.`);
+      // Keep the validation, but silent — just snap back to the suggestion.
       setPickup(suggested);
       return;
     }
     setPickup(value);
+  };
+
+  const openPicker = () => {
+    const el = timeInputRef.current;
+    if (!el) return;
+    // showPicker is supported on Chromium and Safari TP; fall back to focus.
+    type WithShow = HTMLInputElement & { showPicker?: () => void };
+    const withShow = el as WithShow;
+    if (typeof withShow.showPicker === "function") {
+      try {
+        withShow.showPicker();
+        return;
+      } catch {
+        /* fall through */
+      }
+    }
+    el.focus();
+    el.click();
   };
 
   const handlePlace = () => {
@@ -103,7 +126,12 @@ function CartPage() {
   }
 
   return (
-    <main className="mx-auto max-w-3xl px-4 py-8 sm:px-6 sm:py-10">
+    <motion.main
+      initial={{ opacity: 0, y: 6 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.25 }}
+      className="mx-auto max-w-3xl px-4 py-8 sm:px-6 sm:py-10"
+    >
       <Link
         to="/"
         className="inline-flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground"
@@ -118,88 +146,102 @@ function CartPage() {
       )}
 
       <div className="mt-8 space-y-3">
-        {cart.map((line) => {
-          const item = getItem(line.itemId);
-          if (!item) return null;
-          return (
-            <div
-              key={line.itemId}
-              className="flex flex-wrap items-center gap-3 rounded-2xl border border-border bg-card p-3 sm:gap-4"
-            >
-              <img
-                src={item.image}
-                alt={item.name}
-                className="h-16 w-16 flex-shrink-0 rounded-xl object-cover"
-                loading="lazy"
-                width={64}
-                height={64}
-              />
-              <div className="min-w-0 flex-1">
-                <div className="font-semibold">{item.name}</div>
-                <div className="text-sm text-muted-foreground">Rs. {item.price}</div>
-              </div>
-              <div className="flex items-center rounded-full border border-border">
-                <button
-                  onClick={() => setQty(line.itemId, line.qty - 1)}
-                  aria-label="Decrease quantity"
-                  className="grid h-8 w-8 place-items-center"
-                >
-                  <Minus className="h-3.5 w-3.5" />
-                </button>
-                <span className="w-6 text-center text-sm font-bold">{line.qty}</span>
-                <button
-                  onClick={() => setQty(line.itemId, line.qty + 1)}
-                  aria-label="Increase quantity"
-                  className="grid h-8 w-8 place-items-center"
-                >
-                  <Plus className="h-3.5 w-3.5" />
-                </button>
-              </div>
-              <div className="ml-auto w-20 text-right font-display font-bold sm:ml-0">
-                Rs. {item.price * line.qty}
-              </div>
-              <button
-                onClick={() => removeFromCart(line.itemId)}
-                aria-label="Remove from cart"
-                className="text-muted-foreground hover:text-destructive"
+        <AnimatePresence initial={false}>
+          {cart.map((line) => {
+            const item = liveMenu.find((m) => m.id === line.itemId);
+            if (!item) return null;
+            return (
+              <motion.div
+                key={line.itemId}
+                layout
+                initial={{ opacity: 0, y: 6 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, x: 20 }}
+                transition={{ duration: 0.2 }}
+                className="flex flex-wrap items-center gap-3 rounded-2xl border border-border bg-card p-3 sm:gap-4"
               >
-                <Trash2 className="h-4 w-4" />
-              </button>
-            </div>
-          );
-        })}
+                <img
+                  src={item.image}
+                  alt={item.name}
+                  className="h-16 w-16 flex-shrink-0 rounded-xl object-cover"
+                  loading="lazy"
+                  width={64}
+                  height={64}
+                />
+                <div className="min-w-0 flex-1">
+                  <div className="font-semibold">{item.name}</div>
+                  <div className="text-sm text-muted-foreground">Rs. {item.price}</div>
+                </div>
+                <div className="flex items-center rounded-full border border-border">
+                  <button
+                    onClick={() => setQty(line.itemId, line.qty - 1)}
+                    aria-label="Decrease quantity"
+                    className="grid h-8 w-8 place-items-center"
+                  >
+                    <Minus className="h-3.5 w-3.5" />
+                  </button>
+                  <span className="w-6 text-center text-sm font-bold">{line.qty}</span>
+                  <button
+                    onClick={() => setQty(line.itemId, line.qty + 1)}
+                    aria-label="Increase quantity"
+                    className="grid h-8 w-8 place-items-center"
+                  >
+                    <Plus className="h-3.5 w-3.5" />
+                  </button>
+                </div>
+                <div className="ml-auto w-20 text-right font-display font-bold sm:ml-0">
+                  Rs. {item.price * line.qty}
+                </div>
+                <button
+                  onClick={() => removeFromCart(line.itemId)}
+                  aria-label="Remove from cart"
+                  className="text-muted-foreground hover:text-destructive"
+                >
+                  <Trash2 className="h-4 w-4" />
+                </button>
+              </motion.div>
+            );
+          })}
+        </AnimatePresence>
       </div>
 
       <div className="mt-8 grid gap-4 md:grid-cols-2">
         {/* Pickup time */}
         <div className="rounded-2xl border border-border bg-card p-5">
-          <div className="flex items-center gap-2 text-sm font-bold">
-            <Clock className="h-4 w-4 text-primary" /> Pickup time
+          <div className="text-sm font-bold">Pickup time</div>
+          <div className="mt-1 text-xs text-muted-foreground">
+            Currently set to{" "}
+            <span className="font-semibold text-foreground">{format12(pickup)}</span>
           </div>
-          <div className="mt-2 flex items-start gap-2 rounded-xl bg-secondary/60 p-3 text-xs text-secondary-foreground">
-            <Sparkles className="mt-0.5 h-3.5 w-3.5 flex-shrink-0 text-primary" />
-            <div>
-              Based on the current queue, the earliest pickup is{" "}
-              <span className="font-bold text-foreground">{format12(suggested)}</span>. You can pick
-              a later time if you'd like, but not earlier.
-            </div>
-          </div>
+
+          <button
+            type="button"
+            onClick={openPicker}
+            className="mt-3 inline-flex w-full items-center justify-center gap-2 rounded-full border border-input bg-background px-4 py-3 text-sm font-bold text-foreground transition-colors hover:border-primary"
+          >
+            <Calendar className="h-4 w-4 text-primary" />
+            {edited ? "Change time" : "Select time"}
+          </button>
+
+          {/* Native input is kept off-screen but accessible — supplies the
+              picker UI when "Select time" is tapped. */}
           <input
+            ref={timeInputRef}
             type="time"
             value={pickup}
             min={suggested}
             step={60}
             onChange={(e) => handlePickupChange(e.target.value)}
-            className="mt-3 w-full rounded-xl border border-input bg-background px-3 py-2.5 text-base font-semibold focus:border-primary focus:outline-none"
+            aria-label="Pickup time"
+            className="sr-only"
           />
-          <div className="mt-2 text-xs text-muted-foreground">
-            Showing as: <span className="font-semibold text-foreground">{format12(pickup)}</span>
-          </div>
         </div>
 
         {/* Payment */}
         <div className="rounded-2xl border border-border bg-card p-5">
-          <div className="text-sm font-bold">Payment</div>
+          <div className="flex items-center gap-2 text-sm font-bold">
+            <CreditCard className="h-4 w-4 text-primary" /> Payment
+          </div>
           <div className="mt-3 flex flex-col gap-2">
             {(["EasyPaisa", "JazzCash", "Cash on Pickup"] as const).map((p) => (
               <label
@@ -259,6 +301,6 @@ function CartPage() {
           </button>
         </div>
       </div>
-    </main>
+    </motion.main>
   );
 }

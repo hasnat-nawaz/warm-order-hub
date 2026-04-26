@@ -1,9 +1,9 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { vendors } from "@/data/menu";
-import { useApp } from "@/store/useApp";
-import { menu } from "@/data/menu";
+import { useApp, useLiveMenu } from "@/store/useApp";
 import { ArrowRight, Clock, MapPin, Star, Zap } from "lucide-react";
 import heroImg from "@/assets/hero.jpg";
+import { motion } from "framer-motion";
 
 function VendorCardLink({
   vendor,
@@ -78,13 +78,14 @@ export const Route = createFileRoute("/")({
 function HomePage() {
   const favIds = useApp((s) => s.favorites);
   const vendorAccepting = useApp((s) => s.vendorAccepting);
+  const liveMenu = useLiveMenu();
   const favItems = favIds
-    .map((id) => menu.find((m) => m.id === id))
+    .map((id) => liveMenu.find((m) => m.id === id))
     .filter(Boolean)
     .slice(0, 3);
 
   return (
-    <main>
+    <motion.main initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 0.3 }}>
       {/* Hero */}
       <section className="relative overflow-hidden">
         <div className="absolute inset-0 bg-gradient-ember" />
@@ -221,12 +222,15 @@ function HomePage() {
         </div>
 
         <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
-          {vendors.map((v) => (
-            <VendorCardLink
+          {vendors.map((v, i) => (
+            <motion.div
               key={v.id}
-              vendor={v}
-              accepting={vendorAccepting[v.id] ?? v.accepting}
-            />
+              initial={{ opacity: 0, y: 8 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.3, delay: i * 0.05 }}
+            >
+              <VendorCardLink vendor={v} accepting={vendorAccepting[v.id] ?? v.accepting} />
+            </motion.div>
           ))}
         </div>
       </section>
@@ -238,6 +242,6 @@ function HomePage() {
           <p>Skip the queue · Eat on time</p>
         </div>
       </footer>
-    </main>
+    </motion.main>
   );
 }

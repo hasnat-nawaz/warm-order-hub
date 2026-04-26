@@ -1,13 +1,13 @@
 import { createFileRoute, Link, redirect, useNavigate } from "@tanstack/react-router";
-import { getVendor, itemsByVendor } from "@/data/menu";
-import { useApp } from "@/store/useApp";
+import { CATEGORIES, CATEGORY_IMAGES, getVendor, type Category } from "@/data/menu";
+import { useApp, useLiveMenu } from "@/store/useApp";
 import { ArrowLeft, Clock, MapPin, Minus, Plus, Star } from "lucide-react";
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { toast } from "sonner";
+import { motion } from "framer-motion";
 
 export const Route = createFileRoute("/vendors/$vendorId")({
   beforeLoad: () => {
-    // Vendors should stay on their own dashboard rather than browse customer pages.
     if (typeof window === "undefined") return;
     const state = useApp.getState();
     if (state.role === "vendor") {
@@ -21,7 +21,11 @@ export const Route = createFileRoute("/vendors/$vendorId")({
 function VendorPage() {
   const { vendorId } = Route.useParams();
   const vendor = getVendor(vendorId);
-  const items = itemsByVendor(vendorId);
+  const liveMenu = useLiveMenu();
+  const items = useMemo(
+    () => liveMenu.filter((m) => m.vendorId === vendorId),
+    [liveMenu, vendorId],
+  );
   const addToCart = useApp((s) => s.addToCart);
   const clearCart = useApp((s) => s.clearCart);
   const cartVendorId = useApp((s) => s.cartVendorId);
@@ -40,7 +44,8 @@ function VendorPage() {
       toast.error(`${vendor.name} is currently closed.`);
       return;
     }
-    const item = items.find((i) => i.id === itemId)!;
+    const item = items.find((i) => i.id === itemId);
+    if (!item) return;
     const qty = qtys[itemId] ?? 1;
     const res = addToCart(item, qty);
     if (!res.ok) {
@@ -59,11 +64,17 @@ function VendorPage() {
     toast.success(`Added ${qty}× ${item.name}`);
   };
 
-  const categories = Array.from(new Set(items.map((i) => i.category)));
+  // Only show categories that this vendor actually has items in.
+  const presentCategories: Category[] = CATEGORIES.filter((c) =>
+    items.some((i) => i.category === c),
+  );
+
+  const sectionId = (c: Category) => `cat-${c.toLowerCase()}`;
 
   return (
     <main className="mx-auto max-w-5xl px-4 pb-24 sm:px-6">
-      {/* Banner */}
+      {/* Banner. Back button is intentionally desktop-only — on phones it
+          previously overlapped the bottom-fixed cart button + first card. */}
       <div className="relative mt-6 overflow-hidden rounded-3xl">
         <img
           src={vendor.image}
@@ -75,7 +86,7 @@ function VendorPage() {
         <div className="absolute inset-0 bg-gradient-to-t from-charcoal/85 to-transparent" />
         <Link
           to="/"
-          className="absolute left-4 top-4 inline-flex items-center gap-1.5 rounded-full bg-background/90 px-3 py-1.5 text-xs font-semibold backdrop-blur"
+          className="absolute left-4 top-4 hidden items-center gap-1.5 rounded-full bg-background/90 px-3 py-1.5 text-xs font-semibold backdrop-blur sm:inline-flex"
         >
           <ArrowLeft className="h-3.5 w-3.5" /> Back
         </Link>
@@ -131,9 +142,51 @@ function VendorPage() {
         </div>
       )}
 
+      {/* Category cards — tap to scroll to section */}
+      {presentCategories.length > 0 && (
+        <section className="mt-8">
+          <div className="mb-4 flex items-end justify-between">
+            <h2 className="font-display text-2xl font-bold">Browse by category</h2>
+            <span className="text-xs text-muted-foreground">Tap a card</span>
+          </div>
+          <div className="grid gap-4 sm:grid-cols-2 md:grid-cols-3">
+            {presentCategories.map((cat, i) => {
+              const count = items.filter((i) => i.category === cat).length;
+              return (
+                <motion.a
+                  key={cat}
+                  href={`#${sectionId(cat)}`}
+                  initial={{ opacity: 0, y: 8 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ duration: 0.25, delay: i * 0.04 }}
+                  whileTap={{ scale: 0.97 }}
+                  className="group relative overflow-hidden rounded-3xl bg-card shadow-card transition-all hover:-translate-y-0.5 hover:shadow-warm"
+                >
+                  <div className="relative aspect-[5/3]">
+                    <img
+                      src={CATEGORY_IMAGES[cat]}
+                      alt={cat}
+                      className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105"
+                      loading="lazy"
+                    />
+                    <div className="absolute inset-0 bg-gradient-to-t from-charcoal/85 via-charcoal/10 to-transparent" />
+                    <div className="absolute bottom-3 left-4 text-cream">
+                      <h3 className="font-display text-2xl font-black">{cat}</h3>
+                      <p className="text-xs opacity-90">
+                        {count} item{count === 1 ? "" : "s"}
+                      </p>
+                    </div>
+                  </div>
+                </motion.a>
+              );
+            })}
+          </div>
+        </section>
+      )}
+
       {/* Menu by category */}
-      {categories.map((cat) => (
-        <section key={cat} className="mt-10">
+      {presentCategories.map((cat) => (
+        <section key={cat} id={sectionId(cat)} className="mt-12 scroll-mt-24">
           <h2 className="mb-4 font-display text-2xl font-bold">{cat}</h2>
           <div className="grid gap-4 md:grid-cols-2">
             {items
@@ -141,8 +194,11 @@ function VendorPage() {
               .map((item) => {
                 const qty = qtys[item.id] ?? 1;
                 return (
-                  <article
+                  <motion.article
                     key={item.id}
+                    initial={{ opacity: 0, y: 6 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ duration: 0.2 }}
                     className="flex flex-col gap-4 rounded-2xl border border-border bg-card p-4 transition-shadow hover:shadow-card sm:flex-row"
                   >
                     <img
@@ -190,7 +246,7 @@ function VendorPage() {
                         </div>
                       </div>
                     </div>
-                  </article>
+                  </motion.article>
                 );
               })}
           </div>
@@ -199,7 +255,7 @@ function VendorPage() {
 
       <button
         onClick={() => navigate({ to: "/cart" })}
-        className="fixed bottom-6 left-1/2 z-40 -translate-x-1/2 rounded-full bg-primary px-6 py-3 text-sm font-bold text-primary-foreground shadow-warm hover:-translate-y-0.5 hover:-translate-x-1/2"
+        className="fixed bottom-6 left-1/2 z-40 -translate-x-1/2 rounded-full bg-primary px-6 py-3 text-sm font-bold text-primary-foreground shadow-warm transition-transform hover:-translate-y-0.5 hover:-translate-x-1/2"
       >
         View cart →
       </button>

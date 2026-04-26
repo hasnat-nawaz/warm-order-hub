@@ -11,12 +11,29 @@ import vRaju from "@/assets/vendor-raju.jpg";
 import vHot from "@/assets/vendor-hotspicy.jpg";
 import vSip from "@/assets/vendor-sipspot.jpg";
 
+/**
+ * The five static categories used across the customer + vendor surfaces.
+ * Order matters — it's the order shown in the management grid.
+ */
+export const CATEGORIES = ["Breakfast", "Desi", "Fastfood", "Chinese", "Drinks"] as const;
+
+export type Category = (typeof CATEGORIES)[number];
+
+/** A representative image for each category card. */
+export const CATEGORY_IMAGES: Record<Category, string> = {
+  Breakfast: aloo,
+  Desi: biryani,
+  Fastfood: burger,
+  Chinese: fries, // re-used: warm fried side fits the look
+  Drinks: juice,
+};
+
 export type MenuItem = {
   id: string;
   vendorId: string;
   name: string;
   price: number;
-  category: string;
+  category: Category;
   image: string;
   description: string;
 };
@@ -69,7 +86,8 @@ export const vendors: Vendor[] = [
   },
 ];
 
-export const menu: MenuItem[] = [
+/** Built-in menu seed. Vendors can extend this in the manage page. */
+export const baseMenu: MenuItem[] = [
   {
     id: "raju-paratha",
     vendorId: "raju",
@@ -93,7 +111,7 @@ export const menu: MenuItem[] = [
     vendorId: "raju",
     name: "Chicken Biryani",
     price: 220,
-    category: "Mains",
+    category: "Desi",
     image: biryani,
     description: "Aromatic basmati rice with tender chicken & raita.",
   },
@@ -102,7 +120,7 @@ export const menu: MenuItem[] = [
     vendorId: "raju",
     name: "Anwar Roll",
     price: 150,
-    category: "Mains",
+    category: "Desi",
     image: roll,
     description: "Spicy chicken wrap with chutneys, freshly made.",
   },
@@ -112,7 +130,7 @@ export const menu: MenuItem[] = [
     vendorId: "hot",
     name: "Hot Fillet Burger",
     price: 280,
-    category: "Burgers",
+    category: "Fastfood",
     image: burger,
     description: "Crispy chicken fillet, melted cheese, fiery sauce.",
   },
@@ -121,7 +139,7 @@ export const menu: MenuItem[] = [
     vendorId: "hot",
     name: "Crispy Fries",
     price: 120,
-    category: "Sides",
+    category: "Fastfood",
     image: fries,
     description: "Golden fries with house ketchup.",
   },
@@ -130,9 +148,18 @@ export const menu: MenuItem[] = [
     vendorId: "hot",
     name: "Club Sandwich",
     price: 250,
-    category: "Sandwiches",
+    category: "Fastfood",
     image: sandwich,
     description: "Triple-decker chicken, egg, lettuce & tomato.",
+  },
+  {
+    id: "hot-chowmein",
+    vendorId: "hot",
+    name: "Chicken Chowmein",
+    price: 230,
+    category: "Chinese",
+    image: fries,
+    description: "Stir-fried noodles tossed with veggies & shredded chicken.",
   },
 
   {
@@ -140,7 +167,7 @@ export const menu: MenuItem[] = [
     vendorId: "sip",
     name: "Strawberry Juice",
     price: 100,
-    category: "Juices",
+    category: "Drinks",
     image: juice,
     description: "Fresh strawberries, blended cold.",
   },
@@ -149,12 +176,18 @@ export const menu: MenuItem[] = [
     vendorId: "sip",
     name: "Cardamom Chai",
     price: 60,
-    category: "Hot",
+    category: "Drinks",
     image: chai,
     description: "Aromatic chai with crushed cardamom.",
   },
 ];
 
+// Back-compat: many existing imports use the `menu` symbol. Keep it as a
+// reference to the seed list — code that needs the *live* (vendor-edited)
+// menu should pull it from the store via `useApp`.
+export const menu = baseMenu;
+
 export const getVendor = (id: string) => vendors.find((v) => v.id === id);
-export const getItem = (id: string) => menu.find((m) => m.id === id);
-export const itemsByVendor = (id: string) => menu.filter((m) => m.vendorId === id);
+export const getItem = (id: string, list: MenuItem[] = baseMenu) => list.find((m) => m.id === id);
+export const itemsByVendor = (id: string, list: MenuItem[] = baseMenu) =>
+  list.filter((m) => m.vendorId === id);

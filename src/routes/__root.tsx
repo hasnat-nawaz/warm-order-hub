@@ -75,7 +75,7 @@ function RootComponent() {
     <div className="min-h-screen bg-background">
       <Header />
       <Outlet />
-      <Toaster richColors position="top-center" />
+      <Toaster richColors closeButton position="top-center" expand />
     </div>
   );
 }

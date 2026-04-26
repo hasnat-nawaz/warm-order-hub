@@ -1,47 +1,123 @@
 All items below have been implemented.
 
+# ROUND 1 — milestone 3 baseline (already done previously)
+
 1. [DONE] Separate UIs for vendor and customer based on logins.
-   - New /login route with Customer / Vendor tabs.
-   - Role + vendor selection persisted in zustand.
-   - Header shows different nav per role (vendor sees Dashboard only, no cart).
-   - Route guards redirect appropriately:
-       /vendor                 -> requires vendor role (else /login)
-       /cart, /quick-order,
-       /vendors/$vendorId      -> vendors are bounced to /vendor
-       /orders, /orders/:id    -> require any signed-in customer
-   1.1 [DONE] Vendor manually accepts orders (Accept / Decline buttons on the
-       Pending stage; status no longer auto-advances).
-   1.2 [DONE] Vendor dashboard upgraded: open/close toggle, today's revenue,
-       counts (To Accept / Preparing / Ready), order notes panel, decline
-       option, sequential order numbers, vendor-name banner.
-   1.3 [DONE] Customer vs vendor UIs differentiated by header label
-       ("Vendor Console" vs "GIKI · Eat fast"), nav, redirects, available
-       actions, and styling.
+   - /login route, role + vendor selection persisted in zustand.
+   - Role-aware header nav, cart hidden from vendors.
+   - Route guards on /vendor, /cart, /quick-order, /vendors/$vendorId,
+     /orders, /orders/:id, /manage. SSR-safe (typeof window guard).
+2. [DONE] Mobile-first responsive design (hamburger menu, wrapping rows).
+3. [DONE] Real-time vendor-driven progress (no auto-advance, cross-tab
+   storage sync via useApp.persist.rehydrate()).
+4. [DONE] 12-hour times (format12 / formatDate12) and queue-based pickup
+   suggestion (suggestedPickupForVendor + min on input).
+5. [DONE] Extra instructions textarea on cart, shown on order detail and
+   vendor dashboard.
+6. [DONE] Footer copy fixed.
+7. [DONE] Sequential order numbers (1001+, persisted with migrate).
 
-2. [DONE] Responsive design: mobile-first throughout (hamburger menu,
-   wrapping order rows, card stacks on small screens, smaller paddings).
 
-3. [DONE] Progress bar is updated in real time by the vendor.
-   - Removed the demo setTimeout that auto-advanced the customer's order.
-   - Vendor's "Mark X" / "Accept" buttons are the only way to progress.
-   - Cross-tab sync: a window 'storage' listener calls
-     useApp.persist.rehydrate() so a customer page in another tab/device
-     reflects the vendor's update without refresh.
+# ROUND 2 — secure login, manage page, statuses, animations
 
-4. [DONE] Time problems
-   4.1 12-hour format everywhere (format12, formatDate12 helpers). Vendor
-       dashboard, cart, orders list, order detail, header clock all use
-       "h:mm AM/PM".
-   4.2 Real-time clock visible in the header (refreshes every 30 s) and a
-       useNow() hook drives "x min ago" labels on the order detail page.
-   4.3 Pickup time is suggested automatically from the queue
-       (suggestedPickupForVendor uses the vendor's prep time + queue depth),
-       and the cart's <input type="time"> has min={suggested}. Manual
-       attempts to pick an earlier time are clamped + show a toast.
+8. [DONE] Username + password login (no role tab).
+   - Static "backend" users in src/data/users.ts. Login form is a single
+     username + password field, secure-styled (lock + show/hide toggle,
+     fake submit delay). On success, role is decided server-side and the
+     user is bounced to /vendor or back to where they came from.
+   - Demo creds shown on the form: customer `demo / demo123`, vendor
+     `raju / raju123`.
 
-5. [DONE] Extra instructions textarea added to cart (240-char limit) and
-   surfaced on the order detail and the vendor dashboard.
-   5.1 Sequential order numbers (orderCounter starts at 1001, persisted).
+9. [DONE] User profile chip in the header.
+   - Default avatar (User / ChefHat icon) on dark background + truncated
+     username, sitting immediately to the left of "Sign out".
+   - Old time clock pill removed entirely from the header.
+   - Sign-in CTA shown when not logged in.
 
-6. [DONE] Footer no longer says "Built for CS272 · Milestone 3" — replaced
-   with "Skip the queue · Eat on time".
+10. [DONE] Manage page (/manage, vendor only).
+    - Five fixed categories: Breakfast, Desi, Fastfood, Chinese, Drinks
+      (replacing the old dinner/lunch/burgers grouping). Cards show a
+      representative photo + item count.
+    - Each card has Add Item (with picture upload via FileReader) and
+      Edit Category (modal: edit names/prices/descriptions/images,
+      delete items). Vendor edits persist to localStorage and propagate
+      live to the customer view.
+    - Customer view (/vendors/:id) gets the same category cards on top,
+      tapping one smooth-scrolls to that section.
+
+11. [DONE] Status overhaul: added a Cancelled status + color tokens.
+    - New tokens in styles.css: --warning (yellow) and --success (green).
+    - Single source of truth: src/lib/orderStatus.ts (statusPillClasses,
+      statusDotClasses, statusLabel, STAGE_FLOW).
+    - Color mapping:
+        Pending     -> muted / blank
+        Preparing   -> warning yellow
+        Ready       -> success green
+        Picked up   -> primary terracotta orange
+        Cancelled   -> destructive red, labelled "Not accepted"
+    - Applied on vendor dashboard pill, customer order detail badge,
+      stage banners, and My Orders list.
+
+12. [DONE] Cancel flow.
+    - Vendor "Decline" sets the order to Cancelled (no longer "Picked up"
+      as before).
+    - Customer order detail shows a clear "Your order was not accepted"
+      banner with no payment-charged note, and the cancelled card switches
+      to a destructive border instead of the gradient.
+
+13. [DONE] Vendor dashboard redesign.
+    - Orders are now a 1 / 2 / 3-column GRID of prominent blocks (was
+      cramped rows). Each block:
+        - status pill (color-coded) docked top-right
+        - order # huge, customer name + items below
+        - pickup time + payment + notes block
+        - action buttons docked at the bottom (Decline / Accept on
+          Pending; Mark X on Preparing/Ready; locked label on closed
+          orders) — sized so they're tap-friendly but not accidental.
+    - Stat row is grid-cols-2 on phones (2x2) and grid-cols-4 on lg.
+    - Added animated insertion/removal with framer-motion AnimatePresence.
+
+14. [DONE] Quick order goes through full checkout.
+    - "Tap to order" / "Reorder" now adds the items to the cart and
+      navigates to /cart instead of placing instantly. The customer
+      picks time, payment, and adds a note before confirming.
+
+15. [DONE] Cart UX cleanup.
+    - Replaced the bare clock <input> with a "Select time" / "Change
+      time" button that programmatically opens the native time picker
+      via showPicker(). No more clock icon as the only affordance.
+    - Removed the queue-explanation paragraph; the suggestion is still
+      enforced silently (input min + a soft snap-back if a too-early
+      time is typed).
+
+16. [DONE] My Orders calendar filter.
+    - Date stepper + Popover Calendar (react-day-picker), defaults to
+      Today. Days that have orders show a primary-colored dot. Toggle
+      "Show all" to see the full history, "Today" to jump back.
+
+17. [DONE] Mobile fixes.
+    - Customer vendor page back button is now hidden on phones
+      (sm:inline-flex), so it never overlaps the bottom-fixed cart pill
+      or the first menu card.
+    - Vendor dashboard stats are 2x2 on phones.
+
+18. [DONE] Animations.
+    - styles.css: scroll-behavior: smooth on <html> (with reduced-motion
+      escape hatch) so anchor-tag clicks (e.g. category cards) glide
+      instead of jumping, and scroll-padding-top so anchors don't hide
+      under the sticky header.
+    - Per-route motion.main fade/slide-in (home, login, cart, quick
+      order, orders index, order detail).
+    - Vendor cards on home + category cards stagger in with framer-
+      motion. Order rows / cart lines / vendor-dashboard orders use
+      AnimatePresence for smooth add/remove.
+    - Toaster: rich colours, expand, top-center, plus the close button.
+      Sonner already provides slide-in/fade-out on toast lifecycle.
+
+# Verification
+- npx tsc --noEmit            : clean.
+- npm run lint                : 0 errors (only pre-existing shadcn fast-
+                                refresh warnings remain).
+- npm run build               : both client + SSR bundles built.
+- curl smoke test on /, /login, /quick-order, /vendor, /manage, /cart,
+  /orders, /vendors/raju  -> all 200, no runtime errors in dev log.

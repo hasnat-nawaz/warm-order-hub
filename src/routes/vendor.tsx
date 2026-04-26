@@ -1,23 +1,25 @@
 import { createFileRoute, Link, redirect } from "@tanstack/react-router";
-import { useApp, format12, type OrderStatus } from "@/store/useApp";
-import { getItem, getVendor, vendors } from "@/data/menu";
+import { useApp, format12, type OrderStatus, useLiveMenu } from "@/store/useApp";
+import { getVendor } from "@/data/menu";
 import {
-  Bell,
-  ChefHat,
   CheckCircle2,
-  Clock,
-  MessageSquare,
+  ChefHat,
+  ClipboardList,
+  PackageCheck,
   Power,
   Receipt,
+  StickyNote,
   Wallet,
-  XCircle,
+  X,
 } from "lucide-react";
+import { useMemo } from "react";
 import { toast } from "sonner";
+import { motion, AnimatePresence } from "framer-motion";
+import { statusPillClasses, statusDotClasses, statusLabel } from "@/lib/orderStatus";
 
 export const Route = createFileRoute("/vendor")({
-  head: () => ({ meta: [{ title: "Vendor dashboard — Campus Dhaba" }] }),
+  head: () => ({ meta: [{ title: "Vendor Console — Campus Dhaba" }] }),
   beforeLoad: ({ location }) => {
-    // Skip on SSR: the persisted store hydrates only on the client.
     if (typeof window === "undefined") return;
     const state = useApp.getState();
     if (state.role !== "vendor") {
@@ -30,27 +32,27 @@ export const Route = createFileRoute("/vendor")({
   component: VendorDashboard,
 });
 
-const next: Record<OrderStatus, OrderStatus | null> = {
+const NEXT: Partial<Record<OrderStatus, OrderStatus>> = {
   Pending: "Preparing",
   Preparing: "Ready",
   Ready: "Picked up",
-  "Picked up": null,
-};
-
-const badge: Record<OrderStatus, string> = {
-  Pending: "bg-secondary text-secondary-foreground",
-  Preparing: "bg-accent/30 text-accent-foreground",
-  Ready: "bg-primary text-primary-foreground",
-  "Picked up": "bg-muted text-muted-foreground",
 };
 
 function VendorDashboard() {
   const role = useApp((s) => s.role);
   const vendorLogin = useApp((s) => s.vendorLogin);
-  const allOrders = useApp((s) => s.orders);
-  const update = useApp((s) => s.updateOrderStatus);
+  const orders = useApp((s) => s.orders);
+  const updateOrderStatus = useApp((s) => s.updateOrderStatus);
   const vendorAccepting = useApp((s) => s.vendorAccepting);
-  const toggleAccepting = useApp((s) => s.toggleVendorAccepting);
+  const toggleVendorAccepting = useApp((s) => s.toggleVendorAccepting);
+  const liveMenu = useLiveMenu();
+
+  // Run hooks unconditionally so React's hook order invariant is preserved
+  // even on the bail-out path below.
+  const myOrders = useMemo(
+    () => (vendorLogin ? orders.filter((o) => o.vendorId === vendorLogin) : []),
+    [orders, vendorLogin],
+  );
 
   if (role !== "vendor" || !vendorLogin) {
     return (
@@ -69,184 +71,223 @@ function VendorDashboard() {
   }
 
   const vendor = getVendor(vendorLogin)!;
-  const isOpen = vendorAccepting[vendorLogin] ?? vendor.accepting;
+  const accepting = vendorAccepting[vendor.id] ?? vendor.accepting;
 
-  const orders = allOrders
-    .filter((o) => o.vendorId === vendorLogin)
-    .sort((a, b) => b.placedAt - a.placedAt);
+  const todayKey = new Date().toDateString();
+  const todays = myOrders.filter((o) => new Date(o.placedAt).toDateString() === todayKey);
 
-  const todayStart = new Date();
-  todayStart.setHours(0, 0, 0, 0);
-  const today = orders.filter((o) => o.placedAt >= todayStart.getTime());
-  const revenue = today
-    .filter((o) => o.status !== "Pending") // accepted-or-after counts toward revenue
-    .reduce((s, o) => s + o.total, 0);
-
-  const counts = {
-    Pending: orders.filter((o) => o.status === "Pending").length,
-    Preparing: orders.filter((o) => o.status === "Preparing").length,
-    Ready: orders.filter((o) => o.status === "Ready").length,
+  const stats = {
+    pending: myOrders.filter((o) => o.status === "Pending").length,
+    preparing: myOrders.filter((o) => o.status === "Preparing").length,
+    ready: myOrders.filter((o) => o.status === "Ready").length,
+    revenue: todays.filter((o) => o.status !== "Cancelled").reduce((s, o) => s + o.total, 0),
   };
 
-  const handleAccept = (orderId: string) => {
-    if (!isOpen) {
-      toast.error("Open your dhaba before accepting orders.");
-      return;
-    }
-    update(orderId, "Preparing");
-    toast.success(`Order #${orderId} accepted`);
+  const advance = (orderId: string, current: OrderStatus) => {
+    const next = NEXT[current];
+    if (!next) return;
+    updateOrderStatus(orderId, next);
+    toast.success(`Marked ${next}`);
   };
 
-  const handleReject = (orderId: string) => {
-    update(orderId, "Picked up");
-    toast.info(`Order #${orderId} closed without preparation`);
+  const cancel = (orderId: string) => {
+    updateOrderStatus(orderId, "Cancelled");
+    toast.error("Order cancelled");
   };
 
-  const handleAdvance = (orderId: string, nx: OrderStatus) => {
-    update(orderId, nx);
-    toast.success(`Order #${orderId} marked ${nx}`);
+  // Sort by status urgency, then by placement (newest first within same status).
+  const statusRank: Record<OrderStatus, number> = {
+    Pending: 0,
+    Preparing: 1,
+    Ready: 2,
+    "Picked up": 3,
+    Cancelled: 4,
   };
+  const sorted = [...myOrders].sort((a, b) => {
+    const r = statusRank[a.status] - statusRank[b.status];
+    return r !== 0 ? r : b.placedAt - a.placedAt;
+  });
 
   return (
-    <main className="mx-auto max-w-5xl px-4 py-8 sm:px-6 sm:py-10">
+    <main className="mx-auto max-w-6xl px-4 py-8 sm:px-6 sm:py-10">
       <div className="flex flex-wrap items-end justify-between gap-4">
-        <div className="min-w-0">
+        <div>
           <div className="flex items-center gap-2 text-xs font-bold uppercase tracking-wider text-primary">
-            <ChefHat className="h-4 w-4" /> Vendor view
+            <ChefHat className="h-4 w-4" /> {vendor.name}
           </div>
-          <h1 className="mt-1 truncate font-display text-3xl font-bold sm:text-4xl">
-            {vendor.name}
-          </h1>
-          <p className="mt-1 text-sm text-muted-foreground">{vendor.tagline}</p>
+          <h1 className="mt-1 font-display text-3xl font-bold sm:text-4xl">Vendor dashboard</h1>
+          <p className="mt-1 text-sm text-muted-foreground">
+            Accept, prepare, and track every incoming order.
+          </p>
         </div>
-
         <button
           onClick={() => {
-            toggleAccepting(vendor.id);
-            toast.success(isOpen ? "Dhaba closed for new orders" : "Dhaba is now open");
+            toggleVendorAccepting(vendor.id);
+            toast(accepting ? "Closed for new orders" : "Now accepting orders");
           }}
-          className={`inline-flex items-center gap-2 rounded-full px-5 py-2.5 text-sm font-bold shadow-card transition-transform hover:-translate-y-0.5 ${
-            isOpen
-              ? "bg-primary text-primary-foreground shadow-warm"
-              : "border border-border bg-card text-foreground"
+          className={`inline-flex items-center gap-2 rounded-full px-4 py-2.5 text-sm font-bold shadow-warm transition-transform hover:-translate-y-0.5 ${
+            accepting ? "bg-success text-success-foreground" : "bg-muted text-muted-foreground"
           }`}
-          aria-pressed={isOpen}
         >
           <Power className="h-4 w-4" />
-          {isOpen ? "Open · Accepting orders" : "Closed · Reopen"}
+          {accepting ? "Open · Accepting orders" : "Closed · Reopen"}
         </button>
       </div>
 
-      {/* Stat cards */}
-      <div className="mt-6 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+      {/* Stats — 2x2 on mobile, 4-col on lg */}
+      <div className="mt-6 grid grid-cols-2 gap-3 lg:grid-cols-4">
         <StatCard
-          icon={<Bell className="h-4 w-4" />}
+          icon={<ClipboardList className="h-4 w-4" />}
           label="To accept"
-          value={counts.Pending}
-          tone="primary"
+          value={stats.pending}
+          tone="muted"
         />
         <StatCard
           icon={<ChefHat className="h-4 w-4" />}
           label="Preparing"
-          value={counts.Preparing}
+          value={stats.preparing}
+          tone="warning"
         />
-        <StatCard icon={<CheckCircle2 className="h-4 w-4" />} label="Ready" value={counts.Ready} />
+        <StatCard
+          icon={<PackageCheck className="h-4 w-4" />}
+          label="Ready"
+          value={stats.ready}
+          tone="success"
+        />
         <StatCard
           icon={<Wallet className="h-4 w-4" />}
-          label="Today's revenue"
-          value={`Rs. ${revenue}`}
+          label="Today"
+          value={`Rs. ${stats.revenue}`}
+          tone="primary"
         />
       </div>
 
-      {/* Orders list */}
-      <div className="mt-8 space-y-3">
-        {orders.length === 0 && (
-          <div className="rounded-2xl border border-dashed border-border p-12 text-center text-sm text-muted-foreground">
-            <Receipt className="mx-auto mb-3 h-6 w-6 opacity-50" />
-            No orders yet. They'll show up here as they come in.
+      <div className="mt-8">
+        <h2 className="font-display text-2xl font-bold">Live orders</h2>
+        {sorted.length === 0 ? (
+          <div className="mt-4 rounded-2xl border border-dashed border-border bg-card p-10 text-center">
+            <Receipt className="mx-auto h-8 w-8 text-muted-foreground" />
+            <p className="mt-3 text-sm text-muted-foreground">
+              No orders yet. They'll appear here as customers tap order.
+            </p>
           </div>
-        )}
+        ) : (
+          <div className="mt-4 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+            <AnimatePresence mode="popLayout">
+              {sorted.map((o) => (
+                <motion.article
+                  key={o.id}
+                  layout
+                  initial={{ opacity: 0, y: 8, scale: 0.98 }}
+                  animate={{ opacity: 1, y: 0, scale: 1 }}
+                  exit={{ opacity: 0, scale: 0.95 }}
+                  transition={{ duration: 0.22 }}
+                  className="relative flex flex-col gap-3 rounded-3xl border border-border bg-card p-5 shadow-card"
+                >
+                  {/* Status pill — top right */}
+                  <span
+                    className={`absolute right-4 top-4 inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-[10px] font-bold uppercase tracking-wider ${statusPillClasses(
+                      o.status,
+                    )}`}
+                  >
+                    <span className={`h-1.5 w-1.5 rounded-full ${statusDotClasses(o.status)}`} />
+                    {statusLabel(o.status)}
+                  </span>
 
-        {orders.map((o) => {
-          const nx = next[o.status];
-          const isPending = o.status === "Pending";
-          return (
-            <article
-              key={o.id}
-              className="rounded-2xl border border-border bg-card p-4 shadow-card"
-            >
-              <div className="flex flex-wrap items-start gap-x-4 gap-y-3">
-                <div className="font-display text-2xl font-bold text-primary">#{o.id}</div>
-                <div className="min-w-0 flex-1">
-                  <div className="flex flex-wrap items-center gap-x-3 gap-y-1">
-                    <span className="text-sm font-semibold">{o.customer}</span>
-                    <span
-                      className={`rounded-full px-2.5 py-0.5 text-[11px] font-bold uppercase tracking-wider ${badge[o.status]}`}
-                    >
-                      {o.status}
+                  {/* Header — order #, customer */}
+                  <div className="pr-24">
+                    <div className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">
+                      Order
+                    </div>
+                    <div className="font-display text-3xl font-black leading-none">#{o.id}</div>
+                    <div className="mt-1 truncate text-sm font-semibold">{o.customer}</div>
+                  </div>
+
+                  {/* Time + payment */}
+                  <div className="flex flex-wrap items-center gap-2 text-xs text-muted-foreground">
+                    <span className="rounded-full bg-secondary px-2.5 py-1 font-bold text-secondary-foreground">
+                      Pickup · {format12(o.pickupTime)}
                     </span>
-                  </div>
-                  <div className="mt-1 truncate text-xs text-muted-foreground">
-                    {o.lines.map((l) => `${l.qty}× ${getItem(l.itemId)?.name}`).join(", ")}
-                  </div>
-                  <div className="mt-1 flex flex-wrap gap-x-3 gap-y-1 text-xs text-muted-foreground">
                     <span className="inline-flex items-center gap-1">
-                      <Clock className="h-3 w-3" /> Pickup {format12(o.pickupTime)}
+                      <Wallet className="h-3 w-3" /> {o.payment}
                     </span>
-                    <span>Rs. {o.total}</span>
-                    <span>{o.payment}</span>
                   </div>
+
+                  {/* Items */}
+                  <ul className="space-y-1 text-sm">
+                    {o.lines.map((l) => {
+                      const item = liveMenu.find((m) => m.id === l.itemId);
+                      return (
+                        <li
+                          key={l.itemId}
+                          className="flex items-baseline justify-between gap-3 border-b border-dashed border-border/70 pb-1 last:border-0 last:pb-0"
+                        >
+                          <span className="truncate">
+                            <span className="font-bold text-primary">{l.qty}×</span>{" "}
+                            {item?.name ?? l.itemId}
+                          </span>
+                          <span className="text-xs font-semibold text-muted-foreground">
+                            Rs. {(item?.price ?? 0) * l.qty}
+                          </span>
+                        </li>
+                      );
+                    })}
+                  </ul>
+
                   {o.notes && (
-                    <div className="mt-2 flex gap-2 rounded-xl bg-secondary/60 p-2.5 text-xs text-secondary-foreground">
-                      <MessageSquare className="mt-0.5 h-3.5 w-3.5 flex-shrink-0 text-primary" />
-                      <span className="leading-snug">{o.notes}</span>
+                    <div className="rounded-xl border border-warning/40 bg-warning/15 p-2.5 text-xs">
+                      <div className="flex items-center gap-1 font-bold uppercase tracking-wider text-warning-foreground/80">
+                        <StickyNote className="h-3 w-3" /> Note
+                      </div>
+                      <div className="mt-1 text-foreground">{o.notes}</div>
                     </div>
                   )}
-                </div>
 
-                {/* Action area */}
-                <div className="flex w-full flex-wrap items-center justify-end gap-2 sm:w-auto">
-                  {isPending ? (
-                    <>
+                  <div className="mt-1 flex items-center justify-between border-t border-border pt-3">
+                    <div className="text-xs uppercase tracking-wider text-muted-foreground">
+                      Total
+                    </div>
+                    <div className="font-display text-xl font-black">Rs. {o.total}</div>
+                  </div>
+
+                  {/* Action row — at the bottom of the block */}
+                  <div className="mt-1 flex gap-2">
+                    {o.status === "Pending" && (
+                      <>
+                        <button
+                          onClick={() => cancel(o.id)}
+                          className="inline-flex items-center justify-center gap-1 rounded-full border border-destructive/40 bg-destructive/5 px-3 py-2 text-xs font-bold text-destructive hover:bg-destructive/10"
+                        >
+                          <X className="h-3.5 w-3.5" /> Decline
+                        </button>
+                        <button
+                          onClick={() => advance(o.id, o.status)}
+                          className="inline-flex flex-1 items-center justify-center gap-1.5 rounded-full bg-primary px-4 py-2.5 text-xs font-bold text-primary-foreground shadow-warm"
+                        >
+                          <CheckCircle2 className="h-3.5 w-3.5" /> Accept order
+                        </button>
+                      </>
+                    )}
+                    {(o.status === "Preparing" || o.status === "Ready") && (
                       <button
-                        onClick={() => handleReject(o.id)}
-                        className="inline-flex items-center gap-1 rounded-full border border-border bg-card px-3.5 py-2 text-xs font-bold text-muted-foreground hover:text-foreground"
+                        onClick={() => advance(o.id, o.status)}
+                        className="inline-flex flex-1 items-center justify-center rounded-full bg-foreground px-4 py-2.5 text-xs font-bold text-background hover:bg-foreground/90"
                       >
-                        <XCircle className="h-3.5 w-3.5" /> Decline
+                        Mark {NEXT[o.status]} →
                       </button>
-                      <button
-                        onClick={() => handleAccept(o.id)}
-                        className="inline-flex items-center gap-1 rounded-full bg-primary px-4 py-2 text-xs font-bold text-primary-foreground shadow-warm hover:-translate-y-0.5 transition-transform"
-                      >
-                        <CheckCircle2 className="h-3.5 w-3.5" /> Accept order
-                      </button>
-                    </>
-                  ) : nx ? (
-                    <button
-                      onClick={() => handleAdvance(o.id, nx)}
-                      className="rounded-full bg-foreground px-4 py-2 text-xs font-bold text-background hover:bg-foreground/90"
-                    >
-                      Mark {nx} →
-                    </button>
-                  ) : (
-                    <span className="text-xs text-muted-foreground">Done</span>
-                  )}
-                </div>
-              </div>
-            </article>
-          );
-        })}
+                    )}
+                    {(o.status === "Picked up" || o.status === "Cancelled") && (
+                      <div className="flex-1 rounded-full border border-border bg-muted/40 px-4 py-2.5 text-center text-xs font-bold text-muted-foreground">
+                        Closed
+                      </div>
+                    )}
+                  </div>
+                </motion.article>
+              ))}
+            </AnimatePresence>
+          </div>
+        )}
       </div>
-
-      {/* Switch vendor (only if multiple vendors exist for this account) */}
-      {vendors.length > 1 && (
-        <p className="mt-10 text-center text-xs text-muted-foreground">
-          Need to switch dhabas?{" "}
-          <Link to="/login" className="font-semibold text-primary hover:underline">
-            Sign in as another vendor
-          </Link>
-        </p>
-      )}
     </main>
   );
 }
@@ -260,19 +301,25 @@ function StatCard({
   icon: React.ReactNode;
   label: string;
   value: number | string;
-  tone?: "primary";
+  tone: "primary" | "success" | "warning" | "muted";
 }) {
+  const toneClasses = {
+    primary: "bg-primary/10 text-primary",
+    success: "bg-success/15 text-success-foreground",
+    warning: "bg-warning/30 text-warning-foreground",
+    muted: "bg-muted text-muted-foreground",
+  }[tone];
   return (
-    <div
-      className={`rounded-2xl border border-border bg-card p-4 ${
-        tone === "primary" ? "ring-1 ring-primary/30" : ""
-      }`}
-    >
-      <div className="flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-        <span className={tone === "primary" ? "text-primary" : ""}>{icon}</span>
-        {label}
+    <div className="rounded-2xl border border-border bg-card p-4 shadow-card">
+      <div className="flex items-center gap-2">
+        <span className={`grid h-8 w-8 place-items-center rounded-full ${toneClasses}`}>
+          {icon}
+        </span>
+        <span className="text-[11px] font-bold uppercase tracking-wider text-muted-foreground">
+          {label}
+        </span>
       </div>
-      <div className="mt-1 font-display text-3xl font-bold">{value}</div>
+      <div className="mt-3 font-display text-3xl font-black leading-none">{value}</div>
     </div>
   );
 }
