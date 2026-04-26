@@ -32,7 +32,11 @@ export const Route = createRootRoute({
       { charSet: "utf-8" },
       { name: "viewport", content: "width=device-width, initial-scale=1" },
       { title: "Campus Dhaba — Skip the queue, eat on time" },
-      { name: "description", content: "Pre-order food from GIKI campus dhabas. Pick a vendor, choose a pickup time, and skip the rush." },
+      {
+        name: "description",
+        content:
+          "Pre-order food from GIKI campus dhabas. Pick a vendor, choose a pickup time, and skip the rush.",
+      },
       { property: "og:title", content: "Campus Dhaba" },
       { property: "og:description", content: "Pre-order food from GIKI campus dhabas." },
       { property: "og:type", content: "website" },
@@ -40,7 +44,10 @@ export const Route = createRootRoute({
     links: [
       { rel: "preconnect", href: "https://fonts.googleapis.com" },
       { rel: "preconnect", href: "https://fonts.gstatic.com", crossOrigin: "anonymous" },
-      { rel: "stylesheet", href: "https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,700;9..144,900&family=Inter:wght@400;500;600;700&display=swap" },
+      {
+        rel: "stylesheet",
+        href: "https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,700;9..144,900&family=Inter:wght@400;500;600;700&display=swap",
+      },
       { rel: "stylesheet", href: appCss },
     ],
   }),

@@ -54,20 +54,20 @@
   --radius: 0.875rem;
 
   /* Warm palette */
-  --background: oklch(0.985 0.012 80);            /* warm cream */
-  --foreground: oklch(0.22 0.04 40);              /* deep cocoa */
+  --background: oklch(0.985 0.012 80); /* warm cream */
+  --foreground: oklch(0.22 0.04 40); /* deep cocoa */
   --card: oklch(1 0.005 80);
   --card-foreground: oklch(0.22 0.04 40);
   --popover: oklch(1 0 0);
   --popover-foreground: oklch(0.22 0.04 40);
 
-  --primary: oklch(0.62 0.19 35);                 /* terracotta */
+  --primary: oklch(0.62 0.19 35); /* terracotta */
   --primary-foreground: oklch(0.99 0.01 80);
-  --secondary: oklch(0.94 0.04 75);               /* soft amber */
+  --secondary: oklch(0.94 0.04 75); /* soft amber */
   --secondary-foreground: oklch(0.28 0.05 40);
   --muted: oklch(0.96 0.02 75);
   --muted-foreground: oklch(0.48 0.04 50);
-  --accent: oklch(0.78 0.16 70);                  /* saffron */
+  --accent: oklch(0.78 0.16 70); /* saffron */
   --accent-foreground: oklch(0.22 0.04 40);
   --destructive: oklch(0.55 0.22 28);
   --destructive-foreground: oklch(0.99 0 0);
@@ -82,7 +82,12 @@
   --cream: oklch(0.98 0.02 80);
   --charcoal: oklch(0.2 0.03 40);
 
-  --gradient-hero: linear-gradient(135deg, oklch(0.55 0.2 30) 0%, oklch(0.7 0.18 55) 50%, oklch(0.82 0.17 80) 100%);
+  --gradient-hero: linear-gradient(
+    135deg,
+    oklch(0.55 0.2 30) 0%,
+    oklch(0.7 0.18 55) 50%,
+    oklch(0.82 0.17 80) 100%
+  );
   --gradient-warm: linear-gradient(135deg, var(--primary), var(--accent));
   --gradient-ember: radial-gradient(circle at 20% 0%, oklch(0.55 0.2 30 / 0.25), transparent 60%);
 }
@@ -113,33 +118,52 @@
     border-color: var(--color-border);
   }
 
-  html, body {
+  html,
+  body {
     background-color: var(--color-background);
     color: var(--color-foreground);
     font-family: var(--font-sans);
     -webkit-font-smoothing: antialiased;
   }
 
-  h1, h2, h3, h4 {
+  h1,
+  h2,
+  h3,
+  h4 {
     font-family: var(--font-display);
     letter-spacing: -0.02em;
   }
 }
 
 @layer utilities {
-  .bg-gradient-hero { background-image: var(--gradient-hero); }
-  .bg-gradient-warm { background-image: var(--gradient-warm); }
-  .bg-gradient-ember { background-image: var(--gradient-ember); }
-  .shadow-warm { box-shadow: var(--shadow-warm); }
-  .shadow-card { box-shadow: var(--shadow-card); }
-  .text-balance { text-wrap: balance; }
-  .font-display { font-family: var(--font-display); }
+  .bg-gradient-hero {
+    background-image: var(--gradient-hero);
+  }
+  .bg-gradient-warm {
+    background-image: var(--gradient-warm);
+  }
+  .bg-gradient-ember {
+    background-image: var(--gradient-ember);
+  }
+  .shadow-warm {
+    box-shadow: var(--shadow-warm);
+  }
+  .shadow-card {
+    box-shadow: var(--shadow-card);
+  }
+  .text-balance {
+    text-wrap: balance;
+  }
+  .font-display {
+    font-family: var(--font-display);
+  }
 }
 
 /* Subtle grain for warmth */
 .grain::before {
   content: "";
-  position: absolute; inset: 0;
+  position: absolute;
+  inset: 0;
   background-image: radial-gradient(oklch(0.3 0.05 35 / 0.06) 1px, transparent 1px);
   background-size: 4px 4px;
   pointer-events: none;

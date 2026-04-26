@@ -11,6 +11,7 @@
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as VendorRouteImport } from './routes/vendor'
 import { Route as QuickOrderRouteImport } from './routes/quick-order'
+import { Route as LoginRouteImport } from './routes/login'
 import { Route as CartRouteImport } from './routes/cart'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as OrdersIndexRouteImport } from './routes/orders.index'
@@ -25,6 +26,11 @@ const VendorRoute = VendorRouteImport.update({
 const QuickOrderRoute = QuickOrderRouteImport.update({
   id: '/quick-order',
   path: '/quick-order',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const LoginRoute = LoginRouteImport.update({
+  id: '/login',
+  path: '/login',
   getParentRoute: () => rootRouteImport,
 } as any)
 const CartRoute = CartRouteImport.update({
@@ -56,6 +62,7 @@ const OrdersOrderIdRoute = OrdersOrderIdRouteImport.update({
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/cart': typeof CartRoute
+  '/login': typeof LoginRoute
   '/quick-order': typeof QuickOrderRoute
   '/vendor': typeof VendorRoute
   '/orders/$orderId': typeof OrdersOrderIdRoute
@@ -65,6 +72,7 @@ export interface FileRoutesByFullPath {
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/cart': typeof CartRoute
+  '/login': typeof LoginRoute
   '/quick-order': typeof QuickOrderRoute
   '/vendor': typeof VendorRoute
   '/orders/$orderId': typeof OrdersOrderIdRoute
@@ -75,6 +83,7 @@ export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
   '/cart': typeof CartRoute
+  '/login': typeof LoginRoute
   '/quick-order': typeof QuickOrderRoute
   '/vendor': typeof VendorRoute
   '/orders/$orderId': typeof OrdersOrderIdRoute
@@ -86,6 +95,7 @@ export interface FileRouteTypes {
   fullPaths:
     | '/'
     | '/cart'
+    | '/login'
     | '/quick-order'
     | '/vendor'
     | '/orders/$orderId'
@@ -95,6 +105,7 @@ export interface FileRouteTypes {
   to:
     | '/'
     | '/cart'
+    | '/login'
     | '/quick-order'
     | '/vendor'
     | '/orders/$orderId'
@@ -104,6 +115,7 @@ export interface FileRouteTypes {
     | '__root__'
     | '/'
     | '/cart'
+    | '/login'
     | '/quick-order'
     | '/vendor'
     | '/orders/$orderId'
@@ -114,6 +126,7 @@ export interface FileRouteTypes {
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   CartRoute: typeof CartRoute
+  LoginRoute: typeof LoginRoute
   QuickOrderRoute: typeof QuickOrderRoute
   VendorRoute: typeof VendorRoute
   OrdersOrderIdRoute: typeof OrdersOrderIdRoute
@@ -135,6 +148,13 @@ declare module '@tanstack/react-router' {
       path: '/quick-order'
       fullPath: '/quick-order'
       preLoaderRoute: typeof QuickOrderRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/login': {
+      id: '/login'
+      path: '/login'
+      fullPath: '/login'
+      preLoaderRoute: typeof LoginRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/cart': {
@@ -178,6 +198,7 @@ declare module '@tanstack/react-router' {
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   CartRoute: CartRoute,
+  LoginRoute: LoginRoute,
   QuickOrderRoute: QuickOrderRoute,
   VendorRoute: VendorRoute,
   OrdersOrderIdRoute: OrdersOrderIdRoute,

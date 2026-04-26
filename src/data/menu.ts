@@ -70,19 +70,91 @@ export const vendors: Vendor[] = [
 ];
 
 export const menu: MenuItem[] = [
-  { id: "raju-paratha", vendorId: "raju", name: "Aloo Paratha", price: 80, category: "Breakfast", image: aloo, description: "Stuffed paratha with butter, served with yogurt & pickle." },
-  { id: "raju-chai", vendorId: "raju", name: "Karak Chai", price: 50, category: "Drinks", image: chai, description: "Strong, milky chai brewed the desi way." },
-  { id: "raju-biryani", vendorId: "raju", name: "Chicken Biryani", price: 220, category: "Mains", image: biryani, description: "Aromatic basmati rice with tender chicken & raita." },
-  { id: "raju-roll", vendorId: "raju", name: "Anwar Roll", price: 150, category: "Mains", image: roll, description: "Spicy chicken wrap with chutneys, freshly made." },
+  {
+    id: "raju-paratha",
+    vendorId: "raju",
+    name: "Aloo Paratha",
+    price: 80,
+    category: "Breakfast",
+    image: aloo,
+    description: "Stuffed paratha with butter, served with yogurt & pickle.",
+  },
+  {
+    id: "raju-chai",
+    vendorId: "raju",
+    name: "Karak Chai",
+    price: 50,
+    category: "Drinks",
+    image: chai,
+    description: "Strong, milky chai brewed the desi way.",
+  },
+  {
+    id: "raju-biryani",
+    vendorId: "raju",
+    name: "Chicken Biryani",
+    price: 220,
+    category: "Mains",
+    image: biryani,
+    description: "Aromatic basmati rice with tender chicken & raita.",
+  },
+  {
+    id: "raju-roll",
+    vendorId: "raju",
+    name: "Anwar Roll",
+    price: 150,
+    category: "Mains",
+    image: roll,
+    description: "Spicy chicken wrap with chutneys, freshly made.",
+  },
 
-  { id: "hot-burger", vendorId: "hot", name: "Hot Fillet Burger", price: 280, category: "Burgers", image: burger, description: "Crispy chicken fillet, melted cheese, fiery sauce." },
-  { id: "hot-fries", vendorId: "hot", name: "Crispy Fries", price: 120, category: "Sides", image: fries, description: "Golden fries with house ketchup." },
-  { id: "hot-sandwich", vendorId: "hot", name: "Club Sandwich", price: 250, category: "Sandwiches", image: sandwich, description: "Triple-decker chicken, egg, lettuce & tomato." },
+  {
+    id: "hot-burger",
+    vendorId: "hot",
+    name: "Hot Fillet Burger",
+    price: 280,
+    category: "Burgers",
+    image: burger,
+    description: "Crispy chicken fillet, melted cheese, fiery sauce.",
+  },
+  {
+    id: "hot-fries",
+    vendorId: "hot",
+    name: "Crispy Fries",
+    price: 120,
+    category: "Sides",
+    image: fries,
+    description: "Golden fries with house ketchup.",
+  },
+  {
+    id: "hot-sandwich",
+    vendorId: "hot",
+    name: "Club Sandwich",
+    price: 250,
+    category: "Sandwiches",
+    image: sandwich,
+    description: "Triple-decker chicken, egg, lettuce & tomato.",
+  },
 
-  { id: "sip-strawberry", vendorId: "sip", name: "Strawberry Juice", price: 100, category: "Juices", image: juice, description: "Fresh strawberries, blended cold." },
-  { id: "sip-chai", vendorId: "sip", name: "Cardamom Chai", price: 60, category: "Hot", image: chai, description: "Aromatic chai with crushed cardamom." },
+  {
+    id: "sip-strawberry",
+    vendorId: "sip",
+    name: "Strawberry Juice",
+    price: 100,
+    category: "Juices",
+    image: juice,
+    description: "Fresh strawberries, blended cold.",
+  },
+  {
+    id: "sip-chai",
+    vendorId: "sip",
+    name: "Cardamom Chai",
+    price: 60,
+    category: "Hot",
+    image: chai,
+    description: "Aromatic chai with crushed cardamom.",
+  },
 ];
 
-export const getVendor = (id: string) => vendors.find(v => v.id === id);
-export const getItem = (id: string) => menu.find(m => m.id === id);
-export const itemsByVendor = (id: string) => menu.filter(m => m.vendorId === id);
+export const getVendor = (id: string) => vendors.find((v) => v.id === id);
+export const getItem = (id: string) => menu.find((m) => m.id === id);
+export const itemsByVendor = (id: string) => menu.filter((m) => m.vendorId === id);

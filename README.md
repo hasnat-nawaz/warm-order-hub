@@ -24,7 +24,7 @@ Built with **React 19 + TanStack Start + Vite + Tailwind v4 + Zustand + Framer M
 
 You need **one** of these package managers / runtimes installed:
 
-- [Bun](https://bun.sh) ≥ 1.1 *(recommended – matches the lockfile)*
+- [Bun](https://bun.sh) ≥ 1.1 _(recommended – matches the lockfile)_
 - or **Node.js ≥ 20** with `npm` / `pnpm` / `yarn`
 
 Check your versions:
@@ -78,15 +78,15 @@ bun run preview    # preview the built site locally
 
 ## 🗺️ Available routes
 
-| Route | Description |
-|---|---|
-| `/` | Home – hero + vendor list |
-| `/vendors/:vendorId` | Vendor menu (e.g. `/vendors/raju`) |
-| `/cart` | Cart & checkout |
-| `/quick-order` | Favorites & one-tap reorder |
-| `/orders` | Your order history |
-| `/orders/:orderId` | Live order tracking |
-| `/vendor` | Vendor-side dashboard (manage queue) |
+| Route                | Description                          |
+| -------------------- | ------------------------------------ |
+| `/`                  | Home – hero + vendor list            |
+| `/vendors/:vendorId` | Vendor menu (e.g. `/vendors/raju`)   |
+| `/cart`              | Cart & checkout                      |
+| `/quick-order`       | Favorites & one-tap reorder          |
+| `/orders`            | Your order history                   |
+| `/orders/:orderId`   | Live order tracking                  |
+| `/vendor`            | Vendor-side dashboard (manage queue) |
 
 ---
 
