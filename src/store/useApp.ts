@@ -324,25 +324,54 @@ if (typeof window !== "undefined") {
 // minus anything in removedItemIds. We expose both a hook-friendly selector
 // and a low-level helper for places that already have raw state.
 
-const liveMenuFromState = (state: Store) => (): MenuItem[] => {
+// IMPORTANT (React 19 + SSR): selectors used with useSyncExternalStore must
+// return a stable snapshot when the underlying store state hasn't changed.
+// If we compute a *new array* each time, React can enter an update loop and
+// throw: "The result of getServerSnapshot should be cached".
+//
+// This memoizer returns the same array reference as long as the relevant
+// state slice references are unchanged (Zustand updates immutably, so that
+// means "no actual change").
+let _lm_customItems: Store["customItems"] | null = null;
+let _lm_itemOverrides: Store["itemOverrides"] | null = null;
+let _lm_removedIds: Store["removedItemIds"] | null = null;
+let _lm_cached: MenuItem[] | null = null;
+
+const computeLiveMenu = (state: Store): MenuItem[] => {
+  if (
+    _lm_cached &&
+    _lm_customItems === state.customItems &&
+    _lm_itemOverrides === state.itemOverrides &&
+    _lm_removedIds === state.removedItemIds
+  ) {
+    return _lm_cached;
+  }
+
   const removed = new Set(state.removedItemIds);
   const overrides = state.itemOverrides;
   const basePart = baseMenu
     .filter((m) => !removed.has(m.id))
     .map((m) => (overrides[m.id] ? { ...m, ...overrides[m.id] } : m));
   const customPart = state.customItems.filter((c) => !removed.has(c.id));
-  return [...basePart, ...customPart];
+
+  _lm_customItems = state.customItems;
+  _lm_itemOverrides = state.itemOverrides;
+  _lm_removedIds = state.removedItemIds;
+  _lm_cached = [...basePart, ...customPart];
+  return _lm_cached;
 };
 
+const liveMenuFromState = (state: Store) => (): MenuItem[] => computeLiveMenu(state);
+
 /** Selector helper: returns the live menu computed from store state. */
-export const selectLiveMenu = (s: Store): MenuItem[] => liveMenuFromState(s)();
+export const selectLiveMenu = (s: Store): MenuItem[] => computeLiveMenu(s);
 
 /** React hook returning the live, vendor-edited menu. */
 export const useLiveMenu = (): MenuItem[] => useApp(selectLiveMenu);
 
 /** Look up a single item against the live menu (state version). */
 export const findLiveItem = (state: Store, id: string) =>
-  liveMenuFromState(state)().find((m) => m.id === id);
+  computeLiveMenu(state).find((m) => m.id === id);
 
 /** Re-export categories helper for convenience. */
 export const itemsForVendorCategory = (list: MenuItem[], vendorId: string, cat: Category) =>

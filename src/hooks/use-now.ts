@@ -8,7 +8,6 @@ export function useNow(intervalMs: number = 30_000) {
   const [now, setNow] = useState<Date>(() => new Date());
   useEffect(() => {
     const tick = () => setNow(new Date());
-    tick();
     const id = setInterval(tick, intervalMs);
     return () => clearInterval(id);
   }, [intervalMs]);
