@@ -57,6 +57,15 @@ const sameDay = (a: Date, b: Date) =>
   a.getMonth() === b.getMonth() &&
   a.getDate() === b.getDate();
 
+// Sort by status urgency, then by placement (newest first within same status).
+const STATUS_RANK: Record<OrderStatus, number> = {
+  Pending: 0,
+  Preparing: 1,
+  Ready: 2,
+  "Picked up": 3,
+  Cancelled: 4,
+};
+
 function VendorDashboard() {
   const role = useApp((s) => s.role);
   const vendorLogin = useApp((s) => s.vendorLogin);
@@ -75,6 +84,27 @@ function VendorDashboard() {
   const [confirmToggle, setConfirmToggle] = useState(false);
   const [filterDate, setFilterDate] = useState<Date | null>(new Date());
   const [popoverOpen, setPopoverOpen] = useState(false);
+
+  const sorted = useMemo(() => {
+    return [...myOrders].sort((a, b) => {
+      const r = STATUS_RANK[a.status] - STATUS_RANK[b.status];
+      return r !== 0 ? r : b.placedAt - a.placedAt;
+    });
+  }, [myOrders]);
+
+  const orderDates = useMemo(() => {
+    const set = new Set<string>();
+    for (const o of myOrders) {
+      const d = new Date(o.placedAt);
+      set.add(`${d.getFullYear()}-${d.getMonth()}-${d.getDate()}`);
+    }
+    return set;
+  }, [myOrders]);
+
+  const filteredOrders = useMemo(() => {
+    if (!filterDate) return sorted;
+    return sorted.filter((o) => sameDay(new Date(o.placedAt), filterDate));
+  }, [sorted, filterDate]);
 
   if (role !== "vendor" || !vendorLogin) {
     return (
@@ -117,33 +147,6 @@ function VendorDashboard() {
     cancelOrder(orderId, "vendor");
     toast.error("Order cancelled");
   };
-
-  // Sort by status urgency, then by placement (newest first within same status).
-  const statusRank: Record<OrderStatus, number> = {
-    Pending: 0,
-    Preparing: 1,
-    Ready: 2,
-    "Picked up": 3,
-    Cancelled: 4,
-  };
-  const sorted = [...myOrders].sort((a, b) => {
-    const r = statusRank[a.status] - statusRank[b.status];
-    return r !== 0 ? r : b.placedAt - a.placedAt;
-  });
-
-  const orderDates = useMemo(() => {
-    const set = new Set<string>();
-    for (const o of myOrders) {
-      const d = new Date(o.placedAt);
-      set.add(`${d.getFullYear()}-${d.getMonth()}-${d.getDate()}`);
-    }
-    return set;
-  }, [myOrders]);
-
-  const filteredOrders = useMemo(() => {
-    if (!filterDate) return sorted;
-    return sorted.filter((o) => sameDay(new Date(o.placedAt), filterDate));
-  }, [sorted, filterDate]);
 
   const stepDay = (delta: number) => {
     const base = filterDate ?? new Date();

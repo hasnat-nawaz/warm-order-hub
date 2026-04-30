@@ -129,188 +129,193 @@ function CartPage() {
   }
 
   return (
-    <motion.main
-      initial={{ opacity: 0, y: 6 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.25 }}
-      className="mx-auto max-w-3xl px-4 py-8 sm:px-6 sm:py-10"
-    >
+    <>
       <Link
         to="/"
-        className="inline-flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground"
+        aria-label="Back"
+        className="fixed left-4 top-20 z-40 inline-flex items-center gap-1.5 rounded-full bg-foreground px-3.5 py-2 text-xs font-bold uppercase tracking-wider text-background shadow-warm ring-1 ring-background/40 backdrop-blur transition-transform hover:-translate-y-0.5 sm:left-6 sm:top-24"
       >
-        <ArrowLeft className="h-4 w-4" /> Back
+        <ArrowLeft className="h-3.5 w-3.5" /> Back
       </Link>
-      <h1 className="mt-3 font-display text-3xl font-bold sm:text-4xl">Your cart</h1>
-      {vendor && (
-        <p className="mt-1 text-sm text-muted-foreground">
-          From <span className="font-semibold text-foreground">{vendor.name}</span>
-        </p>
-      )}
+      <motion.main
+        initial={{ opacity: 0, y: 6 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.25 }}
+        className="mx-auto max-w-3xl px-4 py-8 sm:px-6 sm:py-10"
+      >
+        <h1 className="mt-3 font-display text-3xl font-bold sm:text-4xl">Your cart</h1>
+        {vendor && (
+          <p className="mt-1 text-sm text-muted-foreground">
+            From <span className="font-semibold text-foreground">{vendor.name}</span>
+          </p>
+        )}
 
-      <div className="mt-8 space-y-4">
-        <AnimatePresence initial={false}>
-          {cart.map((line) => {
-            const item = liveMenu.find((m) => m.id === line.itemId);
-            if (!item) return null;
-            return (
-              <motion.div
-                key={line.itemId}
-                layout
-                initial={{ opacity: 0, y: 6 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, x: 20 }}
-                transition={{ duration: 0.2 }}
-                className="flex flex-wrap items-center gap-4 rounded-3xl border border-border bg-card p-4 shadow-card sm:gap-5 sm:p-5"
-              >
-                <img
-                  src={item.image}
-                  alt={item.name}
-                  className="h-24 w-24 flex-shrink-0 rounded-2xl object-cover sm:h-28 sm:w-28"
-                  loading="lazy"
-                  width={112}
-                  height={112}
-                />
-                <div className="min-w-0 flex-1">
-                  <div className="font-display text-lg font-bold sm:text-xl">{item.name}</div>
-                  <div className="mt-0.5 text-sm text-muted-foreground">
-                    Rs. {item.price} <span className="opacity-60">each</span>
-                  </div>
-                </div>
-                <div className="flex items-center rounded-full border border-border bg-background">
-                  <button
-                    onClick={() => setQty(line.itemId, line.qty - 1)}
-                    aria-label="Decrease quantity"
-                    className="grid h-10 w-10 place-items-center transition-colors hover:bg-muted"
-                  >
-                    <Minus className="h-4 w-4" />
-                  </button>
-                  <span className="w-8 text-center text-base font-bold">{line.qty}</span>
-                  <button
-                    onClick={() => setQty(line.itemId, line.qty + 1)}
-                    aria-label="Increase quantity"
-                    className="grid h-10 w-10 place-items-center transition-colors hover:bg-muted"
-                  >
-                    <Plus className="h-4 w-4" />
-                  </button>
-                </div>
-                <div className="ml-auto w-24 text-right font-display text-lg font-bold sm:ml-0 sm:text-xl">
-                  Rs. {item.price * line.qty}
-                </div>
-                <button
-                  onClick={() => removeFromCart(line.itemId)}
-                  aria-label="Remove from cart"
-                  className="grid h-10 w-10 place-items-center rounded-full text-muted-foreground transition-colors hover:bg-destructive/10 hover:text-destructive"
+        <div className="mt-8 space-y-4">
+          <AnimatePresence initial={false}>
+            {cart.map((line) => {
+              const item = liveMenu.find((m) => m.id === line.itemId);
+              if (!item) return null;
+              return (
+                <motion.div
+                  key={line.itemId}
+                  layout
+                  initial={{ opacity: 0, y: 6 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, x: 20 }}
+                  transition={{ duration: 0.2 }}
+                  className="flex flex-wrap items-center gap-4 rounded-3xl border border-border bg-card p-4 shadow-card sm:gap-5 sm:p-5"
                 >
-                  <Trash2 className="h-4 w-4" />
-                </button>
-              </motion.div>
-            );
-          })}
-        </AnimatePresence>
-      </div>
+                  <img
+                    src={item.image}
+                    alt={item.name}
+                    className="h-24 w-24 flex-shrink-0 rounded-2xl object-cover sm:h-28 sm:w-28"
+                    loading="lazy"
+                    width={112}
+                    height={112}
+                  />
+                  <div className="min-w-0 flex-1">
+                    <div className="font-display text-lg font-bold sm:text-xl">{item.name}</div>
+                    <div className="mt-0.5 text-sm text-muted-foreground">
+                      Rs. {item.price} <span className="opacity-60">each</span>
+                    </div>
+                  </div>
+                  <div className="flex items-center rounded-full border border-border bg-background">
+                    <button
+                      onClick={() => setQty(line.itemId, line.qty - 1)}
+                      aria-label="Decrease quantity"
+                      className="grid h-10 w-10 place-items-center transition-colors hover:bg-muted"
+                    >
+                      <Minus className="h-4 w-4" />
+                    </button>
+                    <span className="w-8 text-center text-base font-bold">{line.qty}</span>
+                    <button
+                      onClick={() => setQty(line.itemId, line.qty + 1)}
+                      aria-label="Increase quantity"
+                      className="grid h-10 w-10 place-items-center transition-colors hover:bg-muted"
+                    >
+                      <Plus className="h-4 w-4" />
+                    </button>
+                  </div>
+                  <div className="ml-auto w-24 text-right font-display text-lg font-bold sm:ml-0 sm:text-xl">
+                    Rs. {item.price * line.qty}
+                  </div>
+                  <button
+                    onClick={() => removeFromCart(line.itemId)}
+                    aria-label="Remove from cart"
+                    className="grid h-10 w-10 place-items-center rounded-full text-muted-foreground transition-colors hover:bg-destructive/10 hover:text-destructive"
+                  >
+                    <Trash2 className="h-4 w-4" />
+                  </button>
+                </motion.div>
+              );
+            })}
+          </AnimatePresence>
+        </div>
 
-      <div className="mt-8 grid gap-4 md:grid-cols-2">
-        {/* Pickup time */}
-        <div className="rounded-2xl border border-border bg-card p-5">
-          <div className="flex items-center gap-2 text-sm font-bold">
-            <Calendar className="h-4 w-4 text-primary" /> Pickup time
-          </div>
-          <div className="mt-3 rounded-2xl bg-primary/5 px-4 py-3 text-center">
-            <div className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">
-              Pickup at
+        <div className="mt-8 grid gap-4 md:grid-cols-2">
+          {/* Pickup time */}
+          <div className="rounded-2xl border border-border bg-card p-5">
+            <div className="flex items-center gap-2 text-sm font-bold">
+              <Calendar className="h-4 w-4 text-primary" /> Pickup time
             </div>
-            <div className="mt-0.5 font-display text-3xl font-black text-primary sm:text-4xl">
-              {format12(pickup)}
+            <div className="mt-3 rounded-2xl bg-primary/5 px-4 py-3 text-center">
+              <div className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">
+                Pickup at
+              </div>
+              <div className="mt-0.5 font-display text-3xl font-black text-primary sm:text-4xl">
+                {format12(pickup)}
+              </div>
             </div>
-          </div>
 
-          <button
-            type="button"
-            onClick={openPicker}
-            className="mt-3 inline-flex w-full items-center justify-center gap-2 rounded-full border border-input bg-background px-4 py-3 text-sm font-bold text-foreground transition-colors hover:border-primary"
-          >
-            {edited ? "Change time" : "Select time"}
-          </button>
+            <button
+              type="button"
+              onClick={openPicker}
+              className="mt-3 inline-flex w-full items-center justify-center gap-2 rounded-full border border-input bg-background px-4 py-3 text-sm font-bold text-foreground transition-colors hover:border-primary"
+            >
+              {edited ? "Change time" : "Select time"}
+            </button>
 
-          {/* Native input is kept off-screen but accessible — supplies the
+            {/* Native input is kept off-screen but accessible — supplies the
               picker UI when "Select time" is tapped. */}
-          <input
-            ref={timeInputRef}
-            type="time"
-            value={pickup}
-            min={suggested}
-            step={60}
-            onChange={(e) => handlePickupChange(e.target.value)}
-            aria-label="Pickup time"
-            className="sr-only"
-          />
-        </div>
-
-        {/* Payment */}
-        <div className="rounded-2xl border border-border bg-card p-5">
-          <div className="flex items-center gap-2 text-sm font-bold">
-            <CreditCard className="h-4 w-4 text-primary" /> Payment
+            <input
+              ref={timeInputRef}
+              type="time"
+              value={pickup}
+              min={suggested}
+              step={60}
+              onChange={(e) => handlePickupChange(e.target.value)}
+              aria-label="Pickup time"
+              className="sr-only"
+            />
           </div>
-          <div className="mt-3 flex flex-col gap-2">
-            {(["EasyPaisa", "JazzCash", "Cash on Pickup"] as const).map((p) => (
-              <label
-                key={p}
-                className={`flex cursor-pointer items-center gap-3 rounded-xl border px-3 py-2.5 text-sm transition-colors ${
-                  payment === p ? "border-primary bg-primary/5" : "border-border"
-                }`}
-              >
-                <input
-                  type="radio"
-                  name="payment"
-                  checked={payment === p}
-                  onChange={() => setPayment(p)}
-                  className="accent-primary"
-                />
-                <span className="font-medium">{p}</span>
-              </label>
-            ))}
-          </div>
-        </div>
-      </div>
 
-      {/* Special instructions */}
-      <div className="mt-4 rounded-2xl border border-border bg-card p-5">
-        <label htmlFor="order-notes" className="flex items-center gap-2 text-sm font-bold">
-          <MessageSquare className="h-4 w-4 text-primary" /> Extra instructions
-          <span className="text-xs font-medium text-muted-foreground">(optional)</span>
-        </label>
-        <p className="mt-1 text-xs text-muted-foreground">
-          Anything the dhaba should know? E.g. "Less spicy", "No raw onion", etc.
-        </p>
-        <textarea
-          id="order-notes"
-          value={notes}
-          onChange={(e) => setNotes(e.target.value.slice(0, 240))}
-          rows={3}
-          placeholder="Add a note for the chef…"
-          className="mt-3 w-full resize-none rounded-xl border border-input bg-background px-3 py-2.5 text-sm focus:border-primary focus:outline-none"
-        />
-        <div className="mt-1 text-right text-[11px] text-muted-foreground">{notes.length}/240</div>
-      </div>
-
-      <div className="mt-6 rounded-2xl bg-foreground p-5 text-background sm:p-6">
-        <div className="flex flex-wrap items-end justify-between gap-3">
-          <div>
-            <div className="text-xs uppercase tracking-wider opacity-70">Total</div>
-            <div className="font-display text-3xl font-black sm:text-4xl">Rs. {total}</div>
-            <div className="mt-1 text-xs opacity-70">
-              Pickup at <span className="font-semibold opacity-100">{format12(pickup)}</span>
+          {/* Payment */}
+          <div className="rounded-2xl border border-border bg-card p-5">
+            <div className="flex items-center gap-2 text-sm font-bold">
+              <CreditCard className="h-4 w-4 text-primary" /> Payment
+            </div>
+            <div className="mt-3 flex flex-col gap-2">
+              {(["EasyPaisa", "JazzCash", "Cash on Pickup"] as const).map((p) => (
+                <label
+                  key={p}
+                  className={`flex cursor-pointer items-center gap-3 rounded-xl border px-3 py-2.5 text-sm transition-colors ${
+                    payment === p ? "border-primary bg-primary/5" : "border-border"
+                  }`}
+                >
+                  <input
+                    type="radio"
+                    name="payment"
+                    checked={payment === p}
+                    onChange={() => setPayment(p)}
+                    className="accent-primary"
+                  />
+                  <span className="font-medium">{p}</span>
+                </label>
+              ))}
             </div>
           </div>
-          <button
-            onClick={handlePlace}
-            className="rounded-full bg-primary px-6 py-3 text-sm font-bold text-primary-foreground shadow-warm transition-transform hover:-translate-y-0.5"
-          >
-            Confirm Order →
-          </button>
         </div>
-      </div>
-    </motion.main>
+
+        {/* Special instructions */}
+        <div className="mt-4 rounded-2xl border border-border bg-card p-5">
+          <label htmlFor="order-notes" className="flex items-center gap-2 text-sm font-bold">
+            <MessageSquare className="h-4 w-4 text-primary" /> Extra instructions
+            <span className="text-xs font-medium text-muted-foreground">(optional)</span>
+          </label>
+          <p className="mt-1 text-xs text-muted-foreground">
+            Anything the dhaba should know? E.g. "Less spicy", "No raw onion", etc.
+          </p>
+          <textarea
+            id="order-notes"
+            value={notes}
+            onChange={(e) => setNotes(e.target.value.slice(0, 240))}
+            rows={3}
+            placeholder="Add a note for the chef…"
+            className="mt-3 w-full resize-none rounded-xl border border-input bg-background px-3 py-2.5 text-sm focus:border-primary focus:outline-none"
+          />
+          <div className="mt-1 text-right text-[11px] text-muted-foreground">
+            {notes.length}/240
+          </div>
+        </div>
+
+        <div className="mt-6 rounded-2xl bg-foreground p-5 text-background sm:p-6">
+          <div className="flex flex-wrap items-end justify-between gap-3">
+            <div>
+              <div className="text-xs uppercase tracking-wider opacity-70">Total</div>
+              <div className="font-display text-3xl font-black sm:text-4xl">Rs. {total}</div>
+              <div className="mt-1 text-xs opacity-70">
+                Pickup at <span className="font-semibold opacity-100">{format12(pickup)}</span>
+              </div>
+            </div>
+            <button
+              onClick={handlePlace}
+              className="rounded-full bg-primary px-6 py-3 text-sm font-bold text-primary-foreground shadow-warm transition-transform hover:-translate-y-0.5"
+            >
+              Confirm Order →
+            </button>
+          </div>
+        </div>
+      </motion.main>
+    </>
   );
 }

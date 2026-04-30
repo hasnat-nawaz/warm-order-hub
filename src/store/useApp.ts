@@ -306,7 +306,9 @@ export const useApp = create<Store>()(
 
       cancelOrder: (orderId, reason = "vendor") => {
         set({
-          orders: get().orders.map((o) => (o.id === orderId ? { ...o, status: "Cancelled", cancellationReason: reason } : o)),
+          orders: get().orders.map((o) =>
+            o.id === orderId ? { ...o, status: "Cancelled", cancellationReason: reason } : o,
+          ),
         });
       },
     }),
