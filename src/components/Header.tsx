@@ -2,7 +2,16 @@ import { Link, useNavigate, useRouterState } from "@tanstack/react-router";
 import { useApp } from "@/store/useApp";
 import { vendors } from "@/data/menu";
 import { ShoppingBag, Flame, Menu, X, LogIn, LogOut, ChefHat, User } from "lucide-react";
-import { useEffect, useState } from "react";
+import { forwardRef, useEffect, useState } from "react";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import { cn } from "@/lib/utils";
 
 type NavLink = { to: string; label: string };
 
@@ -24,7 +33,9 @@ const guestLinks: NavLink[] = [
 
 /**
  * Profile chip: dark circular avatar with default user icon + username.
- * Sized smaller in mobile drawer ("compact" variant) for layout density.
+ * Rendered inside a DropdownMenuTrigger so the whole pill is clickable —
+ * tapping it reveals the sign-out action (no separate "Sign out" button
+ * crowds the header).
  */
 function ProfileChip({
   name,
@@ -35,13 +46,11 @@ function ProfileChip({
   isVendor: boolean;
   compact?: boolean;
 }) {
+  const base = `inline-flex items-center gap-2 rounded-full border border-border bg-card text-foreground ${
+    compact ? "px-2 py-1.5 text-xs" : "px-2 py-1.5 text-sm"
+  }`;
   return (
-    <div
-      className={`inline-flex items-center gap-2 rounded-full border border-border bg-card text-foreground ${
-        compact ? "px-2 py-1.5 text-xs" : "px-2 py-1.5 text-sm"
-      }`}
-      aria-label={`Signed in as ${name}`}
-    >
+    <div className={base} aria-label={`Signed in as ${name}`}>
       <span
         className={`grid place-items-center rounded-full bg-foreground text-background ${
           compact ? "h-6 w-6" : "h-7 w-7"
@@ -57,6 +66,43 @@ function ProfileChip({
     </div>
   );
 }
+
+const ProfileChipTrigger = forwardRef<
+  HTMLButtonElement,
+  React.ButtonHTMLAttributes<HTMLButtonElement> & {
+    name: string;
+    isVendor: boolean;
+    compact?: boolean;
+  }
+>(function ProfileChipTrigger({ name, isVendor, compact = false, className, ...props }, ref) {
+  const base = cn(
+    "inline-flex items-center gap-2 rounded-full border border-border bg-card text-foreground transition-colors hover:bg-secondary",
+    compact ? "px-2 py-1.5 text-xs" : "px-2 py-1.5 text-sm",
+    className,
+  );
+  return (
+    <button
+      ref={ref}
+      type="button"
+      className={base}
+      aria-label={`Account menu for ${name}`}
+      {...props}
+    >
+      <span
+        className={`grid place-items-center rounded-full bg-foreground text-background ${
+          compact ? "h-6 w-6" : "h-7 w-7"
+        }`}
+      >
+        {isVendor ? (
+          <ChefHat className={compact ? "h-3 w-3" : "h-3.5 w-3.5"} strokeWidth={2.5} />
+        ) : (
+          <User className={compact ? "h-3 w-3" : "h-3.5 w-3.5"} strokeWidth={2.5} />
+        )}
+      </span>
+      <span className="max-w-[8rem] truncate font-semibold sm:max-w-[12rem]">{name}</span>
+    </button>
+  );
+});
 
 export function Header() {
   const cartCount = useApp((s) => s.cart.reduce((n, l) => n + l.qty, 0));
@@ -111,6 +157,38 @@ export function Header() {
     );
   };
 
+  /**
+   * Reusable account dropdown — the only place the user can sign out.
+   * Sign out item is in destructive red to match the rest of the app's
+   * "danger" affordances (cancel order, decline, etc.).
+   */
+  const AccountDropdown = ({ compact = false }: { compact?: boolean }) => (
+    <DropdownMenu>
+      <DropdownMenuTrigger asChild>
+        <ProfileChipTrigger name={profileName} isVendor={isVendor} compact={compact} />
+      </DropdownMenuTrigger>
+      <DropdownMenuContent align="end" className="w-56">
+        <DropdownMenuLabel className="px-3 py-2">
+          <div className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">
+            Signed in as
+          </div>
+          <div className="mt-0.5 truncate text-sm font-bold text-foreground">{profileName}</div>
+        </DropdownMenuLabel>
+        <DropdownMenuSeparator />
+        <DropdownMenuItem
+          onSelect={(e) => {
+            e.preventDefault();
+            handleSignOut();
+          }}
+          className="font-bold text-destructive focus:bg-destructive/10 focus:text-destructive"
+        >
+          <LogOut className="h-4 w-4" />
+          Sign out
+        </DropdownMenuItem>
+      </DropdownMenuContent>
+    </DropdownMenu>
+  );
+
   return (
     <header className="sticky top-0 z-50 border-b border-border/60 bg-background/80 backdrop-blur-xl">
       <div className="mx-auto flex h-16 max-w-6xl items-center justify-between gap-3 px-4 sm:px-6">
@@ -130,32 +208,26 @@ export function Header() {
         <nav className="hidden items-center gap-6 md:flex">{links.map((l) => renderLink(l))}</nav>
 
         <div className="flex items-center gap-2">
-          {/* Customer-only cart pill */}
+          {/* Customer-only cart — icon-only takeout-bag for a food-first feel */}
           {!isVendor && (
             <Link
               to="/cart"
-              className="relative inline-flex items-center gap-2 rounded-full bg-foreground px-3.5 py-2 text-sm font-medium text-background transition-transform hover:-translate-y-0.5 sm:px-4"
+              aria-label={cartCount > 0 ? `Cart, ${cartCount} items` : "Cart"}
+              className="relative grid h-10 w-10 place-items-center rounded-full bg-foreground text-background shadow-warm ring-1 ring-black/5 transition-transform hover:-translate-y-0.5 active:translate-y-0"
             >
-              <ShoppingBag className="h-4 w-4" />
-              <span className="hidden sm:inline">Cart</span>
+              <ShoppingBag className="h-5 w-5" strokeWidth={2.25} />
               {cartCount > 0 && (
-                <span className="grid h-5 min-w-5 place-items-center rounded-full bg-primary px-1.5 text-[11px] font-bold text-primary-foreground">
+                <span className="absolute -right-1 -top-1 grid h-5 min-w-5 place-items-center rounded-full bg-primary px-1.5 text-[10px] font-bold text-primary-foreground ring-2 ring-background">
                   {cartCount}
                 </span>
               )}
             </Link>
           )}
 
-          {/* Profile + Sign out (desktop) */}
+          {/* Account (desktop) — single click, dropdown reveals red Sign out */}
           {role ? (
-            <div className="hidden items-center gap-2 md:flex">
-              <ProfileChip name={profileName} isVendor={isVendor} />
-              <button
-                onClick={handleSignOut}
-                className="inline-flex items-center gap-1.5 rounded-full border border-border bg-card px-3 py-1.5 text-xs font-semibold text-foreground transition-colors hover:bg-secondary"
-              >
-                <LogOut className="h-3.5 w-3.5" /> Sign out
-              </button>
+            <div className="hidden md:block">
+              <AccountDropdown />
             </div>
           ) : (
             <Link
@@ -182,16 +254,10 @@ export function Header() {
       {open && (
         <div className="border-t border-border/60 bg-background/95 backdrop-blur-xl md:hidden">
           <div className="mx-auto max-w-6xl space-y-3 px-4 py-4 sm:px-6">
-            {/* Profile row */}
             {role ? (
-              <div className="flex items-center justify-between gap-3">
-                <ProfileChip name={profileName} isVendor={isVendor} compact />
-                <button
-                  onClick={handleSignOut}
-                  className="inline-flex items-center gap-1.5 rounded-full border border-border bg-card px-3 py-1.5 text-xs font-semibold text-foreground"
-                >
-                  <LogOut className="h-3.5 w-3.5" /> Sign out
-                </button>
+              <div className="flex items-center justify-start gap-3">
+                <AccountDropdown compact />
+                <span className="text-xs text-muted-foreground">Tap your name to sign out</span>
               </div>
             ) : (
               <Link

@@ -17,10 +17,14 @@ function VendorCardLink({
       to="/vendors/$vendorId"
       params={{ vendorId: vendor.id }}
       disabled={!accepting}
-      className={`group relative overflow-hidden rounded-3xl bg-card shadow-card transition-all ${
-        accepting ? "hover:-translate-y-1 hover:shadow-warm" : "opacity-70"
+      className={`group relative block overflow-hidden rounded-3xl border border-border/60 bg-card ring-1 ring-black/5 [box-shadow:0_4px_0_0_rgba(0,0,0,0.04),0_18px_28px_-12px_rgba(60,30,10,0.18),0_2px_6px_rgba(60,30,10,0.06)] transition-all duration-300 ${
+        accepting
+          ? "hover:-translate-y-1.5 hover:[box-shadow:0_6px_0_0_rgba(0,0,0,0.05),0_28px_40px_-14px_rgba(60,30,10,0.28),0_4px_10px_rgba(60,30,10,0.1)] active:translate-y-0"
+          : "opacity-75"
       }`}
     >
+      {/* subtle top sheen for the 3D feel */}
+      <span className="pointer-events-none absolute inset-x-0 top-0 z-10 h-px bg-gradient-to-r from-transparent via-white/70 to-transparent" />
       <div className="relative aspect-[5/3] overflow-hidden">
         <img
           src={vendor.image}

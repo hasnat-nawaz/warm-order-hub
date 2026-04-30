@@ -92,13 +92,23 @@ function OrderDetail() {
               {statusLabel(order.status)}
             </div>
           </div>
-          <p className="mt-1 text-sm text-muted-foreground">
-            Pickup at{" "}
-            <span className="font-semibold text-foreground">{format12(order.pickupTime)}</span> ·{" "}
-            {order.payment}
-          </p>
-          <p className="mt-1 text-xs text-muted-foreground">
-            Placed {placedLabel}
+          {!isCancelled && (
+            <div className="mt-4 flex items-center gap-3 rounded-2xl bg-primary/5 p-3">
+              <div className="grid h-12 w-12 flex-shrink-0 place-items-center rounded-2xl bg-primary text-primary-foreground">
+                <Clock className="h-6 w-6" />
+              </div>
+              <div className="min-w-0">
+                <div className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">
+                  Pickup time
+                </div>
+                <div className="font-display text-2xl font-black leading-tight text-primary sm:text-3xl">
+                  {format12(order.pickupTime)}
+                </div>
+              </div>
+            </div>
+          )}
+          <p className="mt-3 text-xs text-muted-foreground">
+            {order.payment} · Placed {placedLabel}
             {!isCancelled && (
               <>
                 <span aria-hidden="true"> · </span>

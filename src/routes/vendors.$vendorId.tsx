@@ -73,8 +73,17 @@ function VendorPage() {
 
   return (
     <main className="mx-auto max-w-5xl px-4 pb-24 sm:px-6">
-      {/* Banner. Back button is intentionally desktop-only — on phones it
-          previously overlapped the bottom-fixed cart button + first card. */}
+      {/* Sticky back button — stays in view while the user scrolls through
+          the menu so they always have an obvious way out. Uses charcoal/cream
+          to contrast against both the light page and the banner image. */}
+      <Link
+        to="/"
+        aria-label="Back to vendors"
+        className="fixed left-4 top-20 z-40 inline-flex items-center gap-1.5 rounded-full bg-foreground px-3.5 py-2 text-xs font-bold uppercase tracking-wider text-background shadow-warm ring-1 ring-background/40 backdrop-blur transition-transform hover:-translate-y-0.5 sm:left-6 sm:top-24"
+      >
+        <ArrowLeft className="h-3.5 w-3.5" /> Back
+      </Link>
+
       <div className="relative mt-6 overflow-hidden rounded-3xl">
         <img
           src={vendor.image}
@@ -84,12 +93,6 @@ function VendorPage() {
           height={384}
         />
         <div className="absolute inset-0 bg-gradient-to-t from-charcoal/85 to-transparent" />
-        <Link
-          to="/"
-          className="absolute left-4 top-4 hidden items-center gap-1.5 rounded-full bg-background/90 px-3 py-1.5 text-xs font-semibold backdrop-blur sm:inline-flex"
-        >
-          <ArrowLeft className="h-3.5 w-3.5" /> Back
-        </Link>
         <div className="absolute right-4 top-4">
           {accepting ? (
             <span className="rounded-full bg-primary px-2.5 py-1 text-[10px] font-bold uppercase tracking-wider text-primary-foreground shadow-warm">

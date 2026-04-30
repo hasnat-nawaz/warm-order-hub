@@ -62,7 +62,10 @@ function CartPage() {
     if (!value) return;
     setEdited(true);
     if (compareTime24(value, suggested) < 0) {
-      // Keep the validation, but silent — just snap back to the suggestion.
+      // Loudly tell the user why we can't accept that time, then snap.
+      toast.error("That time is too soon", {
+        description: `The earliest pickup right now is ${format12(suggested)}. Please pick that time or later.`,
+      });
       setPickup(suggested);
       return;
     }
@@ -145,7 +148,7 @@ function CartPage() {
         </p>
       )}
 
-      <div className="mt-8 space-y-3">
+      <div className="mt-8 space-y-4">
         <AnimatePresence initial={false}>
           {cart.map((line) => {
             const item = liveMenu.find((m) => m.id === line.itemId);
@@ -158,44 +161,46 @@ function CartPage() {
                 animate={{ opacity: 1, y: 0 }}
                 exit={{ opacity: 0, x: 20 }}
                 transition={{ duration: 0.2 }}
-                className="flex flex-wrap items-center gap-3 rounded-2xl border border-border bg-card p-3 sm:gap-4"
+                className="flex flex-wrap items-center gap-4 rounded-3xl border border-border bg-card p-4 shadow-card sm:gap-5 sm:p-5"
               >
                 <img
                   src={item.image}
                   alt={item.name}
-                  className="h-16 w-16 flex-shrink-0 rounded-xl object-cover"
+                  className="h-24 w-24 flex-shrink-0 rounded-2xl object-cover sm:h-28 sm:w-28"
                   loading="lazy"
-                  width={64}
-                  height={64}
+                  width={112}
+                  height={112}
                 />
                 <div className="min-w-0 flex-1">
-                  <div className="font-semibold">{item.name}</div>
-                  <div className="text-sm text-muted-foreground">Rs. {item.price}</div>
+                  <div className="font-display text-lg font-bold sm:text-xl">{item.name}</div>
+                  <div className="mt-0.5 text-sm text-muted-foreground">
+                    Rs. {item.price} <span className="opacity-60">each</span>
+                  </div>
                 </div>
-                <div className="flex items-center rounded-full border border-border">
+                <div className="flex items-center rounded-full border border-border bg-background">
                   <button
                     onClick={() => setQty(line.itemId, line.qty - 1)}
                     aria-label="Decrease quantity"
-                    className="grid h-8 w-8 place-items-center"
+                    className="grid h-10 w-10 place-items-center transition-colors hover:bg-muted"
                   >
-                    <Minus className="h-3.5 w-3.5" />
+                    <Minus className="h-4 w-4" />
                   </button>
-                  <span className="w-6 text-center text-sm font-bold">{line.qty}</span>
+                  <span className="w-8 text-center text-base font-bold">{line.qty}</span>
                   <button
                     onClick={() => setQty(line.itemId, line.qty + 1)}
                     aria-label="Increase quantity"
-                    className="grid h-8 w-8 place-items-center"
+                    className="grid h-10 w-10 place-items-center transition-colors hover:bg-muted"
                   >
-                    <Plus className="h-3.5 w-3.5" />
+                    <Plus className="h-4 w-4" />
                   </button>
                 </div>
-                <div className="ml-auto w-20 text-right font-display font-bold sm:ml-0">
+                <div className="ml-auto w-24 text-right font-display text-lg font-bold sm:ml-0 sm:text-xl">
                   Rs. {item.price * line.qty}
                 </div>
                 <button
                   onClick={() => removeFromCart(line.itemId)}
                   aria-label="Remove from cart"
-                  className="text-muted-foreground hover:text-destructive"
+                  className="grid h-10 w-10 place-items-center rounded-full text-muted-foreground transition-colors hover:bg-destructive/10 hover:text-destructive"
                 >
                   <Trash2 className="h-4 w-4" />
                 </button>
@@ -208,10 +213,16 @@ function CartPage() {
       <div className="mt-8 grid gap-4 md:grid-cols-2">
         {/* Pickup time */}
         <div className="rounded-2xl border border-border bg-card p-5">
-          <div className="text-sm font-bold">Pickup time</div>
-          <div className="mt-1 text-xs text-muted-foreground">
-            Currently set to{" "}
-            <span className="font-semibold text-foreground">{format12(pickup)}</span>
+          <div className="flex items-center gap-2 text-sm font-bold">
+            <Calendar className="h-4 w-4 text-primary" /> Pickup time
+          </div>
+          <div className="mt-3 rounded-2xl bg-primary/5 px-4 py-3 text-center">
+            <div className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">
+              Pickup at
+            </div>
+            <div className="mt-0.5 font-display text-3xl font-black text-primary sm:text-4xl">
+              {format12(pickup)}
+            </div>
           </div>
 
           <button
@@ -219,7 +230,6 @@ function CartPage() {
             onClick={openPicker}
             className="mt-3 inline-flex w-full items-center justify-center gap-2 rounded-full border border-input bg-background px-4 py-3 text-sm font-bold text-foreground transition-colors hover:border-primary"
           >
-            <Calendar className="h-4 w-4 text-primary" />
             {edited ? "Change time" : "Select time"}
           </button>
 

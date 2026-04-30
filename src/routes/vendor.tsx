@@ -12,10 +12,18 @@ import {
   Wallet,
   X,
 } from "lucide-react";
-import { useMemo } from "react";
+import { useMemo, useState } from "react";
 import { toast } from "sonner";
 import { motion, AnimatePresence } from "framer-motion";
 import { statusPillClasses, statusDotClasses, statusLabel } from "@/lib/orderStatus";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 
 export const Route = createFileRoute("/vendor")({
   head: () => ({ meta: [{ title: "Vendor Console — Campus Dhaba" }] }),
@@ -53,6 +61,7 @@ function VendorDashboard() {
     () => (vendorLogin ? orders.filter((o) => o.vendorId === vendorLogin) : []),
     [orders, vendorLogin],
   );
+  const [confirmToggle, setConfirmToggle] = useState(false);
 
   if (role !== "vendor" || !vendorLogin) {
     return (
@@ -111,28 +120,71 @@ function VendorDashboard() {
   return (
     <main className="mx-auto max-w-6xl px-4 py-8 sm:px-6 sm:py-10">
       <div className="flex flex-wrap items-end justify-between gap-4">
-        <div>
-          <div className="flex items-center gap-2 text-xs font-bold uppercase tracking-wider text-primary">
-            <ChefHat className="h-4 w-4" /> {vendor.name}
-          </div>
-          <h1 className="mt-1 font-display text-3xl font-bold sm:text-4xl">Vendor dashboard</h1>
-          <p className="mt-1 text-sm text-muted-foreground">
+        <div className="min-w-0">
+          <h1 className="flex flex-wrap items-center gap-3 font-display text-3xl font-bold sm:text-4xl">
+            <span>Welcome,</span>
+            <span className="inline-flex items-center gap-2.5">
+              <span className="grid h-10 w-10 flex-shrink-0 place-items-center rounded-full bg-primary text-primary-foreground sm:h-12 sm:w-12">
+                <ChefHat className="h-5 w-5 sm:h-6 sm:w-6" />
+              </span>
+              <span className="text-primary">{vendor.name}</span>
+            </span>
+          </h1>
+          <p className="mt-2 text-sm text-muted-foreground">
             Accept, prepare, and track every incoming order.
           </p>
         </div>
         <button
-          onClick={() => {
-            toggleVendorAccepting(vendor.id);
-            toast(accepting ? "Closed for new orders" : "Now accepting orders");
-          }}
-          className={`inline-flex items-center gap-2 rounded-full px-4 py-2.5 text-sm font-bold shadow-warm transition-transform hover:-translate-y-0.5 ${
-            accepting ? "bg-success text-success-foreground" : "bg-muted text-muted-foreground"
+          onClick={() => setConfirmToggle(true)}
+          aria-pressed={accepting}
+          className={`relative inline-flex items-center gap-2 overflow-hidden rounded-full px-5 py-3 text-sm font-bold uppercase tracking-wide text-white shadow-warm ring-1 ring-black/10 transition-all hover:-translate-y-0.5 active:translate-y-0 ${
+            accepting
+              ? "bg-gradient-to-b from-emerald-400 to-emerald-600 hover:from-emerald-300 hover:to-emerald-600"
+              : "bg-gradient-to-b from-rose-400 to-rose-600 hover:from-rose-300 hover:to-rose-600"
           }`}
         >
-          <Power className="h-4 w-4" />
-          {accepting ? "Open · Accepting orders" : "Closed · Reopen"}
+          <span className="pointer-events-none absolute inset-x-0 top-0 h-1/2 rounded-t-full bg-white/20" />
+          <Power className="relative h-4 w-4 drop-shadow" />
+          <span className="relative">{accepting ? "Open" : "Closed"}</span>
         </button>
       </div>
+
+      <Dialog open={confirmToggle} onOpenChange={setConfirmToggle}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle className="font-display text-2xl">
+              {accepting ? "Close the dhaba?" : "Reopen the dhaba?"}
+            </DialogTitle>
+            <DialogDescription>
+              {accepting
+                ? "Customers won't be able to place new orders until you reopen. Existing orders won't be affected."
+                : "You'll start receiving new orders again right away. Make sure your kitchen is ready."}
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter className="gap-2 sm:gap-2">
+            <button
+              onClick={() => setConfirmToggle(false)}
+              className="rounded-full border border-border bg-background px-5 py-2.5 text-sm font-bold text-foreground hover:bg-muted"
+            >
+              Cancel
+            </button>
+            <button
+              onClick={() => {
+                toggleVendorAccepting(vendor.id);
+                toast(accepting ? "Closed for new orders" : "Now accepting orders");
+                setConfirmToggle(false);
+              }}
+              className={`rounded-full px-5 py-2.5 text-sm font-bold text-white shadow-warm ${
+                accepting
+                  ? "bg-gradient-to-b from-rose-400 to-rose-600"
+                  : "bg-gradient-to-b from-emerald-400 to-emerald-600"
+              }`}
+            >
+              {accepting ? "Yes, close" : "Yes, reopen"}
+            </button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
 
       {/* Stats — 2x2 on mobile, 4-col on lg */}
       <div className="mt-6 grid grid-cols-2 gap-3 lg:grid-cols-4">
