@@ -40,21 +40,28 @@ const RING: Record<StatusKind, string> = {
 };
 
 /**
- * Customer-facing label. Slightly friendlier copy for "Cancelled" so it
- * doesn't feel sharp.
+ * Base label map (used for non-cancelled states).
  */
-const LABEL: Record<StatusKind, string> = {
+const LABEL: Record<Exclude<StatusKind, "Cancelled">, string> = {
   Pending: "Pending",
   Preparing: "Preparing",
   Ready: "Ready",
   "Picked up": "Picked up",
-  Cancelled: "Not accepted",
 };
 
 export const statusPillClasses = (s: OrderStatus) => PILL[s];
 export const statusDotClasses = (s: OrderStatus) => DOT[s];
 export const statusRingClasses = (s: OrderStatus) => RING[s];
-export const statusLabel = (s: OrderStatus) => LABEL[s];
+export const statusLabel = (
+  s: OrderStatus,
+  opts?: {
+    /** "user" = customer cancelled, "vendor" = vendor rejected */
+    cancellationReason?: "user" | "vendor";
+  },
+) => {
+  if (s !== "Cancelled") return LABEL[s];
+  return opts?.cancellationReason === "user" ? "Cancelled" : "Not accepted";
+};
 
 /**
  * Stages shown in the customer order tracker. Cancelled is rendered

@@ -203,7 +203,7 @@ function OrdersPage() {
                         )}`}
                       >
                         <span className={`h-1.5 w-1.5 rounded-full ${statusDotClasses(o.status)}`} />
-                        {statusLabel(o.status)}
+                        {statusLabel(o.status, { cancellationReason: o.cancellationReason })}
                       </span>
                     </Link>
                     {o.status === "Pending" && (

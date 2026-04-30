@@ -5,6 +5,10 @@ import {
   CheckCircle2,
   ChefHat,
   ClipboardList,
+  CalendarDays,
+  ChevronLeft,
+  ChevronRight,
+  Filter,
   PackageCheck,
   Power,
   Receipt,
@@ -24,6 +28,8 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
+import { Calendar } from "@/components/ui/calendar";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 
 export const Route = createFileRoute("/vendor")({
   head: () => ({ meta: [{ title: "Vendor Console — Campus Dhaba" }] }),
@@ -46,6 +52,11 @@ const NEXT: Partial<Record<OrderStatus, OrderStatus>> = {
   Ready: "Picked up",
 };
 
+const sameDay = (a: Date, b: Date) =>
+  a.getFullYear() === b.getFullYear() &&
+  a.getMonth() === b.getMonth() &&
+  a.getDate() === b.getDate();
+
 function VendorDashboard() {
   const role = useApp((s) => s.role);
   const vendorLogin = useApp((s) => s.vendorLogin);
@@ -62,6 +73,8 @@ function VendorDashboard() {
     [orders, vendorLogin],
   );
   const [confirmToggle, setConfirmToggle] = useState(false);
+  const [filterDate, setFilterDate] = useState<Date | null>(new Date());
+  const [popoverOpen, setPopoverOpen] = useState(false);
 
   if (role !== "vendor" || !vendorLogin) {
     return (
@@ -117,6 +130,37 @@ function VendorDashboard() {
     const r = statusRank[a.status] - statusRank[b.status];
     return r !== 0 ? r : b.placedAt - a.placedAt;
   });
+
+  const orderDates = useMemo(() => {
+    const set = new Set<string>();
+    for (const o of myOrders) {
+      const d = new Date(o.placedAt);
+      set.add(`${d.getFullYear()}-${d.getMonth()}-${d.getDate()}`);
+    }
+    return set;
+  }, [myOrders]);
+
+  const filteredOrders = useMemo(() => {
+    if (!filterDate) return sorted;
+    return sorted.filter((o) => sameDay(new Date(o.placedAt), filterDate));
+  }, [sorted, filterDate]);
+
+  const stepDay = (delta: number) => {
+    const base = filterDate ?? new Date();
+    const next = new Date(base);
+    next.setDate(base.getDate() + delta);
+    setFilterDate(next);
+  };
+
+  const filterLabel = filterDate
+    ? sameDay(filterDate, new Date())
+      ? "Today"
+      : filterDate.toLocaleDateString(undefined, {
+          weekday: "short",
+          month: "short",
+          day: "numeric",
+        })
+    : "All time";
 
   return (
     <main className="mx-auto max-w-6xl px-4 py-8 sm:px-6 sm:py-10">
@@ -216,18 +260,90 @@ function VendorDashboard() {
       </div>
 
       <div className="mt-8">
-        <h2 className="font-display text-2xl font-bold">Live orders</h2>
-        {sorted.length === 0 ? (
+        <h2 className="font-display text-2xl font-bold">Orders</h2>
+        <p className="mt-1 text-sm text-muted-foreground">
+          Filter by day to quickly review what happened on a specific date.
+        </p>
+
+        {/* Filter row (same UI as customer orders page) */}
+        <div className="mt-4 flex flex-wrap items-center gap-2">
+          <button
+            onClick={() => stepDay(-1)}
+            aria-label="Previous day"
+            disabled={!filterDate}
+            className="grid h-10 w-10 place-items-center rounded-full border border-border bg-card text-muted-foreground transition-colors hover:border-primary hover:text-foreground disabled:opacity-50"
+          >
+            <ChevronLeft className="h-4 w-4" />
+          </button>
+
+          <Popover open={popoverOpen} onOpenChange={setPopoverOpen}>
+            <PopoverTrigger asChild>
+              <button className="inline-flex items-center gap-2 rounded-full border border-border bg-card px-4 py-2.5 text-sm font-bold transition-colors hover:border-primary">
+                <CalendarDays className="h-4 w-4 text-primary" />
+                {filterLabel}
+              </button>
+            </PopoverTrigger>
+            <PopoverContent className="w-auto rounded-2xl border-border bg-card p-2" align="start">
+              <Calendar
+                mode="single"
+                selected={filterDate ?? undefined}
+                onSelect={(d) => {
+                  setFilterDate(d ?? null);
+                  setPopoverOpen(false);
+                }}
+                modifiers={{
+                  hasOrders: (date) =>
+                    orderDates.has(`${date.getFullYear()}-${date.getMonth()}-${date.getDate()}`),
+                }}
+                modifiersClassNames={{
+                  hasOrders:
+                    "after:absolute after:bottom-1 after:left-1/2 after:-translate-x-1/2 after:h-1 after:w-1 after:rounded-full after:bg-primary",
+                }}
+              />
+            </PopoverContent>
+          </Popover>
+
+          <button
+            onClick={() => stepDay(1)}
+            aria-label="Next day"
+            disabled={!filterDate}
+            className="grid h-10 w-10 place-items-center rounded-full border border-border bg-card text-muted-foreground transition-colors hover:border-primary hover:text-foreground disabled:opacity-50"
+          >
+            <ChevronRight className="h-4 w-4" />
+          </button>
+
+          <button
+            onClick={() => setFilterDate(filterDate ? null : new Date())}
+            className={`ml-auto inline-flex items-center gap-1.5 rounded-full px-3 py-2 text-xs font-bold transition-colors ${
+              filterDate
+                ? "bg-foreground text-background hover:bg-foreground/90"
+                : "border border-primary bg-primary/10 text-primary"
+            }`}
+          >
+            <Filter className="h-3.5 w-3.5" />
+            {filterDate ? "Show all" : "Today"}
+          </button>
+        </div>
+
+        <div className="mt-2 text-xs text-muted-foreground">
+          Showing <span className="font-bold text-foreground">{filteredOrders.length}</span> order
+          {filteredOrders.length === 1 ? "" : "s"}
+          {filterDate ? " on this day" : " in total"}
+        </div>
+
+        {filteredOrders.length === 0 ? (
           <div className="mt-4 rounded-2xl border border-dashed border-border bg-card p-10 text-center">
             <Receipt className="mx-auto h-8 w-8 text-muted-foreground" />
             <p className="mt-3 text-sm text-muted-foreground">
-              No orders yet. They'll appear here as customers tap order.
+              {myOrders.length === 0
+                ? "No orders yet. They'll appear here as customers place orders."
+                : "No orders for this day. Try a different date."}
             </p>
           </div>
         ) : (
           <div className="mt-4 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
             <AnimatePresence mode="popLayout">
-              {sorted.map((o) => (
+              {filteredOrders.map((o) => (
                 <motion.article
                   key={o.id}
                   layout
@@ -244,7 +360,7 @@ function VendorDashboard() {
                     )}`}
                   >
                     <span className={`h-1.5 w-1.5 rounded-full ${statusDotClasses(o.status)}`} />
-                    {statusLabel(o.status)}
+                    {statusLabel(o.status, { cancellationReason: o.cancellationReason })}
                   </span>
 
                   {/* Header — order #, customer */}
