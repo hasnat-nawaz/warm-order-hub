@@ -8,7 +8,7 @@ import {
   useLiveMenu,
 } from "@/store/useApp";
 import { getVendor } from "@/data/menu";
-import { ArrowLeft, Minus, Plus, Trash2, Calendar, MessageSquare, CreditCard } from "lucide-react";
+import { ArrowLeft, Minus, Plus, Trash2, Calendar, MessageSquare, CreditCard, ChevronDown, Clock } from "lucide-react";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { toast } from "sonner";
 import { useNow } from "@/hooks/use-now";
@@ -25,6 +25,45 @@ export const Route = createFileRoute("/cart")({
   },
   component: CartPage,
 });
+
+function QtyInput({ itemId, qty }: { itemId: string; qty: number }) {
+  const setQty = useApp((s) => s.setQty);
+  const [val, setVal] = useState(qty.toString());
+
+  useEffect(() => {
+    setVal(qty.toString());
+  }, [qty]);
+
+  const commit = () => {
+    const num = parseInt(val, 10);
+    if (!val || isNaN(num) || num < 1) {
+      setVal("1");
+      setQty(itemId, 1);
+    } else {
+      setVal(num.toString());
+      setQty(itemId, num);
+    }
+  };
+
+  return (
+    <input
+      type="text"
+      inputMode="numeric"
+      value={val}
+      onChange={(e) => setVal(e.target.value.replace(/[^0-9]/g, ""))}
+      onBlur={commit}
+      onKeyDown={(e) => {
+        if (e.key === "Enter") {
+          e.preventDefault();
+          e.currentTarget.blur();
+        }
+      }}
+      onFocus={(e) => e.target.select()}
+      aria-label="Item quantity"
+      className="w-12 text-center text-lg font-bold bg-transparent outline-none focus:bg-muted/50 rounded-md"
+    />
+  );
+}
 
 function CartPage() {
   const cart = useApp((s) => s.cart);
@@ -58,17 +97,11 @@ function CartPage() {
   const vendor = cartVendorId ? getVendor(cartVendorId) : null;
   const total = useMemo(() => cartTotal(cart, liveMenu), [cart, liveMenu]);
 
+  const timeInvalid = compareTime24(pickup, suggested) < 0;
+
   const handlePickupChange = (value: string) => {
     if (!value) return;
     setEdited(true);
-    if (compareTime24(value, suggested) < 0) {
-      // Loudly tell the user why we can't accept that time, then snap.
-      toast.error("That time is too soon", {
-        description: `The earliest pickup right now is ${format12(suggested)}. Please pick that time or later.`,
-      });
-      setPickup(suggested);
-      return;
-    }
     setPickup(value);
   };
 
@@ -133,14 +166,14 @@ function CartPage() {
       <Link
         to="/"
         aria-label="Back"
-        className="fixed left-4 top-20 z-40 inline-flex items-center gap-1.5 rounded-full bg-foreground px-3.5 py-2 text-xs font-bold uppercase tracking-wider text-background shadow-warm ring-1 ring-background/40 backdrop-blur transition-transform hover:-translate-y-0.5 sm:left-6 sm:top-24"
+        className="fixed left-2 top-[4.5rem] z-40 inline-flex items-center gap-2 rounded-full bg-foreground px-4 py-2.5 text-sm font-bold uppercase tracking-wider text-background shadow-warm ring-1 ring-background/40 backdrop-blur transition-transform hover:-translate-y-0.5 sm:left-4 sm:top-20"
       >
-        <ArrowLeft className="h-3.5 w-3.5" /> Back
+        <ArrowLeft className="h-4 w-4" /> Back
       </Link>
       <motion.main
-        initial={{ opacity: 0, y: 6 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.25 }}
+        initial={{ opacity: 0, scale: 0.96 }}
+        animate={{ opacity: 1, scale: 1 }}
+        transition={{ duration: 0.3, ease: "easeOut" }}
         className="mx-auto max-w-3xl px-4 py-8 sm:px-6 sm:py-10"
       >
         <h1 className="mt-3 font-display text-3xl font-bold sm:text-4xl">Your cart</h1>
@@ -159,9 +192,9 @@ function CartPage() {
                 <motion.div
                   key={line.itemId}
                   layout
-                  initial={{ opacity: 0, y: 6 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  exit={{ opacity: 0, x: 20 }}
+                  initial={{ opacity: 0, scale: 0.95 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  exit={{ opacity: 0, scale: 0.95 }}
                   transition={{ duration: 0.2 }}
                   className="flex flex-wrap items-center gap-4 rounded-3xl border border-border bg-card p-4 shadow-card sm:gap-5 sm:p-5"
                 >
@@ -183,17 +216,17 @@ function CartPage() {
                     <button
                       onClick={() => setQty(line.itemId, line.qty - 1)}
                       aria-label="Decrease quantity"
-                      className="grid h-10 w-10 place-items-center transition-colors hover:bg-muted"
+                      className="grid h-12 w-12 place-items-center transition-colors hover:bg-muted"
                     >
-                      <Minus className="h-4 w-4" />
+                      <Minus className="h-5 w-5" />
                     </button>
-                    <span className="w-8 text-center text-base font-bold">{line.qty}</span>
+                    <QtyInput itemId={line.itemId} qty={line.qty} />
                     <button
                       onClick={() => setQty(line.itemId, line.qty + 1)}
                       aria-label="Increase quantity"
-                      className="grid h-10 w-10 place-items-center transition-colors hover:bg-muted"
+                      className="grid h-12 w-12 place-items-center transition-colors hover:bg-muted"
                     >
-                      <Plus className="h-4 w-4" />
+                      <Plus className="h-5 w-5" />
                     </button>
                   </div>
                   <div className="ml-auto w-24 text-right font-display text-lg font-bold sm:ml-0 sm:text-xl">
@@ -202,9 +235,9 @@ function CartPage() {
                   <button
                     onClick={() => removeFromCart(line.itemId)}
                     aria-label="Remove from cart"
-                    className="grid h-10 w-10 place-items-center rounded-full text-muted-foreground transition-colors hover:bg-destructive/10 hover:text-destructive"
+                    className="grid h-12 w-12 place-items-center rounded-full text-muted-foreground transition-colors hover:bg-destructive/10 hover:text-destructive"
                   >
-                    <Trash2 className="h-4 w-4" />
+                    <Trash2 className="h-5 w-5" />
                   </button>
                 </motion.div>
               );
@@ -218,21 +251,31 @@ function CartPage() {
             <div className="flex items-center gap-2 text-sm font-bold">
               <Calendar className="h-4 w-4 text-primary" /> Pickup time
             </div>
-            <div className="mt-3 rounded-2xl bg-primary/5 px-4 py-3 text-center">
-              <div className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">
+            <div className={`mt-3 rounded-2xl px-4 py-3 text-center transition-colors ${timeInvalid ? "bg-destructive/10" : "bg-primary/5"}`}>
+              <div className={`text-[10px] font-bold uppercase tracking-widest ${timeInvalid ? "text-destructive/70" : "text-muted-foreground"}`}>
                 Pickup at
               </div>
-              <div className="mt-0.5 font-display text-3xl font-black text-primary sm:text-4xl">
+              <div className={`mt-0.5 font-display text-3xl font-black sm:text-4xl ${timeInvalid ? "text-destructive" : "text-primary"}`}>
                 {format12(pickup)}
               </div>
             </div>
 
+            {timeInvalid && (
+              <p className="mt-3 text-center text-xs font-semibold text-destructive">
+                Must be at or after {format12(suggested)}
+              </p>
+            )}
+
             <button
               type="button"
               onClick={openPicker}
-              className="mt-3 inline-flex w-full items-center justify-center gap-2 rounded-full border border-input bg-background px-4 py-3 text-sm font-bold text-foreground transition-colors hover:border-primary"
+              className="mt-3 inline-flex w-full items-center justify-between rounded-xl border border-input bg-background px-4 py-3 text-sm font-bold text-foreground transition-all hover:border-primary focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20"
             >
-              {edited ? "Change time" : "Select time"}
+              <span className="flex items-center gap-2">
+                <Clock className="h-4 w-4 text-muted-foreground" />
+                {edited ? "Change time" : "Select pickup time"}
+              </span>
+              <ChevronDown className="h-4 w-4 text-muted-foreground transition-transform" />
             </button>
 
             {/* Native input is kept off-screen but accessible — supplies the
@@ -309,7 +352,8 @@ function CartPage() {
             </div>
             <button
               onClick={handlePlace}
-              className="rounded-full bg-primary px-6 py-3 text-sm font-bold text-primary-foreground shadow-warm transition-transform hover:-translate-y-0.5"
+              disabled={timeInvalid}
+              className="rounded-full bg-primary px-6 py-3 text-sm font-bold text-primary-foreground shadow-warm transition-all hover:-translate-y-0.5 disabled:cursor-not-allowed disabled:bg-muted disabled:text-muted-foreground disabled:shadow-none disabled:hover:translate-y-0"
             >
               Confirm Order →
             </button>

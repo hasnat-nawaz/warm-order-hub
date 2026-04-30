@@ -9,7 +9,15 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import { ImagePlus, Pencil, Plus, Trash2, X, ChefHat, ListChecks } from "lucide-react";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
+import { ImagePlus, Pencil, Plus, Trash2, X, ChefHat, ListChecks, AlertTriangle } from "lucide-react";
 import { useMemo, useRef, useState } from "react";
 import { toast } from "sonner";
 import { motion } from "framer-motion";
@@ -96,9 +104,10 @@ function ManagePage() {
           return (
             <motion.article
               key={cat}
-              initial={{ opacity: 0, y: 8 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.25, delay: i * 0.04 }}
+              initial={{ opacity: 0, scale: 0.95 }}
+              animate={{ opacity: 1, scale: 1 }}
+              transition={{ duration: 0.3, delay: i * 0.08, ease: "easeOut" }}
+              style={{ willChange: "transform, opacity" }}
               className="group flex flex-col overflow-hidden rounded-3xl border border-border bg-card shadow-card"
             >
               <div className="relative aspect-[5/3] overflow-hidden">
@@ -198,6 +207,7 @@ function EditCategoryDialog({
   const updateMenuItem = useApp((s) => s.updateMenuItem);
   const deleteMenuItem = useApp((s) => s.deleteMenuItem);
   const [editingId, setEditingId] = useState<string | null>(null);
+  const [deletingId, setDeletingId] = useState<string | null>(null);
   const items = category
     ? liveMenu.filter((m) => m.vendorId === vendorId && m.category === category)
     : [];
@@ -246,39 +256,63 @@ function EditCategoryDialog({
                 </div>
                 <button
                   onClick={() => setEditingId(it.id)}
-                  className="rounded-full border border-border px-3 py-1.5 text-xs font-bold hover:border-primary"
+                  className="rounded-full border border-border px-4 py-2 text-sm font-bold hover:border-primary"
                 >
                   Edit
                 </button>
                 <button
-                  onClick={() => {
-                    deleteMenuItem(it.id);
-                    toast.info(`${it.name} removed`);
-                  }}
+                  onClick={() => setDeletingId(it.id)}
                   aria-label="Remove item"
-                  className="rounded-full border border-border p-1.5 text-muted-foreground hover:border-destructive hover:text-destructive"
+                  className="rounded-full border border-border p-2.5 text-muted-foreground transition-colors hover:border-destructive hover:bg-destructive/10 hover:text-destructive"
                 >
-                  <Trash2 className="h-3.5 w-3.5" />
+                  <Trash2 className="h-4 w-4" />
                 </button>
               </div>
             ),
           )}
         </div>
 
-        <DialogFooter className="mt-4 gap-2 sm:gap-2">
+        <DialogFooter className="mt-4 gap-3 sm:gap-3">
           <button
             onClick={() => category && onAddNew(category)}
-            className="inline-flex items-center justify-center gap-1.5 rounded-full border border-border bg-card px-4 py-2 text-xs font-bold hover:border-primary"
+            className="inline-flex items-center justify-center gap-1.5 rounded-full border border-border bg-card px-5 py-2.5 text-sm font-bold hover:border-primary"
           >
-            <Plus className="h-3.5 w-3.5" /> Add item to {category}
+            <Plus className="h-4 w-4" /> Add item to {category}
           </button>
           <button
             onClick={onClose}
-            className="inline-flex items-center justify-center rounded-full bg-foreground px-4 py-2 text-xs font-bold text-background hover:bg-foreground/90"
+            className="inline-flex items-center justify-center rounded-full bg-foreground px-5 py-2.5 text-sm font-bold text-background hover:bg-foreground/90"
           >
             Done
           </button>
         </DialogFooter>
+
+        <AlertDialog open={deletingId !== null} onOpenChange={(v) => !v && setDeletingId(null)}>
+          <AlertDialogContent className="max-w-sm">
+            <AlertDialogTitle className="flex items-center gap-3">
+              <AlertTriangle className="h-5 w-5 text-destructive" />
+              Delete item?
+            </AlertDialogTitle>
+            <AlertDialogDescription>
+              Are you sure you want to delete this menu item? This action cannot be undone.
+            </AlertDialogDescription>
+            <div className="flex gap-3 justify-end pt-4">
+              <AlertDialogCancel className="rounded-full">Cancel</AlertDialogCancel>
+              <AlertDialogAction
+                onClick={() => {
+                  if (deletingId) {
+                    deleteMenuItem(deletingId);
+                    toast.info("Item removed");
+                  }
+                  setDeletingId(null);
+                }}
+                className="rounded-full bg-destructive text-destructive-foreground hover:bg-destructive/90"
+              >
+                Delete
+              </AlertDialogAction>
+            </div>
+          </AlertDialogContent>
+        </AlertDialog>
       </DialogContent>
     </Dialog>
   );
@@ -306,7 +340,18 @@ function ItemEditor({
   };
 
   return (
-    <div className="rounded-2xl border border-primary/40 bg-primary/5 p-3">
+    <form
+      onSubmit={(e) => {
+        e.preventDefault();
+        const p = parseInt(price, 10);
+        if (!name.trim() || !p) {
+          toast.error("Name and price are required.");
+          return;
+        }
+        onSave({ name: name.trim(), price: p, description: description.trim(), image });
+      }}
+      className="rounded-2xl border border-primary/40 bg-primary/5 p-3"
+    >
       <div className="flex gap-3">
         <button
           type="button"
@@ -350,28 +395,22 @@ function ItemEditor({
           </div>
         </div>
       </div>
-      <div className="mt-3 flex justify-end gap-2">
+      <div className="mt-4 flex justify-end gap-3">
         <button
+          type="button"
           onClick={onCancel}
-          className="rounded-full border border-border px-3 py-1.5 text-xs font-bold"
+          className="rounded-full border border-border px-5 py-2 text-sm font-bold"
         >
           Cancel
         </button>
         <button
-          onClick={() => {
-            const p = parseInt(price, 10);
-            if (!name.trim() || !p) {
-              toast.error("Name and price are required.");
-              return;
-            }
-            onSave({ name: name.trim(), price: p, description: description.trim(), image });
-          }}
-          className="rounded-full bg-primary px-4 py-1.5 text-xs font-bold text-primary-foreground"
+          type="submit"
+          className="rounded-full bg-primary px-6 py-2 text-sm font-bold text-primary-foreground"
         >
           Save
         </button>
       </div>
-    </div>
+    </form>
   );
 }
 
@@ -440,7 +479,13 @@ function AddItemDialog({
       }}
     >
       <DialogContent className="rounded-3xl border border-border bg-card p-6 sm:max-w-md">
-        <DialogHeader>
+        <form
+          onSubmit={(e) => {
+            e.preventDefault();
+            submit();
+          }}
+        >
+          <DialogHeader>
           <DialogTitle className="font-display text-2xl">
             Add item {category && <span className="text-primary">to {category}</span>}
           </DialogTitle>
@@ -501,23 +546,25 @@ function AddItemDialog({
           />
         </div>
 
-        <DialogFooter className="mt-4 gap-2 sm:gap-2">
+        <DialogFooter className="mt-4 gap-3 sm:gap-3">
           <button
+            type="button"
             onClick={() => {
               reset();
               onClose();
             }}
-            className="inline-flex items-center justify-center gap-1 rounded-full border border-border bg-card px-4 py-2 text-xs font-bold"
+            className="inline-flex items-center justify-center gap-1.5 rounded-full border border-border bg-card px-5 py-2.5 text-sm font-bold"
           >
-            <X className="h-3.5 w-3.5" /> Cancel
+            <X className="h-4 w-4" /> Cancel
           </button>
           <button
-            onClick={submit}
-            className="inline-flex items-center justify-center gap-1 rounded-full bg-primary px-5 py-2 text-xs font-bold text-primary-foreground shadow-warm"
+            type="submit"
+            className="inline-flex items-center justify-center gap-1.5 rounded-full bg-primary px-6 py-2.5 text-sm font-bold text-primary-foreground shadow-warm"
           >
-            <ListChecks className="h-3.5 w-3.5" /> Add item
+            <ListChecks className="h-4 w-4" /> Add item
           </button>
         </DialogFooter>
+        </form>
       </DialogContent>
     </Dialog>
   );

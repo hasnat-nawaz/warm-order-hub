@@ -93,9 +93,9 @@ function QuickOrderPage() {
         <ArrowLeft className="h-3.5 w-3.5" /> Back
       </Link>
       <motion.main
-        initial={{ opacity: 0, y: 6 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.25 }}
+        initial={{ opacity: 0, scale: 0.96 }}
+        animate={{ opacity: 1, scale: 1 }}
+        transition={{ duration: 0.3, ease: "easeOut" }}
         className="mx-auto max-w-3xl px-4 py-8 sm:px-6 sm:py-10"
       >
         <div className="mt-3 flex items-center gap-3">
@@ -114,7 +114,7 @@ function QuickOrderPage() {
 
         {/* Repeat last order */}
         {lastOrder && lastVendor && (
-          <section className="mt-8 overflow-hidden rounded-3xl bg-gradient-warm p-[1.5px] shadow-warm">
+          <section className="group mt-8 overflow-hidden rounded-3xl bg-gradient-warm p-[1.5px] shadow-warm transition-all hover:-translate-y-0.5 hover:shadow-lg">
             <div className="rounded-[calc(1.5rem-1px)] bg-card p-5 sm:p-6">
               <div className="flex items-center gap-2 text-xs font-bold uppercase tracking-wider text-primary">
                 <Repeat className="h-3.5 w-3.5" /> Repeat last order
@@ -137,9 +137,9 @@ function QuickOrderPage() {
                 </div>
                 <button
                   onClick={() => sendToCheckout(lastOrder.lines)}
-                  className="rounded-full bg-primary px-5 py-2.5 text-sm font-bold text-primary-foreground transition-transform hover:-translate-y-0.5"
+                  className="rounded-full bg-primary px-5 py-2.5 text-sm font-bold text-primary-foreground shadow-sm transition-colors hover:bg-primary/90"
                 >
-                  Reorder →
+                  Reorder <span className="inline-block transition-transform group-hover:translate-x-1">→</span>
                 </button>
               </div>
             </div>
@@ -167,7 +167,9 @@ function QuickOrderPage() {
                 <motion.div
                   key={id}
                   layout
-                  className="flex flex-wrap items-center gap-4 rounded-3xl border border-border bg-card p-4 shadow-card sm:gap-5 sm:p-5"
+                  className={`flex flex-wrap items-center gap-4 rounded-3xl border border-border bg-card p-4 shadow-card transition-all sm:gap-5 sm:p-5 ${
+                    open ? "group hover:-translate-y-0.5 hover:border-primary/40 hover:shadow-md" : ""
+                  }`}
                 >
                   <img
                     src={item.image}
@@ -196,9 +198,9 @@ function QuickOrderPage() {
                   <button
                     onClick={() => sendToCheckout([{ itemId: id, qty: 1 }])}
                     disabled={!open}
-                    className="rounded-full bg-foreground px-4 py-2.5 text-xs font-bold text-background hover:bg-foreground/90 disabled:cursor-not-allowed disabled:opacity-50"
+                    className="rounded-full border border-primary/30 bg-primary/5 px-4 py-2.5 text-xs font-bold text-primary transition-colors group-hover:bg-primary group-hover:text-primary-foreground disabled:cursor-not-allowed disabled:border-muted disabled:bg-muted/10 disabled:text-muted-foreground"
                   >
-                    {open ? "Tap to order" : "Closed"}
+                    {open ? "Order now" : "Closed"}
                   </button>
                 </motion.div>
               );

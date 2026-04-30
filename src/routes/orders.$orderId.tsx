@@ -67,9 +67,9 @@ function OrderDetail() {
         <ArrowLeft className="h-3.5 w-3.5" /> All orders
       </Link>
       <motion.main
-        initial={{ opacity: 0, y: 6 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.25 }}
+        initial={{ opacity: 0, scale: 0.96 }}
+        animate={{ opacity: 1, scale: 1 }}
+        transition={{ duration: 0.3, ease: "easeOut" }}
         className="mx-auto max-w-2xl px-4 py-8 sm:px-6 sm:py-10"
       >
         <div

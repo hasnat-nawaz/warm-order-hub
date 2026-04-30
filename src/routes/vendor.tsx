@@ -15,19 +15,20 @@ import {
   StickyNote,
   Wallet,
   X,
+  AlertTriangle,
 } from "lucide-react";
 import { useMemo, useState } from "react";
 import { toast } from "sonner";
 import { motion, AnimatePresence } from "framer-motion";
 import { statusPillClasses, statusDotClasses, statusLabel } from "@/lib/orderStatus";
 import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import { Calendar } from "@/components/ui/calendar";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 
@@ -169,14 +170,11 @@ function VendorDashboard() {
     <main className="mx-auto max-w-6xl px-4 py-8 sm:px-6 sm:py-10">
       <div className="flex flex-wrap items-end justify-between gap-4">
         <div className="min-w-0">
-          <h1 className="flex flex-wrap items-center gap-3 font-display text-3xl font-bold sm:text-4xl">
-            <span>Welcome,</span>
-            <span className="inline-flex items-center gap-2.5">
-              <span className="grid h-10 w-10 flex-shrink-0 place-items-center rounded-full bg-primary text-primary-foreground sm:h-12 sm:w-12">
-                <ChefHat className="h-5 w-5 sm:h-6 sm:w-6" />
-              </span>
-              <span className="text-primary">{vendor.name}</span>
+          <h1 className="flex flex-wrap items-center gap-3 font-display text-3xl font-bold text-primary sm:text-4xl">
+            <span className="grid h-10 w-10 flex-shrink-0 place-items-center rounded-full bg-primary text-primary-foreground sm:h-12 sm:w-12">
+              <ChefHat className="h-5 w-5 sm:h-6 sm:w-6" />
             </span>
+            {vendor.name}
           </h1>
           <p className="mt-2 text-sm text-muted-foreground">
             Accept, prepare, and track every incoming order.
@@ -185,54 +183,47 @@ function VendorDashboard() {
         <button
           onClick={() => setConfirmToggle(true)}
           aria-pressed={accepting}
-          className={`relative inline-flex items-center gap-2 overflow-hidden rounded-full px-5 py-3 text-sm font-bold uppercase tracking-wide text-white shadow-warm ring-1 ring-black/10 transition-all hover:-translate-y-0.5 active:translate-y-0 ${
+          className={`inline-flex items-center gap-2 rounded-full px-5 py-3 text-sm font-bold uppercase tracking-wide transition-all hover:-translate-y-0.5 active:translate-y-0 ${
             accepting
-              ? "bg-gradient-to-b from-emerald-400 to-emerald-600 hover:from-emerald-300 hover:to-emerald-600"
-              : "bg-gradient-to-b from-rose-400 to-rose-600 hover:from-rose-300 hover:to-rose-600"
+              ? "bg-primary text-primary-foreground shadow-warm hover:bg-primary/90"
+              : "border border-primary bg-secondary/30 text-muted-foreground hover:bg-secondary/50"
           }`}
         >
-          <span className="pointer-events-none absolute inset-x-0 top-0 h-1/2 rounded-t-full bg-white/20" />
-          <Power className="relative h-4 w-4 drop-shadow" />
-          <span className="relative">{accepting ? "Open" : "Closed"}</span>
+          <Power className={`h-4 w-4 ${accepting ? "" : "text-primary"}`} />
+          <span>{accepting ? "Open" : "Closed"}</span>
         </button>
       </div>
 
-      <Dialog open={confirmToggle} onOpenChange={setConfirmToggle}>
-        <DialogContent className="max-w-md">
-          <DialogHeader>
-            <DialogTitle className="font-display text-2xl">
-              {accepting ? "Close the dhaba?" : "Reopen the dhaba?"}
-            </DialogTitle>
-            <DialogDescription>
-              {accepting
-                ? "Customers won't be able to place new orders until you reopen. Existing orders won't be affected."
-                : "You'll start receiving new orders again right away. Make sure your kitchen is ready."}
-            </DialogDescription>
-          </DialogHeader>
-          <DialogFooter className="gap-2 sm:gap-2">
-            <button
-              onClick={() => setConfirmToggle(false)}
-              className="rounded-full border border-border bg-background px-5 py-2.5 text-sm font-bold text-foreground hover:bg-muted"
-            >
-              Cancel
-            </button>
-            <button
+      <AlertDialog open={confirmToggle} onOpenChange={setConfirmToggle}>
+        <AlertDialogContent className="max-w-sm">
+          <AlertDialogTitle className="flex items-center gap-3">
+            <AlertTriangle className={`h-5 w-5 ${accepting ? "text-destructive" : "text-primary"}`} />
+            {accepting ? "Close the dhaba?" : "Reopen the dhaba?"}
+          </AlertDialogTitle>
+          <AlertDialogDescription>
+            {accepting
+              ? "Customers won't be able to place new orders until you reopen. Existing orders won't be affected."
+              : "You'll start receiving new orders again right away. Make sure your kitchen is ready."}
+          </AlertDialogDescription>
+          <div className="flex gap-3 justify-end pt-4">
+            <AlertDialogCancel className="rounded-full">Cancel</AlertDialogCancel>
+            <AlertDialogAction
               onClick={() => {
                 toggleVendorAccepting(vendor.id);
                 toast(accepting ? "Closed for new orders" : "Now accepting orders");
                 setConfirmToggle(false);
               }}
-              className={`rounded-full px-5 py-2.5 text-sm font-bold text-white shadow-warm ${
+              className={`rounded-full ${
                 accepting
-                  ? "bg-gradient-to-b from-rose-400 to-rose-600"
-                  : "bg-gradient-to-b from-emerald-400 to-emerald-600"
+                  ? "bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                  : "bg-primary text-primary-foreground hover:bg-primary/90"
               }`}
             >
               {accepting ? "Yes, close" : "Yes, reopen"}
-            </button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+            </AlertDialogAction>
+          </div>
+        </AlertDialogContent>
+      </AlertDialog>
 
       {/* Stats — 2x2 on mobile, 4-col on lg */}
       <div className="mt-6 grid grid-cols-2 gap-3 lg:grid-cols-4">
@@ -350,10 +341,10 @@ function VendorDashboard() {
                 <motion.article
                   key={o.id}
                   layout
-                  initial={{ opacity: 0, y: 8, scale: 0.98 }}
-                  animate={{ opacity: 1, y: 0, scale: 1 }}
+                  initial={{ opacity: 0, scale: 0.95 }}
+                  animate={{ opacity: 1, scale: 1 }}
                   exit={{ opacity: 0, scale: 0.95 }}
-                  transition={{ duration: 0.22 }}
+                  transition={{ duration: 0.3, ease: "easeOut" }}
                   className="relative flex flex-col gap-3 rounded-3xl border border-border bg-card p-5 shadow-card"
                 >
                   {/* Status pill — top right */}

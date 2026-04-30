@@ -1,7 +1,7 @@
 import { createFileRoute, Link, redirect, useNavigate } from "@tanstack/react-router";
 import { CATEGORIES, CATEGORY_IMAGES, getVendor, type Category } from "@/data/menu";
 import { useApp, useLiveMenu } from "@/store/useApp";
-import { ArrowLeft, Clock, MapPin, Minus, Plus, Star } from "lucide-react";
+import { ArrowLeft, Clock, MapPin, Minus, Plus, Star, Check } from "lucide-react";
 import { useMemo, useState } from "react";
 import { toast } from "sonner";
 import { motion } from "framer-motion";
@@ -32,6 +32,7 @@ function VendorPage() {
   const vendorAccepting = useApp((s) => s.vendorAccepting);
   const navigate = useNavigate();
   const [qtys, setQtys] = useState<Record<string, number>>({});
+  const [addingItem, setAddingItem] = useState<string | null>(null);
 
   if (!vendor) return <div className="p-10">Vendor not found.</div>;
 
@@ -62,6 +63,8 @@ function VendorPage() {
       return;
     }
     toast.success(`Added ${qty}× ${item.name}`);
+    setAddingItem(itemId);
+    setTimeout(() => setAddingItem(null), 1000);
   };
 
   // Only show categories that this vendor actually has items in.
@@ -92,7 +95,7 @@ function VendorPage() {
           width={1024}
           height={384}
         />
-        <div className="absolute inset-0 bg-gradient-to-t from-charcoal/85 to-transparent" />
+        <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/40 to-transparent" />
         <div className="absolute right-4 top-4">
           {accepting ? (
             <span className="rounded-full bg-primary px-2.5 py-1 text-[10px] font-bold uppercase tracking-wider text-primary-foreground shadow-warm">
@@ -159,9 +162,9 @@ function VendorPage() {
                 <motion.a
                   key={cat}
                   href={`#${sectionId(cat)}`}
-                  initial={{ opacity: 0, y: 8 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ duration: 0.25, delay: i * 0.04 }}
+                  initial={{ opacity: 0, scale: 0.95 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  transition={{ duration: 0.3, delay: i * 0.04, ease: "easeOut" }}
                   whileTap={{ scale: 0.97 }}
                   className="group relative overflow-hidden rounded-3xl bg-card shadow-card transition-all hover:-translate-y-0.5 hover:shadow-warm"
                 >
@@ -172,7 +175,7 @@ function VendorPage() {
                       className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105"
                       loading="lazy"
                     />
-                    <div className="absolute inset-0 bg-gradient-to-t from-charcoal/85 via-charcoal/10 to-transparent" />
+                    <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/30 to-transparent" />
                     <div className="absolute bottom-3 left-4 text-cream">
                       <h3 className="font-display text-2xl font-black">{cat}</h3>
                       <p className="text-xs opacity-90">
@@ -199,9 +202,9 @@ function VendorPage() {
                 return (
                   <motion.article
                     key={item.id}
-                    initial={{ opacity: 0, y: 6 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ duration: 0.2 }}
+                    initial={{ opacity: 0, scale: 0.95 }}
+                    animate={{ opacity: 1, scale: 1 }}
+                    transition={{ duration: 0.3, ease: "easeOut" }}
                     className="flex flex-col gap-4 rounded-2xl border border-border bg-card p-4 transition-shadow hover:shadow-card sm:flex-row"
                   >
                     <img
@@ -241,10 +244,21 @@ function VendorPage() {
                           </div>
                           <button
                             onClick={() => handleAdd(item.id)}
-                            disabled={!accepting}
-                            className="rounded-full bg-foreground px-4 py-2 text-xs font-bold text-background hover:bg-foreground/90 disabled:cursor-not-allowed disabled:opacity-50"
+                            disabled={!accepting || addingItem === item.id}
+                            className="flex items-center justify-center min-w-[60px] rounded-full bg-foreground px-4 py-2 text-xs font-bold text-background transition-colors hover:bg-foreground/90 disabled:cursor-not-allowed disabled:bg-primary disabled:text-primary-foreground"
                           >
-                            {accepting ? "Add" : "Closed"}
+                            {addingItem === item.id ? (
+                              <motion.div
+                                initial={{ scale: 0.5, opacity: 0 }}
+                                animate={{ scale: 1, opacity: 1 }}
+                              >
+                                <Check className="h-4 w-4" />
+                              </motion.div>
+                            ) : accepting ? (
+                              "Add"
+                            ) : (
+                              "Closed"
+                            )}
                           </button>
                         </div>
                       </div>

@@ -79,9 +79,9 @@ function OrdersPage() {
         <ArrowLeft className="h-3.5 w-3.5" /> Back
       </Link>
       <motion.main
-        initial={{ opacity: 0, y: 6 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.25 }}
+        initial={{ opacity: 0, scale: 0.96 }}
+        animate={{ opacity: 1, scale: 1 }}
+        transition={{ duration: 0.3, ease: "easeOut" }}
         className="mx-auto max-w-3xl px-4 py-8 sm:px-6 sm:py-10"
       >
         <h1 className="mt-3 font-display text-3xl font-bold sm:text-4xl">My orders</h1>
@@ -171,9 +171,9 @@ function OrdersPage() {
                   <motion.div
                     key={o.id}
                     layout
-                    initial={{ opacity: 0, y: 6 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    exit={{ opacity: 0 }}
+                    initial={{ opacity: 0, scale: 0.95 }}
+                    animate={{ opacity: 1, scale: 1 }}
+                    exit={{ opacity: 0, scale: 0.95 }}
                     transition={{ duration: 0.2 }}
                   >
                     <div className="rounded-2xl border border-border bg-card transition-shadow hover:shadow-card">

@@ -1,9 +1,10 @@
-import { createFileRoute, Link } from "@tanstack/react-router";
+import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { vendors } from "@/data/menu";
 import { useApp, useLiveMenu } from "@/store/useApp";
 import { ArrowRight, Clock, MapPin, Star, Zap } from "lucide-react";
 import heroImg from "@/assets/hero.jpg";
 import { motion } from "framer-motion";
+import { toast } from "sonner";
 
 function VendorCardLink({
   vendor,
@@ -34,7 +35,7 @@ function VendorCardLink({
           width={1024}
           height={640}
         />
-        <div className="absolute inset-0 bg-gradient-to-t from-charcoal/80 via-transparent to-transparent" />
+        <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/30 to-transparent" />
         <div className="absolute top-3 right-3">
           {accepting ? (
             <span className="rounded-full bg-background/90 px-2.5 py-1 text-[10px] font-bold uppercase tracking-wider text-primary backdrop-blur">
@@ -60,6 +61,9 @@ function VendorCardLink({
           <span className="inline-flex items-center gap-1">
             <Clock className="h-3.5 w-3.5" /> {vendor.prepTime}
           </span>
+        </div>
+        <div className="mt-4 flex items-center text-sm font-bold text-primary opacity-90 transition-opacity group-hover:opacity-100">
+          View menu <ArrowRight className="ml-1 h-4 w-4 transition-transform group-hover:translate-x-1" />
         </div>
       </div>
     </Link>
@@ -87,6 +91,34 @@ function HomePage() {
     .map((id) => liveMenu.find((m) => m.id === id))
     .filter(Boolean)
     .slice(0, 3);
+
+  const role = useApp((s) => s.role);
+  const addToCart = useApp((s) => s.addToCart);
+  const clearCart = useApp((s) => s.clearCart);
+  const navigate = useNavigate();
+
+  const handleQuickOrder = (itemId: string, vendorId: string) => {
+    if (!role) {
+      toast.message("Please sign in to place an order.");
+      navigate({ to: "/login", search: { redirect: "/" } });
+      return;
+    }
+    const item = liveMenu.find((m) => m.id === itemId);
+    if (!item) return;
+
+    if ((vendorAccepting[vendorId] ?? true) === false) {
+      toast.error("This dhaba is closed right now.");
+      return;
+    }
+
+    clearCart();
+    const res = addToCart(item, 1);
+    if (!res.ok) {
+      toast.error(res.reason ?? "Could not add item.");
+      return;
+    }
+    navigate({ to: "/cart" });
+  };
 
   return (
     <motion.main initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 0.3 }}>
@@ -181,10 +213,10 @@ function HomePage() {
               {favItems.map(
                 (it) =>
                   it && (
-                    <Link
+                    <button
                       key={it.id}
-                      to="/quick-order"
-                      className="group flex items-center gap-3 rounded-2xl bg-card p-3 shadow-card transition-transform hover:-translate-y-0.5"
+                      onClick={() => handleQuickOrder(it.id, it.vendorId)}
+                      className="w-full text-left group flex items-center gap-3 rounded-2xl border border-border bg-card p-3 shadow-card transition-all hover:-translate-y-0.5 hover:border-primary/40 hover:shadow-md"
                     >
                       <img
                         src={it.image}
@@ -198,10 +230,10 @@ function HomePage() {
                         <div className="truncate font-semibold">{it.name}</div>
                         <div className="text-xs text-muted-foreground">Rs. {it.price}</div>
                       </div>
-                      <span className="rounded-full bg-primary px-3 py-1.5 text-xs font-bold text-primary-foreground opacity-0 transition-opacity group-hover:opacity-100">
-                      Order now
+                      <span className="rounded-full border border-primary/30 bg-primary/5 px-3 py-1.5 text-xs font-bold text-primary transition-colors group-hover:bg-primary group-hover:text-primary-foreground">
+                        Order now
                       </span>
-                    </Link>
+                    </button>
                   ),
               )}
             </div>
@@ -229,8 +261,8 @@ function HomePage() {
           {vendors.map((v, i) => (
             <motion.div
               key={v.id}
-              initial={{ opacity: 0, y: 8 }}
-              animate={{ opacity: 1, y: 0 }}
+              initial={{ opacity: 0, scale: 0.95 }}
+              animate={{ opacity: 1, scale: 1 }}
               transition={{ duration: 0.3, delay: i * 0.05 }}
             >
               <VendorCardLink vendor={v} accepting={vendorAccepting[v.id] ?? v.accepting} />
