@@ -208,7 +208,7 @@ function QuickOrderPage() {
 
         {/* Add favourites */}
         <section className="mt-12">
-          <h2 className="mb-4 font-display text-2xl font-bold">Add more favourites</h2>
+          <h2 className="mb-4 font-display text-2xl font-bold">Popular</h2>
           <div className="grid gap-3 sm:grid-cols-2">
             {liveMenu
               .filter((m) => !favorites.includes(m.id))

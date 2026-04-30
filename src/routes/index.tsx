@@ -199,7 +199,7 @@ function HomePage() {
                         <div className="text-xs text-muted-foreground">Rs. {it.price}</div>
                       </div>
                       <span className="rounded-full bg-primary px-3 py-1.5 text-xs font-bold text-primary-foreground opacity-0 transition-opacity group-hover:opacity-100">
-                        Tap
+                      Order now
                       </span>
                     </Link>
                   ),

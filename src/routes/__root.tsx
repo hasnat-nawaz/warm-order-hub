@@ -1,6 +1,8 @@
 import { Outlet, Link, createRootRoute, HeadContent, Scripts } from "@tanstack/react-router";
 import { Header } from "@/components/Header";
 import { Toaster } from "@/components/ui/sonner";
+import { useEffect } from "react";
+import { toast } from "sonner";
 
 import appCss from "../styles.css?url";
 
@@ -71,11 +73,24 @@ function RootShell({ children }: { children: React.ReactNode }) {
 }
 
 function RootComponent() {
+  useEffect(() => {
+    const onPointerDown = (e: PointerEvent) => {
+      const target = e.target as HTMLElement | null;
+      // If the user clicks outside the toaster area, dismiss any visible toasts.
+      // This makes popups feel less "sticky" and matches the request to close
+      // when clicking elsewhere.
+      if (target && target.closest(".toaster")) return;
+      toast.dismiss();
+    };
+    window.addEventListener("pointerdown", onPointerDown);
+    return () => window.removeEventListener("pointerdown", onPointerDown);
+  }, []);
+
   return (
     <div className="min-h-screen bg-background">
       <Header />
       <Outlet />
-      <Toaster richColors closeButton position="top-center" expand />
+      <Toaster richColors position="top-center" expand />
     </div>
   );
 }
