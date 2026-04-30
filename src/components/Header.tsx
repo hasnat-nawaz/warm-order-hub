@@ -191,23 +191,25 @@ export function Header() {
 
   return (
     <header className="sticky top-0 z-50 border-b border-border/60 bg-background/80 backdrop-blur-xl">
-      <div className="mx-auto flex h-16 max-w-6xl items-center justify-between gap-3 px-4 sm:px-6">
-        <Link to={isVendor ? "/vendor" : "/"} className="flex min-w-0 items-center gap-2">
-          <div className="grid h-9 w-9 flex-shrink-0 place-items-center rounded-xl bg-gradient-warm shadow-warm">
-            <Flame className="h-5 w-5 text-primary-foreground" strokeWidth={2.5} />
-          </div>
-          <div className="min-w-0 leading-tight">
-            <div className="truncate font-display text-lg font-bold">Campus Dhaba</div>
-            <div className="text-[10px] uppercase tracking-[0.18em] text-muted-foreground">
-              {isVendor ? "Vendor Console" : "GIKI · Eat fast"}
+      <div className="flex h-16 w-full items-center justify-between gap-3 px-4 sm:px-6 md:px-8">
+        <div className="flex flex-1">
+          <Link to={isVendor ? "/vendor" : "/"} className="flex min-w-0 items-center gap-2">
+            <div className="grid h-9 w-9 flex-shrink-0 place-items-center rounded-xl bg-gradient-warm shadow-warm">
+              <Flame className="h-5 w-5 text-primary-foreground" strokeWidth={2.5} />
             </div>
-          </div>
-        </Link>
+            <div className="min-w-0 leading-tight">
+              <div className="truncate font-display text-lg font-bold">Campus Dhaba</div>
+              <div className="text-[10px] uppercase tracking-[0.18em] text-muted-foreground">
+                {isVendor ? "Vendor Console" : "GIKI · Eat fast"}
+              </div>
+            </div>
+          </Link>
+        </div>
 
         {/* Desktop nav */}
         <nav className="hidden items-center gap-6 md:flex">{links.map((l) => renderLink(l))}</nav>
 
-        <div className="flex items-center gap-2">
+        <div className="flex flex-1 items-center justify-end gap-2">
           {/* Customer-only cart — icon-only takeout-bag for a food-first feel */}
           {!isVendor && (
             <Link
@@ -253,7 +255,7 @@ export function Header() {
       {/* Mobile drawer */}
       {open && (
         <div className="border-t border-border/60 bg-background/95 backdrop-blur-xl md:hidden">
-          <div className="mx-auto max-w-6xl space-y-3 px-4 py-4 sm:px-6">
+          <div className="space-y-3 px-4 py-4 sm:px-6">
             {role ? (
               <div className="flex items-center justify-start gap-3">
                 <AccountDropdown compact />
