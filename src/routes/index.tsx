@@ -3,8 +3,9 @@ import { vendors } from "@/data/menu";
 import { useApp, useLiveMenu } from "@/store/useApp";
 import { ArrowRight, Clock, MapPin, Star, Zap } from "lucide-react";
 import heroImg from "@/assets/hero.jpg";
-import { motion } from "framer-motion";
+import { motion, useMotionValue, useTransform, animate } from "framer-motion";
 import { toast } from "sonner";
+import { useEffect } from "react";
 
 function VendorCardLink({
   vendor,
@@ -83,6 +84,18 @@ export const Route = createFileRoute("/")({
   component: HomePage,
 });
 
+function AnimatedCounter({ value }: { value: number }) {
+  const count = useMotionValue(0);
+  const rounded = useTransform(count, Math.round);
+
+  useEffect(() => {
+    const animation = animate(count, value, { duration: 1.5, ease: "easeOut" });
+    return animation.stop;
+  }, [value, count]);
+
+  return <motion.span>{rounded}</motion.span>;
+}
+
 function HomePage() {
   const favIds = useApp((s) => s.favorites);
   const vendorAccepting = useApp((s) => s.vendorAccepting);
@@ -93,9 +106,17 @@ function HomePage() {
     .slice(0, 3);
 
   const role = useApp((s) => s.role);
+  const orders = useApp((s) => s.orders);
   const addToCart = useApp((s) => s.addToCart);
   const clearCart = useApp((s) => s.clearCart);
   const navigate = useNavigate();
+
+  // Compute live orders (not cancelled, placed today)
+  const todayStart = new Date();
+  todayStart.setHours(0, 0, 0, 0);
+  const liveOrdersCount = orders.filter(
+    (o) => o.status !== "Cancelled" && o.placedAt >= todayStart.getTime()
+  ).length;
 
   const handleQuickOrder = (itemId: string, vendorId: string) => {
     if (!role) {
@@ -185,7 +206,9 @@ function HomePage() {
             </div>
             <div className="absolute -top-5 -right-5 hidden rounded-2xl bg-foreground px-4 py-3 text-background shadow-card md:block">
               <div className="text-[10px] uppercase tracking-wider opacity-70">Live orders</div>
-              <div className="font-display text-xl font-bold">42 today</div>
+              <div className="font-display text-xl font-bold">
+                <AnimatedCounter value={liveOrdersCount} /> today
+              </div>
             </div>
           </div>
         </div>
