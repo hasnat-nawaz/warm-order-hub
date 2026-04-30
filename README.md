@@ -1,131 +1,66 @@
-# Campus Dhaba 🍛
+# Campus Dhaba (Warm Order Hub)
 
-A warm, modern campus food-ordering web app. Browse vendors, build a cart, schedule a pickup time, pay (EasyPaisa / JazzCash / Cash), track your order in real time, and re-order favorites with one tap.
+**Campus Dhaba** is a premium, beautifully animated food-ordering platform tailored specifically for GIKI students. The goal is to solve the age-old problem of waiting in long lines between classes: students can browse menus from on-campus dhabas, add items to their cart, pre-order ahead of time, select a specific pickup slot, and then walk straight up to collect their food right when it's ready!
 
-Built with **React 19 + TanStack Start + Vite + Tailwind v4 + Zustand + Framer Motion**.
-
----
-
-## ✨ Features
-
-- **Home** – hero + live vendor status cards
-- **Vendor menu** – categorized items, quantity steppers, add to cart
-- **Cart & Checkout** – pickup time picker, payment method (EasyPaisa, JazzCash, Cash)
-- **Order tracking** – animated status (Pending → Preparing → Ready → Picked up)
-- **Quick Order** – one-tap reordering of favorites / past orders
-- **Vendor dashboard** (`/vendor`) – manage incoming orders and advance their status
-- **Persistence** – cart, orders and favorites are saved in `localStorage`
+The platform features an ultra-premium "frosty glassmorphism" aesthetic, warm inviting gradients (ember/saffron), beautifully staggered high-performance page animations, and an independent interface for vendors to manage their incoming queues and menus.
 
 ---
 
-## 🚀 Run it on your local machine
+## 🚀 How to Run the Project
 
-### 1. Prerequisites
+This project uses **React**, **Vite**, **TypeScript**, **Tailwind CSS**, and **Framer Motion**. It uses **Zustand** for state management and **TanStack Router** for client-side routing.
 
-You need **one** of these package managers / runtimes installed:
+### Prerequisites
+- Ensure you have Node.js installed.
 
-- [Bun](https://bun.sh) ≥ 1.1 _(recommended – matches the lockfile)_
-- or **Node.js ≥ 20** with `npm` / `pnpm` / `yarn`
+### Steps
+1. **Install dependencies:**
+   Open your terminal in the project root and run:
+   ```bash
+   npm install
+   ```
 
-Check your versions:
+2. **Start the development server:**
+   ```bash
+   npm run dev
+   ```
 
-```bash
-bun --version    # or
-node --version
-```
-
-### 2. Get the code
-
-If you exported / cloned the repo:
-
-```bash
-git clone <your-repo-url> campus-dhaba
-cd campus-dhaba
-```
-
-### 3. Install dependencies
-
-Using **Bun** (recommended):
-
-```bash
-bun install
-```
-
-Or using **npm**:
-
-```bash
-npm install
-```
-
-### 4. Start the dev server
-
-```bash
-bun run dev
-# or
-npm run dev
-```
-
-The app will start on **http://localhost:8080** (or the next free port). Open it in your browser — Vite will hot-reload as you edit.
-
-### 5. Build for production
-
-```bash
-bun run build      # production build
-bun run preview    # preview the built site locally
-```
+3. **View the app:**
+   Open [http://localhost:5173](http://localhost:5173) in your browser.
 
 ---
 
-## 🗺️ Available routes
+## 🍔 Demo Values and Features
 
-| Route                | Description                          |
-| -------------------- | ------------------------------------ |
-| `/`                  | Home – hero + vendor list            |
-| `/vendors/:vendorId` | Vendor menu (e.g. `/vendors/raju`)   |
-| `/cart`              | Cart & checkout                      |
-| `/quick-order`       | Favorites & one-tap reorder          |
-| `/orders`            | Your order history                   |
-| `/orders/:orderId`   | Live order tracking                  |
-| `/vendor`            | Vendor-side dashboard (manage queue) |
+The application comes pre-loaded with a realistic set of static data (handled in the Zustand store) so you can test both the **Customer** and **Vendor** flows without needing a database!
 
----
+### 1. The Vendors (Dhabas)
+There are three built-in demo vendors:
+* **Raju Dhaba** (`raju`): Serves Desi classics & morning parathas (e.g. Aloo Paratha, Karak Chai, Chicken Biryani).
+* **Hot & Spicy** (`hot`): Fired up fast food (e.g. Hot Fillet Burger, Crispy Fries, Club Sandwich).
+* **Sip Spot** (`sip`): Fresh juices & cold beverages. *(Note: This vendor is set to "Closed / Not Accepting Orders" by default so you can test the "Closed" UI state).*
 
-## 🧰 Useful scripts
+### 2. Roles (Customer vs. Vendor)
+You can experience both sides of the application! To switch roles, click the **"Vendor Sign In"** button at the bottom of the Home page, or go to `/login`.
 
-```bash
-bun run dev         # start dev server
-bun run build       # production build
-bun run preview     # preview production build
-bun run lint        # run ESLint
-bun run format      # format with Prettier
-```
+**Customer View:**
+- You can log in using any of the following demo customer accounts:
+  - **Username:** `demo` | **Password:** `demo123`
+  - **Username:** `ahmed` | **Password:** `ahmed123`
+  - **Username:** `ali` | **Password:** `ali123`
+- Browse the dhabas, add items to your cart, pick a time slot, and "Place Order".
+- Check your previous orders on the "My Orders" page.
+- Use "Quick Order" to repeat past orders with a single tap.
 
----
+**Vendor View:**
+- You can log in as a vendor using any of their specific credentials:
+  - **Username:** `raju` | **Password:** `raju123` (Raju Dhaba)
+  - **Username:** `hot` | **Password:** `hot123` (Hot & Spicy)
+  - **Username:** `sip` | **Password:** `sip123` (Sip Spot)
+- The Vendor Dashboard allows you to open/close the shop.
+- Accept incoming orders, mark them as "Preparing", and finally "Ready" or "Picked up".
+- Filter orders by date and view today's revenue.
+- Manage your menu (add new items, edit prices/descriptions) from the **Manage Menu** page.
 
-## 📁 Project structure
-
-```
-src/
-  assets/          # static food & vendor images
-  components/      # Header + shadcn/ui components
-  data/menu.ts     # vendors & menu items (static data)
-  routes/          # file-based routes (TanStack Router)
-  store/useApp.ts  # Zustand store (cart, orders, favorites)
-  styles.css       # design tokens + Tailwind v4 setup
-```
-
----
-
-## 🎨 Design
-
-Warm tones: terracotta, saffron and cream, with Fraunces (display) + Inter (body) typography. All colors are defined as semantic tokens in `src/styles.css` — change them there to re-theme the whole app.
-
----
-
-## ❓ Troubleshooting
-
-- **Port already in use** → kill the other process or run `bun run dev -- --port 5174`
-- **Module not found after pulling new code** → re-run `bun install`
-- **Blank page / weird build error** → delete `node_modules` and `bun.lockb` (or `package-lock.json`) and reinstall
-
-Happy hacking! 🌶️
+### 3. Aesthetics & Animations
+Be sure to navigate around the site! The platform utilizes advanced `framer-motion` implementations to provide high-end, 60fps staggered entrance animations on almost every screen (Home, My Orders, Quick Order, Vendor Dashboard). Watch the sections elegantly slide up independently whenever a new page mounts!

@@ -161,14 +161,6 @@ function LoginPage() {
           {!submitting && <ArrowRight className="h-4 w-4" />}
         </button>
 
-        <p className="mt-5 text-center text-[11px] leading-relaxed text-muted-foreground">
-          Demo credentials —
-          <span className="block">
-            customer: <span className="font-semibold text-foreground">demo / demo123</span>
-            {"  ·  "}
-            vendor: <span className="font-semibold text-foreground">raju / raju123</span>
-          </span>
-        </p>
       </form>
 
       <p className="mt-6 text-center text-xs text-muted-foreground">
