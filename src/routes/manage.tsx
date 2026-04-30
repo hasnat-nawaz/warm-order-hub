@@ -81,9 +81,26 @@ function ManagePage() {
   const vendor = getVendor(vendorLogin)!;
   const myItems = liveMenu.filter((m) => m.vendorId === vendorLogin);
 
+  const containerVariants = {
+    hidden: { opacity: 0 },
+    showSections: {
+      opacity: 1,
+      transition: { staggerChildren: 0.15 },
+    },
+  };
+
+  const blockVariants = {
+    hidden: { opacity: 0, y: 40 },
+    showSections: {
+      opacity: 1,
+      y: 0,
+      transition: { duration: 0.8, ease: [0.16, 1, 0.3, 1] as [number, number, number, number] },
+    },
+  };
+
   return (
-    <main className="mx-auto max-w-6xl px-4 py-8 sm:px-6 sm:py-10">
-      <div className="flex flex-wrap items-end justify-between gap-4">
+    <motion.main variants={containerVariants} initial="hidden" animate="showSections" className="mx-auto max-w-6xl px-4 py-8 sm:px-6 sm:py-10">
+      <motion.div variants={blockVariants} style={{ willChange: "transform, opacity" }} className="flex flex-wrap items-end justify-between gap-4">
         <div>
           <div className="flex items-center gap-2 text-xs font-bold uppercase tracking-wider text-primary">
             <ChefHat className="h-4 w-4" /> {vendor.name}
@@ -96,18 +113,14 @@ function ManagePage() {
         <div className="text-xs text-muted-foreground">
           <span className="font-semibold text-foreground">{myItems.length}</span> items live
         </div>
-      </div>
+      </motion.div>
 
-      <div className="mt-8 grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
+      <motion.div variants={blockVariants} style={{ willChange: "transform, opacity" }} className="mt-8 grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
         {CATEGORIES.map((cat, i) => {
           const items = grouped[cat];
           return (
             <motion.article
               key={cat}
-              initial={{ opacity: 0, scale: 0.95 }}
-              animate={{ opacity: 1, scale: 1 }}
-              transition={{ duration: 0.3, delay: i * 0.08, ease: "easeOut" }}
-              style={{ willChange: "transform, opacity" }}
               className="group flex flex-col overflow-hidden rounded-3xl border border-border bg-card shadow-card"
             >
               <div className="relative aspect-[5/3] overflow-hidden">
@@ -166,7 +179,7 @@ function ManagePage() {
             </motion.article>
           );
         })}
-      </div>
+      </motion.div>
 
       <EditCategoryDialog
         open={editCat !== null}
@@ -184,7 +197,7 @@ function ManagePage() {
         vendorId={vendorLogin}
         onClose={() => setAddCat(null)}
       />
-    </main>
+    </motion.main>
   );
 }
 

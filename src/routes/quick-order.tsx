@@ -83,6 +83,23 @@ function QuickOrderPage() {
     navigate({ to: "/cart" });
   };
 
+  const containerVariants = {
+    hidden: { opacity: 0 },
+    showSections: {
+      opacity: 1,
+      transition: { staggerChildren: 0.15 },
+    },
+  };
+
+  const blockVariants = {
+    hidden: { opacity: 0, y: 40 },
+    showSections: {
+      opacity: 1,
+      y: 0,
+      transition: { duration: 0.8, ease: [0.16, 1, 0.3, 1] as [number, number, number, number] },
+    },
+  };
+
   return (
     <>
       <Link
@@ -93,12 +110,12 @@ function QuickOrderPage() {
         <ArrowLeft className="h-3.5 w-3.5" /> Back
       </Link>
       <motion.main
-        initial={{ opacity: 0, scale: 0.96 }}
-        animate={{ opacity: 1, scale: 1 }}
-        transition={{ duration: 0.3, ease: "easeOut" }}
+        variants={containerVariants}
+        initial="hidden"
+        animate="showSections"
         className="mx-auto max-w-3xl px-4 py-8 sm:px-6 sm:py-10"
       >
-        <div className="mt-3 flex items-center gap-3">
+        <motion.div variants={blockVariants} style={{ willChange: "transform, opacity" }} className="mt-3 flex items-center gap-3">
           <div className="grid h-12 w-12 place-items-center rounded-2xl bg-gradient-warm text-primary-foreground shadow-warm">
             <Zap className="h-6 w-6" />
           </div>
@@ -110,11 +127,11 @@ function QuickOrderPage() {
               One tap to checkout — pick your time and pay your way.
             </p>
           </div>
-        </div>
+        </motion.div>
 
         {/* Repeat last order */}
         {lastOrder && lastVendor && (
-          <section className="group mt-8 overflow-hidden rounded-3xl bg-gradient-warm p-[1.5px] shadow-warm transition-all hover:-translate-y-0.5 hover:shadow-lg">
+          <motion.section variants={blockVariants} style={{ willChange: "transform, opacity" }} className="group mt-8 overflow-hidden rounded-3xl bg-gradient-warm p-[1.5px] shadow-warm transition-all hover:-translate-y-0.5 hover:shadow-lg">
             <div className="rounded-[calc(1.5rem-1px)] bg-card p-5 sm:p-6">
               <div className="flex items-center gap-2 text-xs font-bold uppercase tracking-wider text-primary">
                 <Repeat className="h-3.5 w-3.5" /> Repeat last order
@@ -143,11 +160,11 @@ function QuickOrderPage() {
                 </button>
               </div>
             </div>
-          </section>
+          </motion.section>
         )}
 
         {/* Favourites */}
-        <section className="mt-10">
+        <motion.section variants={blockVariants} style={{ willChange: "transform, opacity" }} className="mt-10">
           <div className="mb-4 flex items-end justify-between">
             <h2 className="font-display text-2xl font-bold">Saved favourites</h2>
             <span className="text-xs text-muted-foreground">Tap to checkout</span>
@@ -206,10 +223,10 @@ function QuickOrderPage() {
               );
             })}
           </div>
-        </section>
+        </motion.section>
 
         {/* Add favourites */}
-        <section className="mt-12">
+        <motion.section variants={blockVariants} style={{ willChange: "transform, opacity" }} className="mt-12">
           <h2 className="mb-4 font-display text-2xl font-bold">Popular</h2>
           <div className="grid gap-3 sm:grid-cols-2">
             {liveMenu
@@ -239,7 +256,7 @@ function QuickOrderPage() {
                 </button>
               ))}
           </div>
-        </section>
+        </motion.section>
       </motion.main>
     </>
   );

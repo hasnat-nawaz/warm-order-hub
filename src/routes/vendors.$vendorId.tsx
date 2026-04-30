@@ -74,8 +74,25 @@ function VendorPage() {
 
   const sectionId = (c: Category) => `cat-${c.toLowerCase()}`;
 
+  const containerVariants = {
+    hidden: { opacity: 0 },
+    showSections: {
+      opacity: 1,
+      transition: { staggerChildren: 0.25 },
+    },
+  };
+
+  const blockVariants = {
+    hidden: { opacity: 0, y: 40 },
+    showSections: {
+      opacity: 1,
+      y: 0,
+      transition: { duration: 1.0, ease: [0.16, 1, 0.3, 1] as [number, number, number, number] },
+    },
+  };
+
   return (
-    <main className="mx-auto max-w-5xl px-4 pb-24 sm:px-6">
+    <motion.main variants={containerVariants} initial="hidden" animate="showSections" className="mx-auto max-w-5xl px-4 pb-24 sm:px-6">
       {/* Sticky back button — stays in view while the user scrolls through
           the menu so they always have an obvious way out. Uses charcoal/cream
           to contrast against both the light page and the banner image. */}
@@ -87,7 +104,7 @@ function VendorPage() {
         <ArrowLeft className="h-3.5 w-3.5" /> Back
       </Link>
 
-      <div className="relative mt-6 overflow-hidden rounded-3xl">
+      <motion.div variants={blockVariants} style={{ willChange: "transform, opacity" }} className="relative mt-6 overflow-hidden rounded-3xl">
         <img
           src={vendor.image}
           alt={vendor.name}
@@ -124,7 +141,7 @@ function VendorPage() {
             </span>
           </div>
         </div>
-      </div>
+      </motion.div>
 
       {!accepting && (
         <div className="mt-6 rounded-2xl border border-border bg-card p-4 text-sm text-muted-foreground">
@@ -150,7 +167,7 @@ function VendorPage() {
 
       {/* Category cards — tap to scroll to section */}
       {presentCategories.length > 0 && (
-        <section className="mt-8">
+        <motion.section variants={blockVariants} style={{ willChange: "transform, opacity" }} className="mt-8">
           <div className="mb-4 flex items-end justify-between">
             <h2 className="font-display text-2xl font-bold">Browse by category</h2>
             <span className="text-xs text-muted-foreground">Tap a card</span>
@@ -187,12 +204,12 @@ function VendorPage() {
               );
             })}
           </div>
-        </section>
+        </motion.section>
       )}
 
       {/* Menu by category */}
       {presentCategories.map((cat) => (
-        <section key={cat} id={sectionId(cat)} className="mt-12 scroll-mt-24">
+        <motion.section variants={blockVariants} style={{ willChange: "transform, opacity" }} key={cat} id={sectionId(cat)} className="mt-12 scroll-mt-24">
           <h2 className="mb-4 font-display text-2xl font-bold">{cat}</h2>
           <div className="grid gap-4 md:grid-cols-2">
             {items
@@ -267,7 +284,7 @@ function VendorPage() {
                 );
               })}
           </div>
-        </section>
+        </motion.section>
       ))}
 
       <button
@@ -276,6 +293,6 @@ function VendorPage() {
       >
         View cart →
       </button>
-    </main>
+    </motion.main>
   );
 }

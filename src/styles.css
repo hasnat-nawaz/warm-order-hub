@@ -137,6 +137,8 @@
   }
 
   html {
+    /* Globally scale the website to 90% by reducing root font-size */
+    font-size: 90%;
     /* Anchor jumps and programmatic scrolls slide instead of jumping. */
     scroll-behavior: smooth;
     /* Sticky 4rem header — keep anchored sections out from behind it. */

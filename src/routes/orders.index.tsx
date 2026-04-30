@@ -69,6 +69,23 @@ function OrdersPage() {
         })
     : "All time";
 
+  const containerVariants = {
+    hidden: { opacity: 0 },
+    showSections: {
+      opacity: 1,
+      transition: { staggerChildren: 0.15 },
+    },
+  };
+
+  const blockVariants = {
+    hidden: { opacity: 0, y: 40 },
+    showSections: {
+      opacity: 1,
+      y: 0,
+      transition: { duration: 0.8, ease: [0.16, 1, 0.3, 1] as [number, number, number, number] },
+    },
+  };
+
   return (
     <>
       <Link
@@ -79,11 +96,12 @@ function OrdersPage() {
         <ArrowLeft className="h-3.5 w-3.5" /> Back
       </Link>
       <motion.main
-        initial={{ opacity: 0, scale: 0.96 }}
-        animate={{ opacity: 1, scale: 1 }}
-        transition={{ duration: 0.3, ease: "easeOut" }}
+        variants={containerVariants}
+        initial="hidden"
+        animate="showSections"
         className="mx-auto max-w-3xl px-4 py-8 sm:px-6 sm:py-10"
       >
+        <motion.div variants={blockVariants} style={{ willChange: "transform, opacity" }}>
         <div className="mt-3 flex items-center gap-3">
           <div className="grid h-12 w-12 flex-shrink-0 place-items-center rounded-2xl bg-gradient-warm text-primary-foreground shadow-warm">
             <ShoppingBag className="h-6 w-6" />
@@ -96,8 +114,10 @@ function OrdersPage() {
           Browse orders by day. Pick a date from the calendar to filter.
         </p>
 
+        </motion.div>
+
         {/* Filter row */}
-        <div className="mt-6 flex flex-wrap items-center gap-2">
+        <motion.div variants={blockVariants} style={{ willChange: "transform, opacity" }} className="mt-6 flex flex-wrap items-center gap-2">
           <button
             onClick={() => stepDay(-1)}
             aria-label="Previous day"
@@ -154,22 +174,22 @@ function OrdersPage() {
             <Filter className="h-3.5 w-3.5" />
             {filterDate ? "Show all" : "Today"}
           </button>
-        </div>
+        </motion.div>
 
-        <div className="mt-2 text-xs text-muted-foreground">
+        <motion.div variants={blockVariants} style={{ willChange: "transform, opacity" }} className="mt-2 text-xs text-muted-foreground">
           Showing <span className="font-bold text-foreground">{filtered.length}</span> order
           {filtered.length === 1 ? "" : "s"}
           {filterDate ? " on this day" : " in total"}
-        </div>
+        </motion.div>
 
         {filtered.length === 0 ? (
-          <div className="mt-10 rounded-2xl border border-dashed border-border p-10 text-center text-sm text-muted-foreground">
+          <motion.div variants={blockVariants} style={{ willChange: "transform, opacity" }} className="mt-10 rounded-2xl border border-dashed border-border p-10 text-center text-sm text-muted-foreground">
             {orders.length === 0
               ? "No orders yet. Place your first one!"
               : "No orders for this day. Try a different date."}
-          </div>
+          </motion.div>
         ) : (
-          <div className="mt-6 space-y-3">
+          <motion.div variants={blockVariants} style={{ willChange: "transform, opacity" }} className="mt-6 space-y-3">
             <AnimatePresence initial={false}>
               {filtered.map((o) => {
                 const v = getVendor(o.vendorId);
@@ -236,7 +256,7 @@ function OrdersPage() {
                 );
               })}
             </AnimatePresence>
-          </div>
+          </motion.div>
         )}
       </motion.main>
     </>

@@ -166,9 +166,26 @@ function VendorDashboard() {
         })
     : "All time";
 
+  const containerVariants = {
+    hidden: { opacity: 0 },
+    showSections: {
+      opacity: 1,
+      transition: { staggerChildren: 0.15 },
+    },
+  };
+
+  const blockVariants = {
+    hidden: { opacity: 0, y: 40 },
+    showSections: {
+      opacity: 1,
+      y: 0,
+      transition: { duration: 0.8, ease: [0.16, 1, 0.3, 1] as [number, number, number, number] },
+    },
+  };
+
   return (
-    <main className="mx-auto max-w-6xl px-4 py-8 sm:px-6 sm:py-10">
-      <div className="flex flex-wrap items-end justify-between gap-4">
+    <motion.main variants={containerVariants} initial="hidden" animate="showSections" className="mx-auto max-w-6xl px-4 py-8 sm:px-6 sm:py-10">
+      <motion.div variants={blockVariants} style={{ willChange: "transform, opacity" }} className="flex flex-wrap items-end justify-between gap-4">
         <div className="min-w-0">
           <h1 className="flex flex-wrap items-center gap-3 font-display text-3xl font-bold text-primary sm:text-4xl">
             <span className="grid h-10 w-10 flex-shrink-0 place-items-center rounded-full bg-primary text-primary-foreground sm:h-12 sm:w-12">
@@ -192,7 +209,7 @@ function VendorDashboard() {
           <Power className={`h-4 w-4 ${accepting ? "" : "text-primary"}`} />
           <span>{accepting ? "Open" : "Closed"}</span>
         </button>
-      </div>
+      </motion.div>
 
       <AlertDialog open={confirmToggle} onOpenChange={setConfirmToggle}>
         <AlertDialogContent className="max-w-sm">
@@ -226,7 +243,7 @@ function VendorDashboard() {
       </AlertDialog>
 
       {/* Stats — 2x2 on mobile, 4-col on lg */}
-      <div className="mt-6 grid grid-cols-2 gap-3 lg:grid-cols-4">
+      <motion.div variants={blockVariants} style={{ willChange: "transform, opacity" }} className="mt-6 grid grid-cols-2 gap-3 lg:grid-cols-4">
         <StatCard
           icon={<ClipboardList className="h-4 w-4" />}
           label="To accept"
@@ -251,9 +268,9 @@ function VendorDashboard() {
           value={`Rs. ${stats.revenue}`}
           tone="primary"
         />
-      </div>
+      </motion.div>
 
-      <div className="mt-8">
+      <motion.div variants={blockVariants} style={{ willChange: "transform, opacity" }} className="mt-8">
         <h2 className="font-display text-2xl font-bold">Orders</h2>
         <p className="mt-1 text-sm text-muted-foreground">
           Filter by day to quickly review what happened on a specific date.
@@ -450,8 +467,8 @@ function VendorDashboard() {
             </AnimatePresence>
           </div>
         )}
-      </div>
-    </main>
+      </motion.div>
+    </motion.main>
   );
 }
 
