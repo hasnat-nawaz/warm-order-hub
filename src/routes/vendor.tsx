@@ -100,7 +100,8 @@ function VendorDashboard() {
   };
 
   const cancel = (orderId: string) => {
-    updateOrderStatus(orderId, "Cancelled");
+    const cancelOrder = useApp.getState().cancelOrder;
+    cancelOrder(orderId, "vendor");
     toast.error("Order cancelled");
   };
 

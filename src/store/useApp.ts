@@ -17,6 +17,7 @@ export type Order = {
   customer: string;
   payment: "EasyPaisa" | "JazzCash" | "Cash on Pickup";
   notes?: string;
+  cancellationReason?: "user" | "vendor"; // "user" = customer cancelled, "vendor" = vendor rejected
 };
 
 export type StoredMenuItem = MenuItem & { custom?: boolean };
@@ -78,6 +79,8 @@ type Store = {
   quickOrder: (itemId: string, pickupTime: string) => Order;
 
   updateOrderStatus: (orderId: string, status: OrderStatus) => void;
+  updateOrderLines: (orderId: string, lines: CartLine[]) => void;
+  cancelOrder: (orderId: string, reason?: "user" | "vendor") => void;
 };
 
 const defaultAccepting = vendors.reduce<Record<string, boolean>>((acc, v) => {
@@ -281,6 +284,29 @@ export const useApp = create<Store>()(
       updateOrderStatus: (orderId, status) => {
         set({
           orders: get().orders.map((o) => (o.id === orderId ? { ...o, status } : o)),
+        });
+      },
+
+      updateOrderLines: (orderId, lines) => {
+        set({
+          orders: get().orders.map((o) => {
+            if (o.id === orderId) {
+              // Recalculate total based on new lines
+              const liveMenu = liveMenuFromState(get())();
+              const total = lines.reduce((s, l) => {
+                const it = liveMenu.find((m) => m.id === l.itemId);
+                return s + (it?.price ?? 0) * l.qty;
+              }, 0);
+              return { ...o, lines, total };
+            }
+            return o;
+          }),
+        });
+      },
+
+      cancelOrder: (orderId, reason = "vendor") => {
+        set({
+          orders: get().orders.map((o) => (o.id === orderId ? { ...o, status: "Cancelled", cancellationReason: reason } : o)),
         });
       },
     }),

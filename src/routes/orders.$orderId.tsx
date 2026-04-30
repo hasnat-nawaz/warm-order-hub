@@ -10,6 +10,7 @@ import {
   MessageSquare,
   Radio,
   XCircle,
+  Edit2,
 } from "lucide-react";
 import { useNow } from "@/hooks/use-now";
 import { motion } from "framer-motion";
@@ -83,13 +84,24 @@ function OrderDetail() {
               </div>
               <h1 className="font-display text-2xl font-bold sm:text-3xl">{vendor?.name}</h1>
             </div>
-            <div
-              className={`inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-[10px] font-bold uppercase tracking-wider ${statusPillClasses(
-                order.status,
-              )}`}
-            >
-              <span className={`h-1.5 w-1.5 rounded-full ${statusDotClasses(order.status)}`} />
-              {statusLabel(order.status)}
+            <div className="flex flex-col items-end gap-2">
+              <div
+                className={`inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-[10px] font-bold uppercase tracking-wider ${statusPillClasses(
+                  order.status,
+                )}`}
+              >
+                <span className={`h-1.5 w-1.5 rounded-full ${statusDotClasses(order.status)}`} />
+                {statusLabel(order.status)}
+              </div>
+              {order.status === "Pending" && (
+                <Link
+                  to="/orders/edit/$orderId"
+                  params={{ orderId: order.id }}
+                  className="inline-flex items-center gap-1.5 rounded-full bg-primary/10 px-2.5 py-1 text-[10px] font-bold text-primary transition-colors hover:bg-primary/20"
+                >
+                  <Edit2 className="h-3 w-3" /> Edit
+                </Link>
+              )}
             </div>
           </div>
           {!isCancelled && (
@@ -124,11 +136,17 @@ function OrderDetail() {
               <XCircle className="mt-0.5 h-5 w-5 flex-shrink-0 text-destructive" />
               <div>
                 <div className="text-sm font-bold text-destructive">
-                  Your order was not accepted
+                  {order.cancellationReason === "user"
+                    ? "You cancelled this order"
+                    : "Your order was not accepted"}
                 </div>
                 <p className="mt-1 text-xs text-muted-foreground">
-                  {vendor?.name ?? "The vendor"} couldn't take this order. No payment was charged.
-                  Try a different time or vendor — your favourites are still ready to reorder.
+                  {order.cancellationReason === "user"
+                    ? "This order was cancelled as per your request. No payment was charged."
+                    : `${vendor?.name ?? "The vendor"} couldn't take this order. No payment was charged.`}
+                  <br />
+                  {order.cancellationReason !== "user" &&
+                    "Try a different time or vendor — your favourites are still ready to reorder."}
                 </p>
                 <Link
                   to="/"

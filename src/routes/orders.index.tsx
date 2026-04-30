@@ -1,7 +1,7 @@
 import { createFileRoute, Link, redirect } from "@tanstack/react-router";
 import { useApp, format12, useLiveMenu } from "@/store/useApp";
 import { getVendor } from "@/data/menu";
-import { ArrowLeft, CalendarDays, ChevronLeft, ChevronRight, Filter } from "lucide-react";
+import { ArrowLeft, CalendarDays, ChevronLeft, ChevronRight, Filter, Edit2 } from "lucide-react";
 import { useMemo, useState } from "react";
 import { Calendar } from "@/components/ui/calendar";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
@@ -174,37 +174,50 @@ function OrdersPage() {
                   exit={{ opacity: 0 }}
                   transition={{ duration: 0.2 }}
                 >
-                  <Link
-                    to="/orders/$orderId"
-                    params={{ orderId: o.id }}
-                    className="flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-border bg-card p-4 transition-shadow hover:shadow-card sm:gap-4"
-                  >
-                    <div className="min-w-0 flex-1">
-                      <div className="text-xs text-muted-foreground">
-                        Order #{o.id} · {v?.name} ·{" "}
-                        {placed.toLocaleDateString(undefined, { month: "short", day: "numeric" })}
-                      </div>
-                      <div className="mt-0.5 truncate font-semibold">
-                        {o.lines
-                          .map(
-                            (l) =>
-                              `${l.qty}× ${liveMenu.find((m) => m.id === l.itemId)?.name ?? "Item"}`,
-                          )
-                          .join(", ")}
-                      </div>
-                      <div className="mt-1 text-xs text-muted-foreground">
-                        Pickup {format12(o.pickupTime)} · Rs. {o.total}
-                      </div>
-                    </div>
-                    <span
-                      className={`inline-flex items-center gap-1.5 rounded-full px-3 py-1.5 text-xs font-bold ${statusPillClasses(
-                        o.status,
-                      )}`}
+                  <div className="rounded-2xl border border-border bg-card transition-shadow hover:shadow-card">
+                    <Link
+                      to="/orders/$orderId"
+                      params={{ orderId: o.id }}
+                      className="flex flex-wrap items-center justify-between gap-3 p-4 sm:gap-4"
                     >
-                      <span className={`h-1.5 w-1.5 rounded-full ${statusDotClasses(o.status)}`} />
-                      {statusLabel(o.status)}
-                    </span>
-                  </Link>
+                      <div className="min-w-0 flex-1">
+                        <div className="text-xs text-muted-foreground">
+                          Order #{o.id} · {v?.name} ·{" "}
+                          {placed.toLocaleDateString(undefined, { month: "short", day: "numeric" })}
+                        </div>
+                        <div className="mt-0.5 truncate font-semibold">
+                          {o.lines
+                            .map(
+                              (l) =>
+                                `${l.qty}× ${liveMenu.find((m) => m.id === l.itemId)?.name ?? "Item"}`,
+                            )
+                            .join(", ")}
+                        </div>
+                        <div className="mt-1 text-xs text-muted-foreground">
+                          Pickup {format12(o.pickupTime)} · Rs. {o.total}
+                        </div>
+                      </div>
+                      <span
+                        className={`inline-flex items-center gap-1.5 rounded-full px-3 py-1.5 text-xs font-bold ${statusPillClasses(
+                          o.status,
+                        )}`}
+                      >
+                        <span className={`h-1.5 w-1.5 rounded-full ${statusDotClasses(o.status)}`} />
+                        {statusLabel(o.status)}
+                      </span>
+                    </Link>
+                    {o.status === "Pending" && (
+                      <div className="border-t border-border px-4 py-3 flex items-center justify-end">
+                        <Link
+                          to="/orders/edit/$orderId"
+                          params={{ orderId: o.id }}
+                          className="inline-flex items-center gap-2 rounded-full bg-primary/10 px-3 py-1.5 text-xs font-bold text-primary transition-colors hover:bg-primary/20"
+                        >
+                          <Edit2 className="h-3.5 w-3.5" /> Edit order
+                        </Link>
+                      </div>
+                    )}
+                  </div>
                 </motion.div>
               );
             })}
