@@ -1,7 +1,7 @@
 import { createFileRoute, Link, redirect } from "@tanstack/react-router";
 import { useApp, format12, useLiveMenu } from "@/store/useApp";
 import { getVendor } from "@/data/menu";
-import { ArrowLeft, CalendarDays, ChevronLeft, ChevronRight, Filter, Edit2 } from "lucide-react";
+import { ArrowLeft, CalendarDays, ChevronLeft, ChevronRight, Filter, Edit2, ShoppingBag } from "lucide-react";
 import { useMemo, useState } from "react";
 import { Calendar } from "@/components/ui/calendar";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
@@ -84,7 +84,14 @@ function OrdersPage() {
         transition={{ duration: 0.3, ease: "easeOut" }}
         className="mx-auto max-w-3xl px-4 py-8 sm:px-6 sm:py-10"
       >
-        <h1 className="mt-3 font-display text-3xl font-bold sm:text-4xl">My orders</h1>
+        <div className="mt-3 flex items-center gap-3">
+          <div className="grid h-12 w-12 flex-shrink-0 place-items-center rounded-2xl bg-gradient-warm text-primary-foreground shadow-warm">
+            <ShoppingBag className="h-6 w-6" />
+          </div>
+          <h1 className="font-display text-3xl font-bold leading-tight sm:text-4xl">
+            My orders
+          </h1>
+        </div>
         <p className="mt-1 text-sm text-muted-foreground">
           Browse orders by day. Pick a date from the calendar to filter.
         </p>
