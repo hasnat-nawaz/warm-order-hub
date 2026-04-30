@@ -3,6 +3,7 @@ import { vendors } from "@/data/menu";
 import { useApp, useLiveMenu } from "@/store/useApp";
 import { ArrowRight, Clock, MapPin, Star, Zap } from "lucide-react";
 import heroImg from "@/assets/hero.jpg";
+import memphisPattern from "@/assets/white-memphis-pattern.png";
 import { motion, useMotionValue, useTransform, animate } from "framer-motion";
 import { toast } from "sonner";
 import { useEffect } from "react";
@@ -20,8 +21,8 @@ function VendorCardLink({
       params={{ vendorId: vendor.id }}
       disabled={!accepting}
       className={`group relative block overflow-hidden rounded-3xl border border-border/60 bg-card ring-1 ring-black/5 [box-shadow:0_4px_0_0_rgba(0,0,0,0.04),0_18px_28px_-12px_rgba(60,30,10,0.18),0_2px_6px_rgba(60,30,10,0.06)] transition-all duration-300 ${accepting
-          ? "hover:-translate-y-1.5 hover:[box-shadow:0_6px_0_0_rgba(0,0,0,0.05),0_28px_40px_-14px_rgba(60,30,10,0.28),0_4px_10px_rgba(60,30,10,0.1)] active:translate-y-0"
-          : "opacity-75"
+        ? "hover:-translate-y-1.5 hover:[box-shadow:0_6px_0_0_rgba(0,0,0,0.05),0_28px_40px_-14px_rgba(60,30,10,0.28),0_4px_10px_rgba(60,30,10,0.1)] active:translate-y-0"
+        : "opacity-75"
         }`}
     >
       {/* subtle top sheen for the 3D feel */}
