@@ -75,8 +75,8 @@ const ProfileChipTrigger = forwardRef<
 >(function ProfileChipTrigger({ name, isVendor, compact = false, className, ...props }, ref) {
   const base = cn(
     "inline-flex items-center justify-center rounded-full md:border md:border-border md:bg-card md:text-foreground md:transition-colors md:hover:bg-secondary md:gap-2",
-    compact ? "md:px-2 md:py-1.5 md:text-xs" : "md:px-2 md:py-1.5 md:text-sm",
-    "h-10 w-10 bg-foreground text-background shadow-warm ring-1 ring-black/5 transition-transform hover:-translate-y-0.5 active:translate-y-0 md:h-auto md:w-auto md:shadow-none md:ring-0 md:hover:translate-y-0 md:active:translate-y-0",
+    compact ? "md:px-3 md:text-xs" : "md:px-4 md:text-sm",
+    "h-10 w-10 bg-foreground text-background shadow-warm ring-1 ring-black/5 transition-transform hover:-translate-y-0.5 active:translate-y-0 md:h-10 md:w-auto md:shadow-none md:ring-0 md:hover:translate-y-0 md:active:translate-y-0",
     className,
   );
   return (
@@ -273,9 +273,9 @@ export function Header() {
               {/* Desktop signin */}
               <Link
                 to="/login"
-                className="hidden items-center gap-1.5 rounded-full border border-primary/30 bg-primary/10 px-3 py-1.5 text-xs font-semibold text-primary transition-colors hover:bg-primary/20 md:inline-flex"
+              className="hidden items-center justify-center gap-1.5 rounded-full border border-primary/30 bg-primary/10 px-4 h-10 text-sm font-semibold text-primary transition-colors hover:bg-primary/20 md:inline-flex"
               >
-                <LogIn className="h-3.5 w-3.5" /> Sign in
+              <LogIn className="h-4 w-4" /> Sign in
               </Link>
               {/* Mobile signin */}
               <Link
