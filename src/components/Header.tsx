@@ -217,9 +217,9 @@ export function Header() {
             ) : (
               <Link
                 to="/login"
-                className="grid h-10 w-10 place-items-center rounded-full bg-foreground text-background shadow-warm ring-1 ring-black/5 transition-transform hover:-translate-y-0.5 active:translate-y-0"
+                className="inline-flex items-center justify-center gap-1.5 rounded-full border border-primary/30 bg-primary/10 px-3 h-10 text-sm font-semibold text-primary transition-colors hover:bg-primary/20"
               >
-                <LogIn className="h-5 w-5" />
+                Sign in
               </Link>
             )}
           </div>
@@ -278,7 +278,7 @@ export function Header() {
                 to="/login"
                 className="inline-flex items-center justify-center gap-1.5 rounded-full border border-primary/30 bg-primary/10 px-4 h-10 text-sm font-semibold text-primary transition-colors hover:bg-primary/20"
               >
-                <LogIn className="h-4 w-4" /> Sign in
+                Sign in
               </Link>
             )}
           </div>

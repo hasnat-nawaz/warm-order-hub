@@ -163,7 +163,7 @@ function HomePage() {
       {/* Hero */}
       <section className="relative overflow-hidden" style={{ contain: 'paint' }}>
         <div className="absolute inset-0 bg-gradient-ember" />
-        <div className="mx-auto grid max-w-6xl gap-10 px-4 pt-12 pb-16 sm:px-6 md:grid-cols-[1.1fr_1fr] md:items-center md:pt-20 md:pb-24">
+        <div className="mx-auto grid max-w-6xl gap-10 px-4 pt-[10px] pb-16 sm:px-6 md:grid-cols-[1.1fr_1fr] md:items-center md:pt-20 md:pb-24">
           <motion.div variants={blockVariants} style={{ willChange: "transform, opacity" }} className="relative z-10">
             <span className="inline-flex items-center gap-2 rounded-full border border-primary/30 bg-primary/10 px-3 py-1 text-xs font-semibold uppercase tracking-wider text-primary">
               <Zap className="h-3.5 w-3.5" /> Built for GIKI students
@@ -192,7 +192,7 @@ function HomePage() {
               </Link>
             </div>
 
-            <dl className="mt-10 grid grid-cols-3 gap-4 max-w-md sm:gap-6">
+            <dl className="mt-10 flex max-w-md items-start justify-between gap-4 px-[30px] sm:gap-6">
               {[
                 ["3+", "Dhabas"],
                 ["~2 min", "Order time"],
