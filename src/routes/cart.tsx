@@ -14,6 +14,96 @@ import { toast } from "sonner";
 import { useNow } from "@/hooks/use-now";
 import { motion, AnimatePresence } from "framer-motion";
 
+function WheelColumn({
+  options,
+  value,
+  onChange,
+}: {
+  options: string[];
+  value: string;
+  onChange: (val: string) => void;
+}) {
+  const scrollRef = useRef<HTMLDivElement>(null);
+  const [localValue, setLocalValue] = useState(value);
+
+  useEffect(() => {
+    setLocalValue(value);
+  }, [value]);
+
+  useEffect(() => {
+    if (scrollRef.current) {
+      const idx = options.indexOf(value);
+      if (idx !== -1) {
+        const itemHeight = scrollRef.current.children[1]?.clientHeight || 48;
+        scrollRef.current.scrollTop = idx * itemHeight;
+      }
+    }
+  }, []);
+
+  useEffect(() => {
+    const t = setTimeout(() => {
+      if (localValue !== value) onChange(localValue);
+    }, 150);
+    return () => clearTimeout(t);
+  }, [localValue, value, onChange]);
+
+  const handleScroll = (e: React.UIEvent<HTMLDivElement>) => {
+    const el = e.currentTarget;
+    const itemHeight = el.children[1]?.clientHeight || 48;
+    const index = Math.round(el.scrollTop / itemHeight);
+    const clamped = Math.max(0, Math.min(options.length - 1, index));
+    if (options[clamped] !== localValue) {
+      setLocalValue(options[clamped]);
+    }
+  };
+
+  return (
+    <div className="relative h-48 flex-1 overflow-hidden rounded-2xl bg-secondary/20 before:absolute before:inset-x-0 before:top-0 before:z-10 before:h-16 before:bg-gradient-to-b before:from-card before:to-transparent before:pointer-events-none after:absolute after:inset-x-0 after:bottom-0 after:z-10 after:h-16 after:bg-gradient-to-t after:from-card after:to-transparent after:pointer-events-none">
+      <div className="absolute inset-x-0 top-1/2 -mt-6 h-12 border-y-2 border-primary/20 pointer-events-none" />
+      <div 
+        ref={scrollRef}
+        className="h-full overflow-y-auto snap-y snap-mandatory no-scrollbar"
+        onScroll={handleScroll}
+      >
+        <div className="h-[calc(50%-1.5rem)]" />
+        {options.map((opt) => (
+          <div 
+            key={opt} 
+            className="h-12 snap-center flex items-center justify-center font-display text-2xl font-bold cursor-pointer transition-colors"
+            onClick={(e) => {
+               const parent = e.currentTarget.parentElement;
+               if (parent) {
+                 const itemHeight = e.currentTarget.clientHeight;
+                 parent.scrollTo({ top: options.indexOf(opt) * itemHeight, behavior: 'smooth' });
+               }
+            }}
+          >
+            <span className={opt === localValue ? "text-primary scale-110 transition-transform" : "text-muted-foreground opacity-50 transition-transform"}>{opt}</span>
+          </div>
+        ))}
+        <div className="h-[calc(50%-1.5rem)]" />
+      </div>
+    </div>
+  )
+}
+
+const parseTime = (t: string) => {
+  const [h, m] = t.split(":").map(Number);
+  const ampm = h >= 12 ? "PM" : "AM";
+  const hour12 = h % 12 || 12;
+  return { hStr: hour12.toString().padStart(2, "0"), mStr: m.toString().padStart(2, "0"), ampm };
+};
+
+const buildTime = (hStr: string, mStr: string, ampm: string) => {
+  let h = parseInt(hStr, 10);
+  if (ampm === "PM" && h !== 12) h += 12;
+  if (ampm === "AM" && h === 12) h = 0;
+  return `${h.toString().padStart(2, "0")}:${mStr}`;
+};
+
+const HOURS = Array.from({ length: 12 }, (_, i) => (i + 1).toString().padStart(2, "0"));
+const MINUTES = Array.from({ length: 60 }, (_, i) => i.toString().padStart(2, "0"));
+
 export const Route = createFileRoute("/cart")({
   head: () => ({ meta: [{ title: "Your cart — Campus Dhaba" }] }),
   beforeLoad: () => {
@@ -89,6 +179,11 @@ function CartPage() {
   const [payment, setPayment] = useState<"EasyPaisa" | "JazzCash" | "Cash on Pickup">("EasyPaisa");
   const timeInputRef = useRef<HTMLInputElement>(null);
 
+  const [timePickerOpen, setTimePickerOpen] = useState(false);
+  const [tempH, setTempH] = useState("12");
+  const [tempM, setTempM] = useState("00");
+  const [tempA, setTempA] = useState("PM");
+
   // Keep pickup auto-synced to the suggestion until the user manually changes it.
   useEffect(() => {
     if (!edited) setPickup(suggested);
@@ -106,21 +201,11 @@ function CartPage() {
   };
 
   const openPicker = () => {
-    const el = timeInputRef.current;
-    if (!el) return;
-    // showPicker is supported on Chromium and Safari TP; fall back to focus.
-    type WithShow = HTMLInputElement & { showPicker?: () => void };
-    const withShow = el as WithShow;
-    if (typeof withShow.showPicker === "function") {
-      try {
-        withShow.showPicker();
-        return;
-      } catch {
-        /* fall through */
-      }
-    }
-    el.focus();
-    el.click();
+    const { hStr, mStr, ampm } = parseTime(pickup);
+    setTempH(hStr);
+    setTempM(mStr);
+    setTempA(ampm);
+    setTimePickerOpen(true);
   };
 
   const handlePlace = () => {
@@ -277,20 +362,71 @@ function CartPage() {
               </span>
               <ChevronDown className="h-4 w-4 text-muted-foreground transition-transform" />
             </button>
-
-            {/* Native input is kept off-screen but accessible — supplies the
-              picker UI when "Select time" is tapped. */}
-            <input
-              ref={timeInputRef}
-              type="time"
-              value={pickup}
-              min={suggested}
-              step={60}
-              onChange={(e) => handlePickupChange(e.target.value)}
-              aria-label="Pickup time"
-              className="sr-only"
-            />
           </div>
+
+          <AnimatePresence>
+            {timePickerOpen && (
+              <div className="fixed inset-0 z-50 flex items-center justify-center px-4 sm:px-0">
+                <motion.div 
+                  initial={{ opacity: 0 }} 
+                  animate={{ opacity: 1 }} 
+                  exit={{ opacity: 0 }}
+                  transition={{ duration: 0.2 }}
+                  className="absolute inset-0 bg-black/60 backdrop-blur-sm"
+                  onClick={() => setTimePickerOpen(false)}
+                />
+                <motion.div
+                  initial={{ opacity: 0, scale: 0.96, y: 10 }}
+                  animate={{ opacity: 1, scale: 1, y: 0 }}
+                  exit={{ opacity: 0, scale: 0.96, y: 10 }}
+                  transition={{ duration: 0.3, ease: "easeOut" }}
+                  className="relative w-full max-w-sm rounded-3xl border border-border bg-card p-6 shadow-warm"
+                >
+                  <h2 className="flex items-center gap-2 font-display text-2xl font-bold">
+                    <Clock className="h-5 w-5 text-primary" /> Select pickup time
+                  </h2>
+                  <p className="mt-1 text-sm text-muted-foreground">
+                    Choose when you'd like to pick up your order.
+                  </p>
+                  
+                  <div className="my-8 flex justify-center gap-3">
+                    <WheelColumn options={HOURS} value={tempH} onChange={setTempH} />
+                    <span className="flex items-center font-display text-3xl font-bold text-primary/50">:</span>
+                    <WheelColumn options={MINUTES} value={tempM} onChange={setTempM} />
+                    <WheelColumn options={["AM", "PM"]} value={tempA} onChange={setTempA} />
+                  </div>
+                  
+                  {compareTime24(buildTime(tempH, tempM, tempA), suggested) < 0 && (
+                    <p className="mb-4 text-center text-sm font-semibold text-destructive">
+                      Must be at or after {format12(suggested)}
+                    </p>
+                  )}
+
+                  <div className="flex gap-3 justify-end">
+                     <button
+                       onClick={() => setTimePickerOpen(false)}
+                       className="rounded-full border border-border bg-card px-5 py-2.5 text-sm font-bold transition-colors hover:bg-secondary"
+                     >
+                       Cancel
+                     </button>
+                     <button
+                       onClick={() => {
+                         const t = buildTime(tempH, tempM, tempA);
+                         if (compareTime24(t, suggested) >= 0) {
+                           handlePickupChange(t);
+                           setTimePickerOpen(false);
+                         }
+                       }}
+                       disabled={compareTime24(buildTime(tempH, tempM, tempA), suggested) < 0}
+                       className="rounded-full bg-primary px-5 py-2.5 text-sm font-bold text-primary-foreground shadow-warm transition-all hover:-translate-y-0.5 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:translate-y-0"
+                     >
+                       Save
+                     </button>
+                  </div>
+                </motion.div>
+              </div>
+            )}
+          </AnimatePresence>
 
           {/* Payment */}
           <div className="rounded-2xl border border-border bg-card p-5">
