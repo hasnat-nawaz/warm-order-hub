@@ -53,10 +53,10 @@ export const users: AppUser[] = [
   },
   {
     role: "vendor",
-    username: "hot",
-    password: "hot123",
-    displayName: "Hot & Spicy",
-    vendorId: "hot",
+    username: "ayan",
+    password: "ayan123",
+    displayName: "Ayan Gardens",
+    vendorId: "ayan",
   },
   {
     role: "vendor",
@@ -64,6 +64,13 @@ export const users: AppUser[] = [
     password: "sip123",
     displayName: "Sip Spot",
     vendorId: "sip",
+  },
+  {
+    role: "vendor",
+    username: "juice",
+    password: "juice123",
+    displayName: "Juice Spot",
+    vendorId: "juice",
   },
 ];
 

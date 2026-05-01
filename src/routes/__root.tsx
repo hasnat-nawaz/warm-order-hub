@@ -1,4 +1,4 @@
-import { Outlet, Link, createRootRoute, HeadContent, Scripts, useRouterState } from "@tanstack/react-router";
+import { Outlet, Link, createRootRoute, HeadContent, Scripts, useRouter, useRouterState } from "@tanstack/react-router";
 import { Header } from "@/components/Header";
 import { useApp } from "@/store/useApp";
 import { Toaster } from "@/components/ui/sonner";
@@ -75,6 +75,7 @@ function RootShell({ children }: { children: React.ReactNode }) {
 
 function RootComponent() {
   const cart = useApp((s) => s.cart);
+  const router = useRouter();
   const path = useRouterState({ select: (s) => s.location.pathname });
 
   useEffect(() => {
@@ -89,6 +90,20 @@ function RootComponent() {
     window.addEventListener("pointerdown", onPointerDown);
     return () => window.removeEventListener("pointerdown", onPointerDown);
   }, []);
+
+  // Always land on the home page on first load (even if the user refreshes on a deep link).
+  useEffect(() => {
+    if (path !== "/") {
+      router.navigate({ to: "/", replace: true });
+    }
+    // Intentionally run once on mount.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  // When navigating to a new page, start at the top.
+  useEffect(() => {
+    window.scrollTo({ top: 0, left: 0, behavior: "auto" });
+  }, [path]);
 
   return (
     <div className="min-h-screen bg-background">
