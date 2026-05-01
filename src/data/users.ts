@@ -77,3 +77,8 @@ export const findUser = (username: string, password: string): AppUser | null => 
   const match = users.find((x) => x.username.toLowerCase() === u && x.password === password);
   return match ?? null;
 };
+
+/** Adds a new user to the in-memory array for this session. */
+export const addUser = (user: AppUser) => {
+  users.push(user);
+};
