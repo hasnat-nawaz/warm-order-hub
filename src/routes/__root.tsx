@@ -2,10 +2,64 @@ import { Outlet, Link, createRootRoute, HeadContent, Scripts, useRouter, useRout
 import { Header } from "@/components/Header";
 import { useApp } from "@/store/useApp";
 import { Toaster } from "@/components/ui/sonner";
-import { useEffect } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { toast } from "sonner";
+import { AnimatePresence, motion } from "framer-motion";
 
 import appCss from "../styles.css?url";
+
+function LoadingOverlay({ show }: { show: boolean }) {
+  return (
+    <AnimatePresence>
+      {show && (
+        <motion.div
+          key="route-loading"
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          exit={{ opacity: 0 }}
+          transition={{ duration: 0.18, ease: "easeOut" }}
+          className="fixed inset-0 z-[60] grid place-items-center bg-background/70 backdrop-blur-md"
+          aria-label="Loading"
+          role="status"
+          aria-live="polite"
+        >
+          <motion.div
+            initial={{ y: 6, scale: 0.98 }}
+            animate={{ y: 0, scale: 1 }}
+            exit={{ y: 6, scale: 0.98 }}
+            transition={{ duration: 0.18, ease: "easeOut" }}
+            className="flex flex-col items-center gap-4 rounded-3xl border border-border bg-card px-6 py-5 shadow-card"
+          >
+            {/* Burger animation (pure CSS via motion + Tailwind) */}
+            <div className="relative h-16 w-16">
+              <motion.div
+                animate={{ y: [0, -6, 0] }}
+                transition={{ duration: 0.8, repeat: Infinity, ease: "easeInOut" }}
+                className="absolute left-1/2 top-1/2 h-16 w-16 -translate-x-1/2 -translate-y-1/2"
+              >
+                <div className="absolute left-1/2 top-1 h-3 w-12 -translate-x-1/2 rounded-full bg-accent shadow-sm" />
+                <div className="absolute left-1/2 top-[18px] h-2 w-11 -translate-x-1/2 rounded-full bg-success/70" />
+                <div className="absolute left-1/2 top-[28px] h-2.5 w-12 -translate-x-1/2 rounded-full bg-warning/80" />
+                <div className="absolute left-1/2 top-[38px] h-3 w-12 -translate-x-1/2 rounded-full bg-primary/90 shadow-sm" />
+                <div className="absolute left-1/2 top-[52px] h-3 w-12 -translate-x-1/2 rounded-full bg-accent shadow-sm" />
+              </motion.div>
+              <motion.div
+                className="absolute -bottom-2 left-1/2 h-2.5 w-14 -translate-x-1/2 rounded-full bg-foreground/10"
+                animate={{ scaleX: [0.9, 1.05, 0.9], opacity: [0.35, 0.18, 0.35] }}
+                transition={{ duration: 0.8, repeat: Infinity, ease: "easeInOut" }}
+              />
+            </div>
+
+            <div className="text-center">
+              <p className="text-sm font-bold text-foreground">Loading…</p>
+              <p className="mt-1 text-xs text-muted-foreground">Cooking up your next page</p>
+            </div>
+          </motion.div>
+        </motion.div>
+      )}
+    </AnimatePresence>
+  );
+}
 
 function NotFoundComponent() {
   return (
@@ -77,6 +131,16 @@ function RootComponent() {
   const cart = useApp((s) => s.cart);
   const router = useRouter();
   const path = useRouterState({ select: (s) => s.location.pathname });
+  const routerStatus = useRouterState({ select: (s) => (s as any).status as string | undefined });
+  const [showBoot, setShowBoot] = useState(true);
+
+  useEffect(() => {
+    const t = window.setTimeout(() => setShowBoot(false), 550);
+    return () => window.clearTimeout(t);
+  }, []);
+
+  const isRoutePending = useMemo(() => routerStatus === "pending", [routerStatus]);
+  const showLoading = showBoot || isRoutePending;
 
   useEffect(() => {
     const onPointerDown = (e: PointerEvent) => {
@@ -107,6 +171,7 @@ function RootComponent() {
 
   return (
     <div className="min-h-screen bg-background">
+      <LoadingOverlay show={showLoading} />
       <Header />
       <Outlet />
       <Toaster richColors position="top-center" expand />
