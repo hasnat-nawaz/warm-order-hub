@@ -391,7 +391,7 @@ function ItemEditor({
             placeholder="Name"
             className="rounded-xl border border-input bg-background px-3 py-2 text-sm focus:border-primary focus:outline-none"
           />
-          <div className="flex gap-2">
+          <div className="flex flex-col gap-2 sm:flex-row">
             <input
               value={price}
               onChange={(e) => setPrice(e.target.value.replace(/[^0-9]/g, ""))}

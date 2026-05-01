@@ -161,14 +161,14 @@ function HomePage() {
   return (
     <motion.main variants={containerVariants} initial="hidden" animate="showSections">
       {/* Hero */}
-      <section className="relative overflow-hidden">
+      <section className="relative overflow-hidden" style={{ contain: 'paint' }}>
         <div className="absolute inset-0 bg-gradient-ember" />
         <div className="mx-auto grid max-w-6xl gap-10 px-4 pt-12 pb-16 sm:px-6 md:grid-cols-[1.1fr_1fr] md:items-center md:pt-20 md:pb-24">
           <motion.div variants={blockVariants} style={{ willChange: "transform, opacity" }} className="relative z-10">
             <span className="inline-flex items-center gap-2 rounded-full border border-primary/30 bg-primary/10 px-3 py-1 text-xs font-semibold uppercase tracking-wider text-primary">
               <Zap className="h-3.5 w-3.5" /> Built for GIKI students
             </span>
-            <h1 className="mt-5 font-display text-5xl font-black leading-[1.05] tracking-tight text-balance md:text-7xl">
+            <h1 className="mt-5 font-display text-4xl font-black leading-[1.05] tracking-tight text-balance sm:text-5xl md:text-7xl">
               Skip the <span className="text-primary">queue.</span>
               <br />
               Eat <span className="italic text-accent">on time.</span>
@@ -192,7 +192,7 @@ function HomePage() {
               </Link>
             </div>
 
-            <dl className="mt-10 grid grid-cols-3 gap-6 max-w-md">
+            <dl className="mt-10 grid grid-cols-3 gap-4 max-w-md sm:gap-6">
               {[
                 ["3+", "Dhabas"],
                 ["~2 min", "Order time"],
@@ -207,7 +207,7 @@ function HomePage() {
           </motion.div>
 
           <motion.div variants={blockVariants} style={{ willChange: "transform, opacity" }} className="relative">
-            <div className="absolute -inset-6 rounded-[2.5rem] bg-gradient-warm opacity-40 blur-3xl" />
+            <div className="absolute -inset-2 rounded-[2.5rem] bg-gradient-warm opacity-40 blur-3xl sm:-inset-4 md:-inset-6" />
             <img
               src={heroImg}
               alt="Spread of pakistani street food including paratha, chai, biryani and burgers"
@@ -215,13 +215,13 @@ function HomePage() {
               width={1536}
               height={1024}
             />
-            <div className="absolute -bottom-5 -left-5 hidden rounded-2xl bg-card px-4 py-3 shadow-card md:block">
+            <div className="absolute -bottom-3 -left-3 hidden rounded-2xl bg-card px-4 py-3 shadow-card md:block lg:-bottom-5 lg:-left-5">
               <div className="text-[10px] uppercase tracking-wider text-muted-foreground">
                 Avg pickup
               </div>
               <div className="font-display text-xl font-bold">8 minutes</div>
             </div>
-            <div className="absolute -top-5 -right-5 hidden rounded-2xl bg-foreground px-4 py-3 text-background shadow-card md:block">
+            <div className="absolute -top-3 -right-3 hidden rounded-2xl bg-foreground px-4 py-3 text-background shadow-card md:block lg:-top-5 lg:-right-5">
               <div className="text-[10px] uppercase tracking-wider opacity-70">Live orders</div>
               <div className="font-display text-xl font-bold">
                 <AnimatedCounter value={liveOrdersCount} /> today

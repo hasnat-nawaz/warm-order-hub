@@ -184,28 +184,31 @@ function QuickOrderPage() {
                 <motion.div
                   key={id}
                   layout
-                  className={`flex flex-wrap items-center gap-4 rounded-3xl border border-border bg-card p-4 shadow-card transition-all sm:gap-5 sm:p-5 ${
+                  className={`flex flex-col gap-3 rounded-3xl border border-border bg-card p-4 shadow-card transition-all sm:flex-row sm:flex-wrap sm:items-center sm:gap-4 sm:p-5 ${
                     open ? "group hover:-translate-y-0.5 hover:border-primary/40 hover:shadow-md" : ""
                   }`}
                 >
-                  <img
-                    src={item.image}
-                    alt={item.name}
-                    className="h-20 w-20 flex-shrink-0 rounded-2xl object-cover sm:h-24 sm:w-24"
-                    loading="lazy"
-                    width={96}
-                    height={96}
-                  />
-                  <div className="min-w-0 flex-1">
-                    <div className="font-display text-lg font-bold leading-tight sm:text-xl">
+                  <div className="flex items-center gap-3 sm:gap-4 sm:flex-1 sm:min-w-0">
+                    <img
+                      src={item.image}
+                      alt={item.name}
+                      className="h-16 w-16 flex-shrink-0 rounded-2xl object-cover sm:h-20 sm:w-20 md:h-24 md:w-24"
+                      loading="lazy"
+                      width={96}
+                      height={96}
+                    />
+                    <div className="min-w-0 flex-1">
+                      <div className="font-display text-base font-bold leading-tight sm:text-lg md:text-xl">
                       {item.name}
                     </div>
                     <div className="mt-0.5 text-sm text-muted-foreground">
                       {vendor?.name} · Rs. {item.price}
                       {!open && <span className="ml-2 font-semibold text-destructive">Closed</span>}
                     </div>
+                    </div>
                   </div>
-                  <button
+                  <div className="flex items-center gap-2 sm:ml-auto">
+                    <button
                     onClick={() => toggleFavorite(id)}
                     aria-label="Remove favourite"
                     className="grid h-11 w-11 place-items-center rounded-full text-primary transition-colors hover:bg-primary/10"
@@ -219,6 +222,7 @@ function QuickOrderPage() {
                   >
                     {open ? "Order now" : "Closed"}
                   </button>
+                  </div>
                 </motion.div>
               );
             })}

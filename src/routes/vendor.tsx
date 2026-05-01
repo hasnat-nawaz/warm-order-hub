@@ -187,7 +187,7 @@ function VendorDashboard() {
     <motion.main variants={containerVariants} initial="hidden" animate="showSections" className="mx-auto max-w-6xl px-4 py-8 sm:px-6 sm:py-10">
       <motion.div variants={blockVariants} style={{ willChange: "transform, opacity" }} className="flex flex-wrap items-end justify-between gap-4">
         <div className="min-w-0">
-          <h1 className="flex flex-wrap items-center gap-3 font-display text-3xl font-bold text-primary sm:text-4xl">
+          <h1 className="flex flex-wrap items-center gap-3 font-display text-2xl font-bold text-primary sm:text-3xl md:text-4xl">
             <span className="grid h-10 w-10 flex-shrink-0 place-items-center rounded-full bg-primary text-primary-foreground sm:h-12 sm:w-12">
               <ChefHat className="h-5 w-5 sm:h-6 sm:w-6" />
             </span>
@@ -379,7 +379,7 @@ function VendorDashboard() {
                     <div className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">
                       Order
                     </div>
-                    <div className="font-display text-3xl font-black leading-none">#{o.id}</div>
+                    <div className="font-display text-2xl font-black leading-none sm:text-3xl">#{o.id}</div>
                     <div className="mt-1 truncate text-sm font-semibold">{o.customer}</div>
                   </div>
 
@@ -499,7 +499,7 @@ function StatCard({
           {label}
         </span>
       </div>
-      <div className="mt-3 font-display text-3xl font-black leading-none">{value}</div>
+      <div className="mt-3 font-display text-2xl font-black leading-none sm:text-3xl">{value}</div>
     </div>
   );
 }

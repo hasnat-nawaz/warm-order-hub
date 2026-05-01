@@ -114,7 +114,7 @@ function OrderDetail() {
                   <div className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">
                     Pickup time
                   </div>
-                  <div className="font-display text-2xl font-black leading-tight text-primary sm:text-3xl">
+                  <div className="font-display text-xl font-black leading-tight text-primary sm:text-2xl md:text-3xl">
                     {format12(order.pickupTime)}
                   </div>
                 </div>
@@ -160,7 +160,7 @@ function OrderDetail() {
             ) : (
               <>
                 {/* Stages */}
-                <ol className="mt-7 grid grid-cols-4 gap-2">
+                <ol className="mt-7 grid grid-cols-4 gap-1.5 sm:gap-2">
                   {STAGE_FLOW.map((s, i) => {
                     const Icon = stageIcon[i];
                     const done = i <= stageIdx;

@@ -251,7 +251,7 @@ function CartPage() {
       <Link
         to="/"
         aria-label="Back"
-        className="fixed left-2 top-[4.5rem] z-40 inline-flex items-center gap-2 rounded-full bg-foreground px-4 py-2.5 text-sm font-bold uppercase tracking-wider text-background shadow-warm ring-1 ring-background/40 backdrop-blur transition-transform hover:-translate-y-0.5 sm:left-4 sm:top-20"
+        className="fixed left-2 top-[4.5rem] z-40 inline-flex items-center gap-2 rounded-full bg-foreground px-3.5 py-2 text-xs font-bold uppercase tracking-wider text-background shadow-warm ring-1 ring-background/40 backdrop-blur transition-transform hover:-translate-y-0.5 sm:left-4 sm:top-20 sm:px-4 sm:py-2.5 sm:text-sm"
       >
         <ArrowLeft className="h-4 w-4" /> Back
       </Link>
@@ -281,24 +281,27 @@ function CartPage() {
                   animate={{ opacity: 1, scale: 1 }}
                   exit={{ opacity: 0, scale: 0.95 }}
                   transition={{ duration: 0.2 }}
-                  className="flex flex-wrap items-center gap-4 rounded-3xl border border-border bg-card p-4 shadow-card sm:gap-5 sm:p-5"
+                  className="flex flex-col gap-3 rounded-3xl border border-border bg-card p-4 shadow-card sm:flex-row sm:flex-wrap sm:items-center sm:gap-5 sm:p-5"
                 >
-                  <img
-                    src={item.image}
-                    alt={item.name}
-                    className="h-24 w-24 flex-shrink-0 rounded-2xl object-cover sm:h-28 sm:w-28"
-                    loading="lazy"
-                    width={112}
-                    height={112}
-                  />
-                  <div className="min-w-0 flex-1">
-                    <div className="font-display text-lg font-bold sm:text-xl">{item.name}</div>
-                    <div className="mt-0.5 text-sm text-muted-foreground">
-                      Rs. {item.price} <span className="opacity-60">each</span>
+                  <div className="flex items-center gap-3 sm:gap-4">
+                    <img
+                      src={item.image}
+                      alt={item.name}
+                      className="h-20 w-20 flex-shrink-0 rounded-2xl object-cover sm:h-24 sm:w-24 md:h-28 md:w-28"
+                      loading="lazy"
+                      width={112}
+                      height={112}
+                    />
+                    <div className="min-w-0 flex-1">
+                      <div className="font-display text-base font-bold sm:text-lg md:text-xl">{item.name}</div>
+                      <div className="mt-0.5 text-sm text-muted-foreground">
+                        Rs. {item.price} <span className="opacity-60">each</span>
+                      </div>
                     </div>
                   </div>
-                  <div className="flex items-center rounded-full border border-border bg-background">
-                    <button
+                  <div className="flex items-center justify-between gap-3 sm:gap-4 sm:ml-auto">
+                    <div className="flex items-center rounded-full border border-border bg-background">
+                      <button
                       onClick={() => setQty(line.itemId, line.qty - 1)}
                       aria-label="Decrease quantity"
                       className="grid h-12 w-12 place-items-center transition-colors hover:bg-muted"
@@ -314,16 +317,17 @@ function CartPage() {
                       <Plus className="h-5 w-5" />
                     </button>
                   </div>
-                  <div className="ml-auto w-24 text-right font-display text-lg font-bold sm:ml-0 sm:text-xl">
-                    Rs. {item.price * line.qty}
-                  </div>
-                  <button
+                  <div className="font-display text-base font-bold sm:text-lg md:text-xl">
+                      Rs. {item.price * line.qty}
+                    </div>
+                    <button
                     onClick={() => removeFromCart(line.itemId)}
                     aria-label="Remove from cart"
                     className="grid h-12 w-12 place-items-center rounded-full text-muted-foreground transition-colors hover:bg-destructive/10 hover:text-destructive"
                   >
                     <Trash2 className="h-5 w-5" />
                   </button>
+                  </div>
                 </motion.div>
               );
             })}

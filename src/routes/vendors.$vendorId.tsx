@@ -92,7 +92,7 @@ function VendorPage() {
   };
 
   return (
-    <motion.main variants={containerVariants} initial="hidden" animate="showSections" className="mx-auto max-w-5xl px-4 pb-24 sm:px-6">
+    <motion.main variants={containerVariants} initial="hidden" animate="showSections" className="mx-auto max-w-5xl px-4 pb-24 sm:px-6" style={{ contain: 'layout' }}>
       {/* Sticky back button — stays in view while the user scrolls through
           the menu so they always have an obvious way out. Uses charcoal/cream
           to contrast against both the light page and the banner image. */}
@@ -124,8 +124,8 @@ function VendorPage() {
             </span>
           )}
         </div>
-        <div className="absolute bottom-5 left-5 right-5 text-cream">
-          <h1 className="font-display text-3xl font-black sm:text-4xl md:text-5xl">
+        <div className="absolute bottom-4 left-4 right-4 text-cream sm:bottom-5 sm:left-5 sm:right-5">
+          <h1 className="font-display text-2xl font-black sm:text-3xl md:text-4xl lg:text-5xl">
             {vendor.name}
           </h1>
           <p className="mt-1 text-sm opacity-90">{vendor.tagline}</p>
@@ -262,7 +262,7 @@ function VendorPage() {
                           <button
                             onClick={() => handleAdd(item.id)}
                             disabled={!accepting || addingItem === item.id}
-                            className="flex items-center justify-center min-w-[60px] rounded-full bg-foreground px-4 py-2 text-xs font-bold text-background transition-colors hover:bg-foreground/90 disabled:cursor-not-allowed disabled:bg-primary disabled:text-primary-foreground"
+                            className="flex items-center justify-center min-w-[60px] rounded-full bg-foreground px-3 py-2 text-xs font-bold text-background transition-colors hover:bg-foreground/90 disabled:cursor-not-allowed disabled:bg-primary disabled:text-primary-foreground sm:px-4"
                           >
                             {addingItem === item.id ? (
                               <motion.div
@@ -289,7 +289,7 @@ function VendorPage() {
 
       <button
         onClick={() => navigate({ to: "/cart" })}
-        className="fixed bottom-6 left-1/2 z-40 -translate-x-1/2 rounded-full bg-primary px-6 py-3 text-sm font-bold text-primary-foreground shadow-warm transition-transform hover:-translate-y-0.5 hover:-translate-x-1/2"
+        className="fixed bottom-6 left-1/2 z-40 -translate-x-1/2 rounded-full bg-primary px-6 py-3 text-sm font-bold text-primary-foreground shadow-warm transition-transform hover:-translate-y-0.5"
       >
         View cart →
       </button>

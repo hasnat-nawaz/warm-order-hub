@@ -2,7 +2,7 @@ import { Link, useNavigate, useRouterState } from "@tanstack/react-router";
 import { useApp } from "@/store/useApp";
 import { vendors } from "@/data/menu";
 import { ShoppingBag, Flame, Menu, X, LogIn, LogOut, ChefHat, User } from "lucide-react";
-import { forwardRef, useEffect, useState } from "react";
+import { forwardRef, useEffect, useState, useRef } from "react";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -46,15 +46,13 @@ function ProfileChip({
   isVendor: boolean;
   compact?: boolean;
 }) {
-  const base = `inline-flex items-center gap-2 rounded-full border border-border bg-card text-foreground ${
-    compact ? "px-2 py-1.5 text-xs" : "px-2 py-1.5 text-sm"
-  }`;
+  const base = `inline-flex items-center gap-2 rounded-full border border-border bg-card text-foreground ${compact ? "px-2 py-1.5 text-xs" : "px-2 py-1.5 text-sm"
+    }`;
   return (
     <div className={base} aria-label={`Signed in as ${name}`}>
       <span
-        className={`grid place-items-center rounded-full bg-foreground text-background ${
-          compact ? "h-6 w-6" : "h-7 w-7"
-        }`}
+        className={`grid place-items-center rounded-full bg-foreground text-background ${compact ? "h-6 w-6" : "h-7 w-7"
+          }`}
       >
         {isVendor ? (
           <ChefHat className={compact ? "h-3 w-3" : "h-3.5 w-3.5"} strokeWidth={2.5} />
@@ -76,8 +74,9 @@ const ProfileChipTrigger = forwardRef<
   }
 >(function ProfileChipTrigger({ name, isVendor, compact = false, className, ...props }, ref) {
   const base = cn(
-    "inline-flex items-center gap-2 rounded-full border border-border bg-card text-foreground transition-colors hover:bg-secondary",
-    compact ? "px-2 py-1.5 text-xs" : "px-2 py-1.5 text-sm",
+    "inline-flex items-center justify-center rounded-full md:border md:border-border md:bg-card md:text-foreground md:transition-colors md:hover:bg-secondary md:gap-2",
+    compact ? "md:px-2 md:py-1.5 md:text-xs" : "md:px-2 md:py-1.5 md:text-sm",
+    "h-10 w-10 bg-foreground text-background shadow-warm ring-1 ring-black/5 transition-transform hover:-translate-y-0.5 active:translate-y-0 md:h-auto md:w-auto md:shadow-none md:ring-0 md:hover:translate-y-0 md:active:translate-y-0",
     className,
   );
   return (
@@ -89,17 +88,19 @@ const ProfileChipTrigger = forwardRef<
       {...props}
     >
       <span
-        className={`grid place-items-center rounded-full bg-foreground text-background ${
-          compact ? "h-6 w-6" : "h-7 w-7"
-        }`}
+        className={cn(
+          "grid place-items-center rounded-full flex-shrink-0",
+          "md:bg-foreground md:text-background",
+          compact ? "md:h-6 md:w-6" : "md:h-7 md:w-7"
+        )}
       >
         {isVendor ? (
-          <ChefHat className={compact ? "h-3 w-3" : "h-3.5 w-3.5"} strokeWidth={2.5} />
+          <ChefHat className="h-5 w-5 md:h-3 md:w-3" strokeWidth={2.5} />
         ) : (
-          <User className={compact ? "h-3 w-3" : "h-3.5 w-3.5"} strokeWidth={2.5} />
+          <User className="h-5 w-5 md:h-3 md:w-3" strokeWidth={2.5} />
         )}
       </span>
-      <span className="max-w-[8rem] truncate font-semibold sm:max-w-[12rem]">{name}</span>
+      <span className="hidden md:block max-w-[8rem] truncate font-semibold sm:max-w-[12rem]">{name}</span>
     </button>
   );
 });
@@ -115,7 +116,46 @@ export function Header() {
   const navigate = useNavigate();
 
   const [open, setOpen] = useState(false);
+  const headerRef = useRef<HTMLElement>(null);
+
   useEffect(() => setOpen(false), [path]);
+
+  useEffect(() => {
+    const handleClickOutside = (e: MouseEvent) => {
+      if (open && headerRef.current && !headerRef.current.contains(e.target as Node)) {
+        setOpen(false);
+      }
+    };
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, [open]);
+
+  const [isVisible, setIsVisible] = useState(true);
+  const scrollRef = useRef({ lastY: 0, anchor: 0 });
+
+  useEffect(() => {
+    const handleScroll = () => {
+      const y = window.scrollY;
+      const prev = scrollRef.current.lastY;
+
+      if (y <= 0) {
+        setIsVisible(true);
+      } else if (y > prev && y - scrollRef.current.anchor > 15) {
+        // Scrolling DOWN past 15px threshold → hide
+        setIsVisible(false);
+        scrollRef.current.anchor = y;
+      } else if (y < prev) {
+        // Scrolling UP at all → show immediately
+        setIsVisible(true);
+        scrollRef.current.anchor = y;
+      }
+
+      scrollRef.current.lastY = y;
+    };
+
+    window.addEventListener("scroll", handleScroll, { passive: true });
+    return () => window.removeEventListener("scroll", handleScroll);
+  }, []);
 
   const links = role === "vendor" ? vendorLinks : role === "customer" ? customerLinks : guestLinks;
 
@@ -141,12 +181,10 @@ export function Header() {
         to={l.to}
         className={
           mobile
-            ? `block rounded-xl px-3 py-2.5 text-base font-medium transition-colors ${
-                active ? "bg-primary/10 text-primary" : "text-foreground hover:bg-secondary"
-              }`
-            : `relative px-1 py-2 text-sm font-medium transition-colors ${
-                active ? "text-primary" : "text-muted-foreground hover:text-foreground"
-              }`
+            ? `block rounded-xl px-3 py-2.5 text-base font-medium transition-colors ${active ? "bg-primary/10 text-primary" : "text-foreground hover:bg-secondary"
+            }`
+            : `relative px-1 py-2 text-sm font-medium transition-colors ${active ? "text-primary" : "text-muted-foreground hover:text-foreground"
+            }`
         }
       >
         {l.label}
@@ -190,11 +228,27 @@ export function Header() {
   );
 
   return (
-    <header className="sticky top-0 z-50 border-b border-border/60 bg-background/80 backdrop-blur-xl">
-      <div className="flex h-16 w-full items-center justify-between gap-3 px-4 sm:px-6 md:px-8">
-        <div className="flex flex-1">
-          <Link to={isVendor ? "/vendor" : "/"} className="flex min-w-0 items-center gap-2">
-            <div className="grid h-9 w-9 flex-shrink-0 place-items-center rounded-xl bg-gradient-warm shadow-warm">
+    <header
+      ref={headerRef}
+      className={cn(
+        "sticky top-0 z-50 border-b border-border/60 bg-background/80 backdrop-blur-xl transition-transform duration-300",
+        isVisible ? "translate-y-0" : "-translate-y-full"
+      )}>
+      <div className="relative flex h-16 w-full items-center justify-between gap-3 px-4 sm:px-6 md:px-8">
+        <div className="flex items-center gap-4 md:flex-1">
+          {/* Mobile menu toggle */}
+          <button
+            aria-label={open ? "Close menu" : "Open menu"}
+            aria-expanded={open}
+            onClick={() => setOpen((o) => !o)}
+            className="grid h-10 w-10 place-items-center rounded-full bg-foreground text-background shadow-warm ring-1 ring-black/5 transition-transform hover:-translate-y-0.5 active:translate-y-0 md:hidden"
+          >
+            {open ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
+          </button>
+
+          {/* Desktop Logo */}
+          <Link to={isVendor ? "/vendor" : "/"} className="hidden min-w-0 items-center gap-2 md:flex">
+            <div className="grid h-10 w-10 flex-shrink-0 place-items-center rounded-xl bg-gradient-warm shadow-warm">
               <Flame className="h-5 w-5 text-primary-foreground" strokeWidth={2.5} />
             </div>
             <div className="min-w-0 leading-tight">
@@ -206,10 +260,21 @@ export function Header() {
           </Link>
         </div>
 
-        {/* Desktop nav */}
-        <nav className="hidden items-center gap-6 md:flex">{links.map((l) => renderLink(l))}</nav>
+        {/* Center Container */}
+        <div className="flex items-center justify-center">
+          {/* Desktop nav */}
+          <nav className="hidden items-center gap-6 md:flex">{links.map((l) => renderLink(l))}</nav>
 
-        <div className="flex flex-1 items-center justify-end gap-2">
+          {/* Mobile Logo Text */}
+          <Link to={isVendor ? "/vendor" : "/"} className="flex flex-col items-center justify-center md:hidden">
+            <div className="font-display text-lg font-bold leading-tight text-foreground">Campus Dhaba</div>
+            <div className="text-[10px] uppercase tracking-[0.18em] text-muted-foreground mt-0.5">
+              {isVendor ? "Vendor Console" : "GIKI · Eat fast"}
+            </div>
+          </Link>
+        </div>
+
+        <div className="flex items-center justify-end gap-3 md:flex-1">
           {/* Customer-only cart — icon-only takeout-bag for a food-first feel */}
           {!isVendor && (
             <Link
@@ -226,29 +291,27 @@ export function Header() {
             </Link>
           )}
 
-          {/* Account (desktop) — single click, dropdown reveals red Sign out */}
+          {/* Account */}
           {role ? (
-            <div className="hidden md:block">
-              <AccountDropdown />
-            </div>
+            <AccountDropdown compact />
           ) : (
-            <Link
-              to="/login"
-              className="hidden items-center gap-1.5 rounded-full border border-primary/30 bg-primary/10 px-3 py-1.5 text-xs font-semibold text-primary transition-colors hover:bg-primary/20 md:inline-flex"
-            >
-              <LogIn className="h-3.5 w-3.5" /> Sign in
-            </Link>
+            <>
+              {/* Desktop signin */}
+              <Link
+                to="/login"
+                className="hidden items-center gap-1.5 rounded-full border border-primary/30 bg-primary/10 px-3 py-1.5 text-xs font-semibold text-primary transition-colors hover:bg-primary/20 md:inline-flex"
+              >
+                <LogIn className="h-3.5 w-3.5" /> Sign in
+              </Link>
+              {/* Mobile signin */}
+              <Link
+                to="/login"
+                className="grid h-10 w-10 place-items-center rounded-full bg-foreground text-background shadow-warm ring-1 ring-black/5 transition-transform hover:-translate-y-0.5 active:translate-y-0 md:hidden"
+              >
+                <LogIn className="h-5 w-5" />
+              </Link>
+            </>
           )}
-
-          {/* Mobile menu toggle */}
-          <button
-            aria-label={open ? "Close menu" : "Open menu"}
-            aria-expanded={open}
-            onClick={() => setOpen((o) => !o)}
-            className="grid h-9 w-9 place-items-center rounded-xl border border-border bg-card text-foreground md:hidden"
-          >
-            {open ? <X className="h-4 w-4" /> : <Menu className="h-4 w-4" />}
-          </button>
         </div>
       </div>
 
@@ -256,21 +319,13 @@ export function Header() {
       {open && (
         <div className="border-t border-border/60 bg-background/95 backdrop-blur-xl md:hidden">
           <div className="space-y-3 px-4 py-4 sm:px-6">
-            {role ? (
-              <div className="flex items-center justify-start gap-3">
-                <AccountDropdown compact />
-                <span className="text-xs text-muted-foreground">Tap your name to sign out</span>
-              </div>
-            ) : (
-              <Link
-                to="/login"
-                className="inline-flex w-full items-center justify-center gap-1.5 rounded-full bg-primary px-3 py-2.5 text-sm font-bold text-primary-foreground"
-              >
-                <LogIn className="h-4 w-4" /> Sign in
-              </Link>
-            )}
-
-            <nav className="flex flex-col gap-1">{links.map((l) => renderLink(l, true))}</nav>
+            <nav className="flex flex-col gap-1">
+              {links.map((l) => (
+                <div key={l.to} onClick={() => setOpen(false)}>
+                  {renderLink(l, true)}
+                </div>
+              ))}
+            </nav>
           </div>
         </div>
       )}
