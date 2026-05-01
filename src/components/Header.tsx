@@ -208,17 +208,21 @@ export function Header() {
       ref={headerRef}
       className="fixed top-0 left-0 right-0 z-50 border-b border-border/60 bg-background/80 backdrop-blur-xl"
     >
-      <div className="relative flex h-16 w-full items-center justify-between gap-3 px-4 sm:px-6 md:px-8">
-        <div className="flex items-center gap-4 md:flex-1">
-          {/* Mobile menu toggle */}
-          <button
-            aria-label={open ? "Close menu" : "Open menu"}
-            aria-expanded={open}
-            onClick={() => setOpen((o) => !o)}
-            className="grid h-10 w-10 place-items-center rounded-full bg-foreground text-background shadow-warm ring-1 ring-black/5 transition-transform hover:-translate-y-0.5 active:translate-y-0 md:hidden"
-          >
-            {open ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
-          </button>
+      <div className="relative flex h-16 w-full items-center justify-between gap-2 px-1 sm:px-2 md:px-3">
+        <div className="flex items-center gap-2 md:flex-1">
+          {/* Mobile Profile/Sign In */}
+          <div className="md:hidden">
+            {role ? (
+              <AccountDropdown compact />
+            ) : (
+              <Link
+                to="/login"
+                className="grid h-10 w-10 place-items-center rounded-full bg-foreground text-background shadow-warm ring-1 ring-black/5 transition-transform hover:-translate-y-0.5 active:translate-y-0"
+              >
+                <LogIn className="h-5 w-5" />
+              </Link>
+            )}
+          </div>
 
           {/* Desktop Logo */}
           <Link to={isVendor ? "/vendor" : "/"} className="hidden min-w-0 items-center gap-2 md:flex">
@@ -248,7 +252,7 @@ export function Header() {
           </Link>
         </div>
 
-        <div className="flex items-center justify-end gap-3 md:flex-1">
+        <div className="flex items-center justify-end gap-1.5 md:flex-1">
           {/* Customer-only cart — icon-only takeout-bag for a food-first feel */}
           {!isVendor && (
             <Link
@@ -265,27 +269,29 @@ export function Header() {
             </Link>
           )}
 
-          {/* Account */}
-          {role ? (
-            <AccountDropdown compact />
-          ) : (
-            <>
-              {/* Desktop signin */}
+          {/* Desktop Account / Sign in */}
+          <div className="hidden md:block">
+            {role ? (
+              <AccountDropdown compact />
+            ) : (
               <Link
                 to="/login"
-              className="hidden items-center justify-center gap-1.5 rounded-full border border-primary/30 bg-primary/10 px-4 h-10 text-sm font-semibold text-primary transition-colors hover:bg-primary/20 md:inline-flex"
+                className="inline-flex items-center justify-center gap-1.5 rounded-full border border-primary/30 bg-primary/10 px-4 h-10 text-sm font-semibold text-primary transition-colors hover:bg-primary/20"
               >
-              <LogIn className="h-4 w-4" /> Sign in
+                <LogIn className="h-4 w-4" /> Sign in
               </Link>
-              {/* Mobile signin */}
-              <Link
-                to="/login"
-                className="grid h-10 w-10 place-items-center rounded-full bg-foreground text-background shadow-warm ring-1 ring-black/5 transition-transform hover:-translate-y-0.5 active:translate-y-0 md:hidden"
-              >
-                <LogIn className="h-5 w-5" />
-              </Link>
-            </>
-          )}
+            )}
+          </div>
+
+          {/* Mobile menu toggle */}
+          <button
+            aria-label={open ? "Close menu" : "Open menu"}
+            aria-expanded={open}
+            onClick={() => setOpen((o) => !o)}
+            className="grid h-10 w-10 place-items-center rounded-full bg-foreground text-background shadow-warm ring-1 ring-black/5 transition-transform hover:-translate-y-0.5 active:translate-y-0 md:hidden"
+          >
+            {open ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
+          </button>
         </div>
       </div>
 
