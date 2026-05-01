@@ -1,7 +1,7 @@
 import { createFileRoute, Link, redirect, useNavigate } from "@tanstack/react-router";
 import { CATEGORIES, CATEGORY_IMAGES, getVendor, type Category } from "@/data/menu";
 import { useApp, useLiveMenu } from "@/store/useApp";
-import { ArrowLeft, Clock, MapPin, Minus, Plus, Star, Check } from "lucide-react";
+import { ArrowLeft, Clock, MapPin, Minus, Plus, Check } from "lucide-react";
 import { useMemo, useState } from "react";
 import { toast } from "sonner";
 import { motion } from "framer-motion";
@@ -92,7 +92,23 @@ function VendorPage() {
   };
 
   return (
-    <motion.main variants={containerVariants} initial="hidden" animate="showSections" className="mx-auto max-w-5xl px-4 pb-24 sm:px-6" style={{ contain: 'layout' }}>
+    <>
+      {/* Desktop-only back button (monitor view) */}
+      <Link
+        to="/"
+        aria-label="Back"
+        className="hidden md:inline-flex fixed left-[3px] top-[67px] z-40 items-center gap-1.5 rounded-full bg-foreground px-3.5 py-2 text-xs font-bold uppercase tracking-wider text-background shadow-warm ring-1 ring-background/40 backdrop-blur transition-transform hover:-translate-y-0.5"
+      >
+        <ArrowLeft className="h-3.5 w-3.5" /> Back
+      </Link>
+
+      <motion.main
+        variants={containerVariants}
+        initial="hidden"
+        animate="showSections"
+        className="mx-auto max-w-5xl px-4 pb-24 sm:px-6"
+        style={{ contain: "layout" }}
+      >
 
 
       <motion.div variants={blockVariants} style={{ willChange: "transform, opacity" }} className="relative mt-6 overflow-hidden rounded-3xl">
@@ -121,9 +137,6 @@ function VendorPage() {
           </h1>
           <p className="mt-1 text-sm opacity-90">{vendor.tagline}</p>
           <div className="mt-3 flex flex-wrap gap-2 text-xs sm:gap-3">
-            <span className="inline-flex items-center gap-1 rounded-full bg-background/15 px-2.5 py-1 backdrop-blur">
-              <Star className="h-3 w-3 fill-accent text-accent" /> {vendor.rating}
-            </span>
             <span className="inline-flex items-center gap-1 rounded-full bg-background/15 px-2.5 py-1 backdrop-blur">
               <MapPin className="h-3 w-3" /> {vendor.location}
             </span>
@@ -279,6 +292,7 @@ function VendorPage() {
       ))}
 
 
-    </motion.main>
+      </motion.main>
+    </>
   );
 }

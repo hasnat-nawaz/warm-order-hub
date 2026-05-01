@@ -1,7 +1,7 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { vendors } from "@/data/menu";
 import { useApp, useLiveMenu } from "@/store/useApp";
-import { ArrowRight, Clock, MapPin, Star, Zap } from "lucide-react";
+import { ArrowRight, Clock, MapPin, Zap } from "lucide-react";
 import heroImg from "@/assets/hero.jpg";
 import memphisPattern from "@/assets/white-memphis-pattern.png";
 import { motion, useMotionValue, useTransform, animate } from "framer-motion";
@@ -48,9 +48,7 @@ function VendorCardLink({
             </span>
           )}
         </div>
-        <div className="absolute bottom-3 left-3 flex items-center gap-1 rounded-full bg-background/90 px-2.5 py-1 text-xs font-bold backdrop-blur">
-          <Star className="h-3 w-3 fill-accent text-accent" /> {vendor.rating}
-        </div>
+        {/* rating removed */}
       </div>
       <div className="p-5">
         <h3 className="font-display text-xl font-bold">{vendor.name}</h3>

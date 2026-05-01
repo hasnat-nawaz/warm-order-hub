@@ -48,13 +48,10 @@ function ManagePage() {
   // Always-on hook so React's hook ordering invariant holds even when we
   // bail early below.
   const grouped = useMemo(() => {
-    const map: Record<Category, MenuItem[]> = {
-      Breakfast: [],
-      Desi: [],
-      Fastfood: [],
-      Chinese: [],
-      Drinks: [],
-    };
+    const map = Object.fromEntries(CATEGORIES.map((c) => [c, [] as MenuItem[]])) as Record<
+      Category,
+      MenuItem[]
+    >;
     if (!vendorLogin) return map;
     for (const it of liveMenu) {
       if (it.vendorId === vendorLogin) map[it.category].push(it);
