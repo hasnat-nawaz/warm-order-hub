@@ -62,7 +62,7 @@ function OrderDetail() {
       <Link
         to="/orders"
         aria-label="Back to orders"
-        className="fixed left-4 top-20 z-40 inline-flex items-center gap-1.5 rounded-full bg-foreground px-3.5 py-2 text-xs font-bold uppercase tracking-wider text-background shadow-warm ring-1 ring-background/40 backdrop-blur transition-transform hover:-translate-y-0.5 sm:left-6 sm:top-24"
+        className="fixed left-[3px] top-[67px] z-40 inline-flex items-center gap-1.5 rounded-full bg-foreground px-3.5 py-2 text-xs font-bold uppercase tracking-wider text-background shadow-warm ring-1 ring-background/40 backdrop-blur transition-transform hover:-translate-y-0.5"
       >
         <ArrowLeft className="h-3.5 w-3.5" /> All orders
       </Link>

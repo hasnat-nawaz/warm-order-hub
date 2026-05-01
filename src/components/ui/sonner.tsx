@@ -15,7 +15,7 @@ const Toaster = ({ ...props }: ToasterProps) => {
       toastOptions={{
         classNames: {
           toast:
-            "group toast group-[.toaster]:rounded-2xl group-[.toaster]:border group-[.toaster]:border-white/20 group-[.toaster]:bg-background/70 group-[.toaster]:backdrop-blur-xl group-[.toaster]:text-foreground group-[.toaster]:shadow-warm group-[.toaster]:font-medium group-[.toaster]:px-5 group-[.toaster]:py-4 group-[.toaster]:min-w-[320px] group-[.toaster]:text-[15px]",
+            "group toast group-[.toaster]:rounded-2xl group-[.toaster]:border group-[.toaster]:border-primary/30 group-[.toaster]:bg-primary/15 group-[.toaster]:backdrop-blur-xl group-[.toaster]:text-foreground group-[.toaster]:shadow-warm group-[.toaster]:font-medium group-[.toaster]:px-5 group-[.toaster]:py-4 group-[.toaster]:min-w-[320px] group-[.toaster]:text-[15px]",
           title: "group-[.toast]:font-semibold group-[.toast]:text-[16px]",
           description: "group-[.toast]:text-muted-foreground",
           actionButton:
@@ -24,12 +24,12 @@ const Toaster = ({ ...props }: ToasterProps) => {
             "group-[.toast]:bg-muted group-[.toast]:text-muted-foreground group-[.toast]:rounded-full",
           closeButton: "group-[.toast]:rounded-full",
           success:
-            "group-[.toaster]:bg-emerald-500/15 group-[.toaster]:text-emerald-900 dark:group-[.toaster]:text-emerald-100 group-[.toaster]:border-emerald-500/40",
+            "group-[.toaster]:!bg-primary/15 group-[.toaster]:!text-emerald-800 dark:group-[.toaster]:!text-emerald-300 group-[.toaster]:!border-emerald-500/40",
           error:
-            "group-[.toaster]:bg-destructive/10 group-[.toaster]:text-destructive group-[.toaster]:border-destructive/40",
-          info: "group-[.toaster]:bg-card group-[.toaster]:text-foreground group-[.toaster]:border-border",
+            "group-[.toaster]:!bg-destructive/15 group-[.toaster]:!text-destructive group-[.toaster]:!border-destructive/40",
+          info: "group-[.toaster]:!bg-card group-[.toaster]:!text-foreground group-[.toaster]:!border-border",
           warning:
-            "group-[.toaster]:bg-warning/30 group-[.toaster]:text-warning-foreground group-[.toaster]:border-warning/40",
+            "group-[.toaster]:!bg-warning/30 group-[.toaster]:!text-warning-foreground group-[.toaster]:!border-warning/40",
         },
       }}
       {...props}

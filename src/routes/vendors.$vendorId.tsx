@@ -93,16 +93,7 @@ function VendorPage() {
 
   return (
     <motion.main variants={containerVariants} initial="hidden" animate="showSections" className="mx-auto max-w-5xl px-4 pb-24 sm:px-6" style={{ contain: 'layout' }}>
-      {/* Sticky back button — stays in view while the user scrolls through
-          the menu so they always have an obvious way out. Uses charcoal/cream
-          to contrast against both the light page and the banner image. */}
-      <Link
-        to="/"
-        aria-label="Back to vendors"
-        className="fixed left-4 top-20 z-40 inline-flex items-center gap-1.5 rounded-full bg-foreground px-3.5 py-2 text-xs font-bold uppercase tracking-wider text-background shadow-warm ring-1 ring-background/40 backdrop-blur transition-transform hover:-translate-y-0.5 sm:left-6 sm:top-24"
-      >
-        <ArrowLeft className="h-3.5 w-3.5" /> Back
-      </Link>
+
 
       <motion.div variants={blockVariants} style={{ willChange: "transform, opacity" }} className="relative mt-6 overflow-hidden rounded-3xl">
         <img
@@ -287,12 +278,7 @@ function VendorPage() {
         </motion.section>
       ))}
 
-      <button
-        onClick={() => navigate({ to: "/cart" })}
-        className="fixed bottom-6 left-1/2 z-40 -translate-x-1/2 rounded-full bg-primary px-6 py-3 text-sm font-bold text-primary-foreground shadow-warm transition-transform hover:-translate-y-0.5"
-      >
-        View cart →
-      </button>
+
     </motion.main>
   );
 }

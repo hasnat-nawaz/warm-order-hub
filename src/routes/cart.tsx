@@ -251,7 +251,7 @@ function CartPage() {
       <Link
         to="/"
         aria-label="Back"
-        className="fixed left-2 top-[4.5rem] z-40 inline-flex items-center gap-2 rounded-full bg-foreground px-3.5 py-2 text-xs font-bold uppercase tracking-wider text-background shadow-warm ring-1 ring-background/40 backdrop-blur transition-transform hover:-translate-y-0.5 sm:left-4 sm:top-20 sm:px-4 sm:py-2.5 sm:text-sm"
+        className="fixed left-[3px] top-[67px] z-40 inline-flex items-center gap-2 rounded-full bg-foreground px-3.5 py-2 text-xs font-bold uppercase tracking-wider text-background shadow-warm ring-1 ring-background/40 backdrop-blur transition-transform hover:-translate-y-0.5 sm:px-4 sm:py-2.5 sm:text-sm"
       >
         <ArrowLeft className="h-4 w-4" /> Back
       </Link>

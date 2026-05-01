@@ -114,7 +114,7 @@ function EditOrderPage() {
         to="/orders/$orderId"
         params={{ orderId }}
         aria-label="Back"
-        className="fixed left-4 top-20 z-40 inline-flex items-center gap-1.5 rounded-full bg-foreground px-3.5 py-2 text-xs font-bold uppercase tracking-wider text-background shadow-warm ring-1 ring-background/40 backdrop-blur transition-transform hover:-translate-y-0.5 sm:left-6 sm:top-24"
+        className="fixed left-[3px] top-[67px] z-40 inline-flex items-center gap-1.5 rounded-full bg-foreground px-3.5 py-2 text-xs font-bold uppercase tracking-wider text-background shadow-warm ring-1 ring-background/40 backdrop-blur transition-transform hover:-translate-y-0.5"
       >
         <ArrowLeft className="h-3.5 w-3.5" /> Back
       </Link>
@@ -218,7 +218,7 @@ function EditOrderPage() {
               Are you sure you want to cancel this order? This action cannot be undone.
             </AlertDialogDescription>
             <div className="flex gap-3 justify-end pt-4">
-              <AlertDialogCancel className="rounded-full">Keep order</AlertDialogCancel>
+              <AlertDialogCancel className="rounded-full mt-0">Keep order</AlertDialogCancel>
               <AlertDialogAction
                 onClick={handleConfirmCancel}
                 className="rounded-full bg-destructive text-destructive-foreground hover:bg-destructive/90"

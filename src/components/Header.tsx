@@ -130,33 +130,6 @@ export function Header() {
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, [open]);
 
-  const [isVisible, setIsVisible] = useState(true);
-  const scrollRef = useRef({ lastY: 0, anchor: 0 });
-
-  useEffect(() => {
-    const handleScroll = () => {
-      const y = window.scrollY;
-      const prev = scrollRef.current.lastY;
-
-      if (y <= 0) {
-        setIsVisible(true);
-      } else if (y > prev && y - scrollRef.current.anchor > 15) {
-        // Scrolling DOWN past 15px threshold → hide
-        setIsVisible(false);
-        scrollRef.current.anchor = y;
-      } else if (y < prev) {
-        // Scrolling UP at all → show immediately
-        setIsVisible(true);
-        scrollRef.current.anchor = y;
-      }
-
-      scrollRef.current.lastY = y;
-    };
-
-    window.addEventListener("scroll", handleScroll, { passive: true });
-    return () => window.removeEventListener("scroll", handleScroll);
-  }, []);
-
   const links = role === "vendor" ? vendorLinks : role === "customer" ? customerLinks : guestLinks;
 
   const isVendor = role === "vendor";
@@ -233,10 +206,8 @@ export function Header() {
     <div className="h-16" />
     <header
       ref={headerRef}
-      className={cn(
-        "fixed top-0 left-0 right-0 z-50 border-b border-border/60 bg-background/80 backdrop-blur-xl transition-transform duration-300",
-        isVisible ? "translate-y-0" : "-translate-y-full"
-      )}>
+      className="fixed top-0 left-0 right-0 z-50 border-b border-border/60 bg-background/80 backdrop-blur-xl"
+    >
       <div className="relative flex h-16 w-full items-center justify-between gap-3 px-4 sm:px-6 md:px-8">
         <div className="flex items-center gap-4 md:flex-1">
           {/* Mobile menu toggle */}

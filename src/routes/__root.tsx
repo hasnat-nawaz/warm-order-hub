@@ -1,5 +1,6 @@
-import { Outlet, Link, createRootRoute, HeadContent, Scripts } from "@tanstack/react-router";
+import { Outlet, Link, createRootRoute, HeadContent, Scripts, useRouterState } from "@tanstack/react-router";
 import { Header } from "@/components/Header";
+import { useApp } from "@/store/useApp";
 import { Toaster } from "@/components/ui/sonner";
 import { useEffect } from "react";
 import { toast } from "sonner";
@@ -73,6 +74,9 @@ function RootShell({ children }: { children: React.ReactNode }) {
 }
 
 function RootComponent() {
+  const cart = useApp((s) => s.cart);
+  const path = useRouterState({ select: (s) => s.location.pathname });
+
   useEffect(() => {
     const onPointerDown = (e: PointerEvent) => {
       const target = e.target as HTMLElement | null;
@@ -91,6 +95,14 @@ function RootComponent() {
       <Header />
       <Outlet />
       <Toaster richColors position="top-center" expand />
+      {cart.length > 0 && path !== "/cart" && path !== "/login" && (
+        <Link
+          to="/cart"
+          className="fixed bottom-6 left-1/2 z-50 -translate-x-1/2 rounded-full bg-primary px-8 py-3 text-sm font-bold text-primary-foreground shadow-warm transition-transform hover:-translate-y-0.5"
+        >
+          Go to cart
+        </Link>
+      )}
     </div>
   );
 }
