@@ -228,10 +228,13 @@ export function Header() {
   );
 
   return (
+    <>
+    {/* Spacer to offset fixed header height */}
+    <div className="h-16" />
     <header
       ref={headerRef}
       className={cn(
-        "sticky top-0 z-50 border-b border-border/60 bg-background/80 backdrop-blur-xl transition-transform duration-300",
+        "fixed top-0 left-0 right-0 z-50 border-b border-border/60 bg-background/80 backdrop-blur-xl transition-transform duration-300",
         isVisible ? "translate-y-0" : "-translate-y-full"
       )}>
       <div className="relative flex h-16 w-full items-center justify-between gap-3 px-4 sm:px-6 md:px-8">
@@ -330,5 +333,6 @@ export function Header() {
         </div>
       )}
     </header>
+    </>
   );
 }
