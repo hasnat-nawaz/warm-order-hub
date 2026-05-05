@@ -1,4 +1,4 @@
-import { createFileRoute, Link, redirect } from "@tanstack/react-router";
+import { createFileRoute, Link, redirect, useNavigate } from "@tanstack/react-router";
 import { useApp, format12, formatDate12, useLiveMenu } from "@/store/useApp";
 import { getVendor } from "@/data/menu";
 import {
@@ -11,10 +11,21 @@ import {
   Radio,
   XCircle,
   Edit2,
+  AlertTriangle,
 } from "lucide-react";
+import { useState } from "react";
 import { useNow } from "@/hooks/use-now";
 import { motion } from "framer-motion";
+import { toast } from "sonner";
 import { STAGE_FLOW, statusDotClasses, statusLabel, statusPillClasses } from "@/lib/orderStatus";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 
 export const Route = createFileRoute("/orders/$orderId")({
   beforeLoad: ({ location }) => {
@@ -34,7 +45,10 @@ function OrderDetail() {
   const { orderId } = Route.useParams();
   const order = useApp((s) => s.orders.find((o) => o.id === orderId));
   const update = useApp((s) => s.updateOrderStatus);
+  const cancelOrder = useApp((s) => s.cancelOrder);
   const liveMenu = useLiveMenu();
+  const navigate = useNavigate();
+  const [showCancelDialog, setShowCancelDialog] = useState(false);
   // 5-second tick so the "minutes ago" copy stays fresh.
   useNow(5_000);
 
@@ -95,13 +109,21 @@ function OrderDetail() {
                   {statusLabel(order.status, { cancellationReason: order.cancellationReason })}
                 </div>
                 {order.status === "Pending" && (
-                  <Link
-                    to="/orders/edit/$orderId"
-                    params={{ orderId: order.id }}
-                    className="inline-flex items-center gap-1.5 rounded-full bg-primary/10 px-2.5 py-1 text-[10px] font-bold text-primary transition-colors hover:bg-primary/20"
-                  >
-                    <Edit2 className="h-3 w-3" /> Edit
-                  </Link>
+                  <>
+                    <button
+                      onClick={() => setShowCancelDialog(true)}
+                      className="inline-flex items-center gap-1.5 rounded-full border border-destructive/40 bg-destructive/10 px-2.5 py-1 text-[10px] font-bold text-destructive transition-colors hover:bg-destructive/20"
+                    >
+                      <XCircle className="h-3 w-3" /> Cancel
+                    </button>
+                    <Link
+                      to="/orders/edit/$orderId"
+                      params={{ orderId: order.id }}
+                      className="inline-flex items-center gap-1.5 rounded-full bg-primary/10 px-2.5 py-1 text-[10px] font-bold text-primary transition-colors hover:bg-primary/20"
+                    >
+                      <Edit2 className="h-3 w-3" /> Edit
+                    </Link>
+                  </>
                 )}
               </div>
             </div>
@@ -265,6 +287,32 @@ function OrderDetail() {
           </button>
         )}
       </motion.main>
+
+      {/* Cancel-order confirmation dialog */}
+      <AlertDialog open={showCancelDialog} onOpenChange={setShowCancelDialog}>
+        <AlertDialogContent className="max-w-sm">
+          <AlertDialogTitle className="flex items-center gap-3">
+            <AlertTriangle className="h-5 w-5 text-destructive" />
+            Cancel order?
+          </AlertDialogTitle>
+          <AlertDialogDescription>
+            Are you sure you want to cancel this order? This action cannot be undone.
+          </AlertDialogDescription>
+          <div className="flex gap-3 justify-end pt-4">
+            <AlertDialogCancel className="rounded-full mt-0">Keep order</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={() => {
+                cancelOrder(orderId, "user");
+                toast.success("Order cancelled successfully.");
+                navigate({ to: "/orders" });
+              }}
+              className="rounded-full bg-destructive text-destructive-foreground hover:bg-destructive/90"
+            >
+              Cancel order
+            </AlertDialogAction>
+          </div>
+        </AlertDialogContent>
+      </AlertDialog>
     </>
   );
 }

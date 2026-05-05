@@ -1,12 +1,21 @@
 import { createFileRoute, Link, redirect } from "@tanstack/react-router";
 import { useApp, format12, useLiveMenu } from "@/store/useApp";
 import { getVendor } from "@/data/menu";
-import { ArrowLeft, CalendarDays, ChevronLeft, ChevronRight, Filter, Edit2, ShoppingBag } from "lucide-react";
+import { ArrowLeft, CalendarDays, ChevronLeft, ChevronRight, Filter, Edit2, ShoppingBag, XCircle, AlertTriangle } from "lucide-react";
 import { useMemo, useState } from "react";
 import { Calendar } from "@/components/ui/calendar";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { motion, AnimatePresence } from "framer-motion";
 import { statusDotClasses, statusLabel, statusPillClasses } from "@/lib/orderStatus";
+import { toast } from "sonner";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 
 export const Route = createFileRoute("/orders/")({
   head: () => ({ meta: [{ title: "My orders — Campus Dhaba" }] }),
@@ -30,9 +39,11 @@ const sameDay = (a: Date, b: Date) =>
 
 function OrdersPage() {
   const orders = useApp((s) => s.orders);
+  const cancelOrder = useApp((s) => s.cancelOrder);
   const liveMenu = useLiveMenu();
   const [filterDate, setFilterDate] = useState<Date | null>(new Date());
   const [popoverOpen, setPopoverOpen] = useState(false);
+  const [cancelTarget, setCancelTarget] = useState<string | null>(null);
 
   // Sort newest first
   const sorted = useMemo(() => [...orders].sort((a, b) => b.placedAt - a.placedAt), [orders]);
@@ -241,7 +252,17 @@ function OrdersPage() {
                         </span>
                       </Link>
                       {o.status === "Pending" && (
-                        <div className="border-t border-border px-4 py-3 flex items-center justify-end">
+                        <div className="border-t border-border px-4 py-3 flex flex-wrap items-center justify-end gap-2">
+                          <button
+                            onClick={(e) => {
+                              e.preventDefault();
+                              e.stopPropagation();
+                              setCancelTarget(o.id);
+                            }}
+                            className="inline-flex items-center gap-2 rounded-full border border-destructive/40 bg-destructive/10 px-3 py-1.5 text-xs font-bold text-destructive transition-colors hover:bg-destructive/20"
+                          >
+                            <XCircle className="h-3.5 w-3.5" /> Cancel order
+                          </button>
                           <Link
                             to="/orders/edit/$orderId"
                             params={{ orderId: o.id }}
@@ -259,6 +280,34 @@ function OrdersPage() {
           </motion.div>
         )}
       </motion.main>
+
+      {/* Cancel-order confirmation dialog */}
+      <AlertDialog open={!!cancelTarget} onOpenChange={(open) => { if (!open) setCancelTarget(null); }}>
+        <AlertDialogContent className="max-w-sm">
+          <AlertDialogTitle className="flex items-center gap-3">
+            <AlertTriangle className="h-5 w-5 text-destructive" />
+            Cancel order?
+          </AlertDialogTitle>
+          <AlertDialogDescription>
+            Are you sure you want to cancel this order? This action cannot be undone.
+          </AlertDialogDescription>
+          <div className="flex gap-3 justify-end pt-4">
+            <AlertDialogCancel className="rounded-full mt-0">Keep order</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={() => {
+                if (cancelTarget) {
+                  cancelOrder(cancelTarget, "user");
+                  toast.success("Order cancelled successfully.");
+                  setCancelTarget(null);
+                }
+              }}
+              className="rounded-full bg-destructive text-destructive-foreground hover:bg-destructive/90"
+            >
+              Cancel order
+            </AlertDialogAction>
+          </div>
+        </AlertDialogContent>
+      </AlertDialog>
     </>
   );
 }
