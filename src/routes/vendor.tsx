@@ -379,7 +379,7 @@ function VendorDashboard() {
                     <div className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">
                       Order
                     </div>
-                    <div className="font-display text-2xl font-black leading-none sm:text-3xl">#{o.id}</div>
+                    <div className="font-display text-lg font-black leading-none sm:text-xl">#{o.id}</div>
                     <div className="mt-1 truncate text-sm font-semibold">{o.customer}</div>
                   </div>
 
@@ -394,7 +394,7 @@ function VendorDashboard() {
                   </div>
 
                   {/* Items */}
-                  <ul className="space-y-1 text-sm">
+                  <ul className="space-y-1 text-base">
                     {o.lines.map((l) => {
                       const item = liveMenu.find((m) => m.id === l.itemId);
                       return (
@@ -402,11 +402,11 @@ function VendorDashboard() {
                           key={l.itemId}
                           className="flex items-baseline justify-between gap-3 border-b border-dashed border-border/70 pb-1 last:border-0 last:pb-0"
                         >
-                          <span className="truncate">
+                          <span className="truncate font-medium">
                             <span className="font-bold text-primary">{l.qty}×</span>{" "}
                             {item?.name ?? l.itemId}
                           </span>
-                          <span className="text-xs font-semibold text-muted-foreground">
+                          <span className="text-sm font-semibold text-muted-foreground">
                             Rs. {(item?.price ?? 0) * l.qty}
                           </span>
                         </li>
@@ -415,8 +415,8 @@ function VendorDashboard() {
                   </ul>
 
                   {o.notes && (
-                    <div className="rounded-xl border border-warning/40 bg-warning/15 p-2.5 text-xs">
-                      <div className="flex items-center gap-1 font-bold uppercase tracking-wider text-warning-foreground/80">
+                    <div className="rounded-xl border border-warning/40 bg-warning/15 p-2.5 text-sm">
+                      <div className="flex items-center gap-1 text-[11px] font-bold uppercase tracking-wider text-warning-foreground/80">
                         <StickyNote className="h-3 w-3" /> Note
                       </div>
                       <div className="mt-1 text-foreground">{o.notes}</div>
