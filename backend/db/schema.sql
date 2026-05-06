@@ -68,39 +68,41 @@ CREATE INDEX IF NOT EXISTS idx_menu_items_vendor ON menu_items(vendor_id);
 CREATE INDEX IF NOT EXISTS idx_menu_items_vendor_active ON menu_items(vendor_id, active);
 
 CREATE TABLE IF NOT EXISTS orders (
-  id                   UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-  public_id            BIGINT GENERATED ALWAYS AS IDENTITY UNIQUE,
-  vendor_id            TEXT NOT NULL REFERENCES vendors(id) ON DELETE RESTRICT,
-  customer_user_id     UUID NULL REFERENCES users(id) ON DELETE SET NULL,
+  id                    UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  public_id             BIGINT GENERATED ALWAYS AS IDENTITY UNIQUE,
+  vendor_id             TEXT NOT NULL REFERENCES vendors(id) ON DELETE RESTRICT,
+  customer_user_id      UUID NULL REFERENCES users(id) ON DELETE SET NULL,
   customer_display_name TEXT NOT NULL,
-  status               order_status NOT NULL DEFAULT 'Pending',
-  payment              payment_method NOT NULL,
-  notes                TEXT NULL,
+  status                order_status NOT NULL DEFAULT 'Pending',
+  payment               payment_method NOT NULL,
+  notes                 TEXT NULL,
   pickup_time_24        TEXT NOT NULL, -- "HH:MM" (matches frontend)
-  placed_at            TIMESTAMPTZ NOT NULL DEFAULT now(),
-  cancellation_reason  cancel_reason NULL,
-  updated_at           TIMESTAMPTZ NOT NULL DEFAULT now(),
-  CONSTRAINT orders_cancel_check
-    CHECK ((status = 'Cancelled' AND cancellation_reason IS NOT NULL) OR (status <> 'Cancelled' AND cancellation_reason IS NULL))
+  placed_at             TIMESTAMPTZ NOT NULL DEFAULT now(),
+  cancellation_reason   cancel_reason NULL,
+  updated_at            TIMESTAMPTZ NOT NULL DEFAULT now(),
+  CONSTRAINT orders_cancel_check CHECK (
+    (status = 'Cancelled' AND cancellation_reason IS NOT NULL)
+    OR (status <> 'Cancelled' AND cancellation_reason IS NULL)
+  )
 );
 
 CREATE INDEX IF NOT EXISTS idx_orders_vendor_placed ON orders(vendor_id, placed_at DESC);
 CREATE INDEX IF NOT EXISTS idx_orders_customer_placed ON orders(customer_user_id, placed_at DESC);
 
 CREATE TABLE IF NOT EXISTS order_lines (
-  order_id        UUID NOT NULL REFERENCES orders(id) ON DELETE CASCADE,
-  item_id         TEXT NOT NULL REFERENCES menu_items(id) ON DELETE RESTRICT,
-  qty             INTEGER NOT NULL CHECK (qty > 0),
-  unit_price      INTEGER NOT NULL CHECK (unit_price >= 0),
-  item_name       TEXT NOT NULL,
+  order_id   UUID NOT NULL REFERENCES orders(id) ON DELETE CASCADE,
+  item_id    TEXT NOT NULL REFERENCES menu_items(id) ON DELETE RESTRICT,
+  qty        INTEGER NOT NULL CHECK (qty > 0),
+  unit_price INTEGER NOT NULL CHECK (unit_price >= 0),
+  item_name  TEXT NOT NULL,
   PRIMARY KEY (order_id, item_id)
 );
 
 -- Optional per-user favourites (frontend currently stores in local state,
 -- but we support DB so "static data" is gone).
 CREATE TABLE IF NOT EXISTS favorites (
-  user_id   UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
-  item_id   TEXT NOT NULL REFERENCES menu_items(id) ON DELETE CASCADE,
+  user_id    UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  item_id    TEXT NOT NULL REFERENCES menu_items(id) ON DELETE CASCADE,
   created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
   PRIMARY KEY (user_id, item_id)
 );

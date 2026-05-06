@@ -6,6 +6,15 @@ Full-stack PERN app:
 - **Backend**: Node.js + Express
 - **Database**: Neon PostgreSQL
 
+## Repository structure
+
+```
+project-root/
+├── frontend/   (React + Vite + TS)
+├── backend/    (Node + Express)
+└── README.md
+```
+
 ## Quick start (local dev)
 
 ### Prerequisites
@@ -38,7 +47,7 @@ Edit `backend/.env` and set at minimum:
 Create frontend env:
 
 ```bash
-cp .env.example .env.local
+cp frontend/.env.example frontend/.env.local
 ```
 
 Ensure `VITE_API_URL` points to the backend:
@@ -48,9 +57,8 @@ Ensure `VITE_API_URL` points to the backend:
 ### 3) Create tables + seed demo data
 
 ```bash
-cd backend
-npm run db:apply:schema
-npm run db:seed
+npm run db:apply:schema -w backend
+npm run db:seed -w backend
 ```
 
 ### 4) Run (auto-reload)
@@ -61,7 +69,7 @@ One command starts **both** servers with hot reload/watch:
 npm start
 ```
 
-- Frontend: `http://localhost:5173`
+- Frontend: `http://localhost:5173` (or next available port)
 - Backend: `http://localhost:8080`
 
 ## Demo accounts
