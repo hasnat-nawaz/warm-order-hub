@@ -11,7 +11,7 @@ Open `http://localhost:5173`.
 
 ## Login credentials (demo)
 
-These are the current credentials used by the login screen (see `src/data/users.ts`).
+After you seed the database, these demo credentials exist in the Neon database (see `backend/scripts/seed.ts`).
 
 ### Customers
 - **ahmed** / **ahmed123**
