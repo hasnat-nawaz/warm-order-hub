@@ -1,6 +1,5 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useApp } from "@/store/useApp";
-import { findUser } from "@/data/users";
 import { ArrowRight, Eye, EyeOff, Lock, ShieldCheck, User } from "lucide-react";
 import { useState } from "react";
 import { toast } from "sonner";
@@ -20,7 +19,7 @@ export const Route = createFileRoute("/login")({
 function LoginPage() {
   const search = Route.useSearch();
   const navigate = useNavigate();
-  const setRole = useApp((s) => s.setRole);
+  const login = useApp((s) => s.login);
 
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
@@ -30,41 +29,23 @@ function LoginPage() {
 
   const safeRedirect = search.redirect && search.redirect.startsWith("/") ? search.redirect : null;
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!username.trim() || !password) {
       setError("Enter your username and password.");
       return;
     }
     setSubmitting(true);
-    // Fake a brief auth call so the spinner state actually shows; this also
-    // trains users that submitting takes a beat (matches a real auth UX).
-    setTimeout(() => {
-      const user = findUser(username, password);
-      if (!user) {
-        setError("Invalid username or password.");
-        setSubmitting(false);
-        return;
-      }
-
-      if (user.role === "vendor") {
-        setRole("vendor", {
-          vendorId: user.vendorId,
-          username: user.username,
-          displayName: user.displayName,
-        });
-        toast.success(`Signed in as ${user.displayName}`);
-        navigate({ to: safeRedirect ?? "/vendor" });
-      } else {
-        setRole("customer", {
-          username: user.username,
-          customer: user.displayName,
-          displayName: user.displayName,
-        });
-        toast.success(`Welcome, ${user.displayName}!`);
-        navigate({ to: safeRedirect ?? "/" });
-      }
-    }, 350);
+    try {
+      await login(username, password);
+      const state = useApp.getState();
+      toast.success(`Welcome, ${state.displayName ?? state.username ?? "user"}!`);
+      navigate({ to: state.role === "vendor" ? (safeRedirect ?? "/vendor") : (safeRedirect ?? "/") });
+    } catch (err: any) {
+      setError(err?.message ?? "Invalid username or password.");
+    } finally {
+      setSubmitting(false);
+    }
   };
 
   return (

@@ -1,6 +1,5 @@
 import { createFileRoute, Link, redirect, useNavigate } from "@tanstack/react-router";
 import { useApp, useLiveMenu } from "@/store/useApp";
-import { getVendor } from "@/data/menu";
 import { ArrowLeft, Minus, Plus, Trash2, AlertTriangle } from "lucide-react";
 import { useMemo, useState } from "react";
 import { toast } from "sonner";
@@ -34,6 +33,7 @@ function EditOrderPage() {
   const updateOrderLines = useApp((s) => s.updateOrderLines);
   const cancelOrder = useApp((s) => s.cancelOrder);
   const liveMenu = useLiveMenu();
+  const vendors = useApp((s) => s.vendors);
   const navigate = useNavigate();
 
   const [editedLines, setEditedLines] = useState(order?.lines ?? []);
@@ -73,7 +73,7 @@ function EditOrderPage() {
     );
   }
 
-  const vendor = getVendor(order.vendorId);
+  const vendor = vendors.find((v) => v.id === order.vendorId);
   const hasChanges = JSON.stringify(editedLines) !== JSON.stringify(order.lines);
 
   const handleQtyChange = (itemId: string, delta: number) => {
@@ -88,12 +88,12 @@ function EditOrderPage() {
     setEditedLines((prev) => prev.filter((l) => l.itemId !== itemId));
   };
 
-  const handleSave = () => {
+  const handleSave = async () => {
     if (editedLines.length === 0) {
       toast.error("Order must have at least one item.");
       return;
     }
-    updateOrderLines(orderId, editedLines);
+    await updateOrderLines(orderId, editedLines);
     toast.success("Order updated successfully!");
     navigate({ to: "/orders/$orderId", params: { orderId } });
   };
@@ -102,8 +102,8 @@ function EditOrderPage() {
     setShowCancelDialog(true);
   };
 
-  const handleConfirmCancel = () => {
-    cancelOrder(orderId, "user");
+  const handleConfirmCancel = async () => {
+    await cancelOrder(orderId, "user");
     toast.success("Order cancelled successfully.");
     navigate({ to: "/orders" });
   };

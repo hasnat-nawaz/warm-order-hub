@@ -1,6 +1,5 @@
 import { Link, useNavigate, useRouterState } from "@tanstack/react-router";
 import { useApp } from "@/store/useApp";
-import { vendors } from "@/data/menu";
 import { ShoppingBag, Flame, Menu, X, LogIn, LogOut, ChefHat, User } from "lucide-react";
 import { forwardRef, useEffect, useState, useRef } from "react";
 import {
@@ -109,6 +108,7 @@ export function Header() {
   const cartCount = useApp((s) => s.cart.reduce((n, l) => n + l.qty, 0));
   const role = useApp((s) => s.role);
   const vendorLogin = useApp((s) => s.vendorLogin);
+  const vendors = useApp((s) => s.vendors);
   const displayName = useApp((s) => s.displayName);
   const customer = useApp((s) => s.customer);
   const logout = useApp((s) => s.logout);

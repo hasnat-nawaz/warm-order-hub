@@ -1,6 +1,5 @@
 import { createFileRoute, Link, redirect, useNavigate } from "@tanstack/react-router";
 import { useApp, format12, formatDate12, useLiveMenu } from "@/store/useApp";
-import { getVendor } from "@/data/menu";
 import {
   ArrowLeft,
   Check,
@@ -47,6 +46,7 @@ function OrderDetail() {
   const update = useApp((s) => s.updateOrderStatus);
   const cancelOrder = useApp((s) => s.cancelOrder);
   const liveMenu = useLiveMenu();
+  const vendors = useApp((s) => s.vendors);
   const navigate = useNavigate();
   const [showCancelDialog, setShowCancelDialog] = useState(false);
   // 5-second tick so the "minutes ago" copy stays fresh.
@@ -63,7 +63,7 @@ function OrderDetail() {
     );
   }
 
-  const vendor = getVendor(order.vendorId);
+  const vendor = vendors.find((v) => v.id === order.vendorId);
   const isCancelled = order.status === "Cancelled";
   const stageIdx = STAGE_FLOW.indexOf(order.status);
   const stageIcon = [Clock, ChefHat, Package, Check];
@@ -280,7 +280,7 @@ function OrderDetail() {
 
         {order.status === "Ready" && (
           <button
-            onClick={() => update(order.id, "Picked up")}
+            onClick={async () => update(order.id, "Picked up")}
             className="mt-6 w-full rounded-full bg-foreground py-3 text-sm font-bold text-background hover:bg-foreground/90"
           >
             Mark as picked up
@@ -302,9 +302,11 @@ function OrderDetail() {
             <AlertDialogCancel className="rounded-full mt-0">Keep order</AlertDialogCancel>
             <AlertDialogAction
               onClick={() => {
-                cancelOrder(orderId, "user");
-                toast.success("Order cancelled successfully.");
-                navigate({ to: "/orders" });
+                (async () => {
+                  await cancelOrder(orderId, "user");
+                  toast.success("Order cancelled successfully.");
+                  navigate({ to: "/orders" });
+                })();
               }}
               className="rounded-full bg-destructive text-destructive-foreground hover:bg-destructive/90"
             >

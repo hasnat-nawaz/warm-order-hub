@@ -1,6 +1,6 @@
 import { createFileRoute, Link, redirect } from "@tanstack/react-router";
 import { useApp, useLiveMenu } from "@/store/useApp";
-import { CATEGORIES, CATEGORY_IMAGES, getVendor, type Category, type MenuItem } from "@/data/menu";
+import { CATEGORIES, CATEGORY_IMAGES, type Category, type MenuItem } from "@/data/menu";
 import {
   Dialog,
   DialogContent,
@@ -41,6 +41,7 @@ function ManagePage() {
   const role = useApp((s) => s.role);
   const vendorLogin = useApp((s) => s.vendorLogin);
   const liveMenu = useLiveMenu();
+  const vendors = useApp((s) => s.vendors);
 
   const [editCat, setEditCat] = useState<Category | null>(null);
   const [addCat, setAddCat] = useState<Category | null>(null);
@@ -75,7 +76,7 @@ function ManagePage() {
     );
   }
 
-  const vendor = getVendor(vendorLogin)!;
+  const vendor = vendors.find((v) => v.id === vendorLogin)!;
   const myItems = liveMenu.filter((m) => m.vendorId === vendorLogin);
 
   const containerVariants = {
@@ -244,9 +245,11 @@ function EditCategoryDialog({
                 key={it.id}
                 item={it}
                 onSave={(patch) => {
-                  updateMenuItem(it.id, patch);
-                  toast.success("Item updated");
-                  setEditingId(null);
+                  (async () => {
+                    await updateMenuItem(it.id, patch);
+                    toast.success("Item updated");
+                    setEditingId(null);
+                  })();
                 }}
                 onCancel={() => setEditingId(null)}
               />
@@ -311,8 +314,10 @@ function EditCategoryDialog({
               <AlertDialogAction
                 onClick={() => {
                   if (deletingId) {
-                    deleteMenuItem(deletingId);
-                    toast.info("Item removed");
+                    (async () => {
+                      await deleteMenuItem(deletingId);
+                      toast.info("Item removed");
+                    })();
                   }
                   setDeletingId(null);
                 }}
@@ -458,20 +463,18 @@ function AddItemDialog({
     reader.readAsDataURL(file);
   };
 
-  const submit = () => {
+  const submit = async () => {
     if (!category) return;
     const p = parseInt(price, 10);
     if (!name.trim() || !p) {
       toast.error("Name and price are required.");
       return;
     }
-    addMenuItem({
-      vendorId,
+    await addMenuItem({
       name: name.trim(),
       price: p,
       category,
       description: description.trim() || `${name.trim()} — freshly made.`,
-      image: image ?? CATEGORY_IMAGES[category],
     });
     toast.success(`${name.trim()} added to ${category}`);
     reset();
@@ -492,7 +495,7 @@ function AddItemDialog({
         <form
           onSubmit={(e) => {
             e.preventDefault();
-            submit();
+            void submit();
           }}
         >
           <DialogHeader>

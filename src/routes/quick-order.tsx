@@ -1,6 +1,5 @@
 import { createFileRoute, Link, redirect, useNavigate } from "@tanstack/react-router";
 import { useApp, format12, useLiveMenu } from "@/store/useApp";
-import { getVendor } from "@/data/menu";
 import { Heart, Zap, ArrowLeft, Clock, Repeat } from "lucide-react";
 import { toast } from "sonner";
 import { motion } from "framer-motion";
@@ -30,6 +29,7 @@ function QuickOrderPage() {
   const orders = useApp((s) => s.orders);
   const role = useApp((s) => s.role);
   const vendorAccepting = useApp((s) => s.vendorAccepting);
+  const vendors = useApp((s) => s.vendors);
   const addToCart = useApp((s) => s.addToCart);
   const clearCart = useApp((s) => s.clearCart);
   const toggleFavorite = useApp((s) => s.toggleFavorite);
@@ -37,7 +37,7 @@ function QuickOrderPage() {
   const navigate = useNavigate();
 
   const lastOrder = orders[0];
-  const lastVendor = lastOrder ? getVendor(lastOrder.vendorId) : null;
+  const lastVendor = lastOrder ? vendors.find((v) => v.id === lastOrder.vendorId) : null;
 
   const requireLogin = (): boolean => {
     if (!role) {
@@ -62,7 +62,7 @@ function QuickOrderPage() {
       return;
     }
     if ((vendorAccepting[first.vendorId] ?? true) === false) {
-      toast.error(`${getVendor(first.vendorId)?.name ?? "This dhaba"} is closed right now.`);
+      toast.error(`${vendors.find((v) => v.id === first.vendorId)?.name ?? "This dhaba"} is closed right now.`);
       return;
     }
 
@@ -178,7 +178,7 @@ function QuickOrderPage() {
             {favorites.map((id) => {
               const item = liveMenu.find((m) => m.id === id);
               if (!item) return null;
-              const vendor = getVendor(item.vendorId);
+              const vendor = vendors.find((v) => v.id === item.vendorId);
               const open = vendorAccepting[item.vendorId] ?? true;
               return (
                 <motion.div

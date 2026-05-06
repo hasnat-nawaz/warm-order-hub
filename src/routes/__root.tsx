@@ -129,10 +129,19 @@ function RootShell({ children }: { children: React.ReactNode }) {
 
 function RootComponent() {
   const cart = useApp((s) => s.cart);
+  const bootstrap = useApp((s) => s.bootstrap);
   const router = useRouter();
   const path = useRouterState({ select: (s) => s.location.pathname });
   const routerStatus = useRouterState({ select: (s) => (s as any).status as string | undefined });
   const [showBoot, setShowBoot] = useState(true);
+
+  useEffect(() => {
+    bootstrap().catch(() => {
+      toast.error("Could not connect to backend. Is it running?");
+    });
+    // run once
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   useEffect(() => {
     const t = window.setTimeout(() => setShowBoot(false), 550);

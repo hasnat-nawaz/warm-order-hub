@@ -1,158 +1,258 @@
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
-import { baseMenu, vendors, getVendor, type Category, type MenuItem } from "@/data/menu";
+import { type Category, type MenuItem, type Vendor, menuItemImage, vendorWithImage } from "@/data/menu";
+import { apiFetch } from "@/lib/api";
 
 export type CartLine = { itemId: string; qty: number };
 export type OrderStatus = "Pending" | "Preparing" | "Ready" | "Picked up" | "Cancelled";
 export type Role = "customer" | "vendor" | null;
 
 export type Order = {
-  id: string;
+  id: string; // public id (stringified number)
   vendorId: string;
   lines: CartLine[];
   total: number;
-  pickupTime: string; // HH:MM (24h, internal)
-  placedAt: number;
+  pickupTime: string; // HH:MM (24h)
+  placedAt: number; // epoch ms
   status: OrderStatus;
   customer: string;
   payment: "EasyPaisa" | "JazzCash" | "Cash on Pickup";
   notes?: string;
-  cancellationReason?: "user" | "vendor"; // "user" = customer cancelled, "vendor" = vendor rejected
+  cancellationReason?: "user" | "vendor";
 };
 
-export type StoredMenuItem = MenuItem & { custom?: boolean };
+type ApiVendor = {
+  id: string;
+  name: string;
+  tagline: string;
+  location: string;
+  hours: string;
+  prep_time: string;
+  accepting: boolean;
+};
+
+type ApiMenuItem = {
+  id: string;
+  vendor_id: string;
+  name: string;
+  price: number;
+  category: string;
+  description: string;
+  active: boolean;
+};
+
+type ApiOrder = {
+  id: string; // uuid
+  public_id: number;
+  vendor_id: string;
+  customer_display_name: string;
+  status: OrderStatus;
+  payment: Order["payment"];
+  notes: string | null;
+  pickup_time_24: string;
+  placed_at: string;
+  cancellation_reason: "user" | "vendor" | null;
+  lines: Array<{ item_id: string; qty: number; unit_price?: number }>;
+};
 
 type Store = {
-  cart: CartLine[];
-  cartVendorId: string | null;
-  favorites: string[];
-  orders: Order[];
-  customer: string;
-
   // Auth
+  token: string | null;
   role: Role;
   vendorLogin: string | null;
   username: string | null;
   displayName: string | null;
+  customer: string;
 
-  // Vendor state
+  // Data
+  vendors: Vendor[];
+  menuItems: ApiMenuItem[];
   vendorAccepting: Record<string, boolean>;
+  orders: Order[];
+  _orderUuidByPublicId: Record<string, string>;
 
-  // Menu state — vendor-managed extensions to the base menu
-  customItems: StoredMenuItem[];
-  itemOverrides: Record<string, Partial<MenuItem>>; // edits on baseMenu items
-  removedItemIds: string[]; // soft-delete for both base and custom items
+  // Cart
+  cart: CartLine[];
+  cartVendorId: string | null;
+  favorites: string[];
 
-  // Sequential id counter
-  orderCounter: number;
-  itemCounter: number;
+  // Bootstrap/loaders
+  bootstrap: () => Promise<void>;
+  refreshOrders: () => Promise<void>;
 
-  setRole: (
-    role: Role,
-    opts?: {
-      vendorId?: string;
-      customer?: string;
-      username?: string;
-      displayName?: string;
-    },
-  ) => void;
+  // Auth actions
+  login: (username: string, password: string) => Promise<void>;
+  signup: (displayName: string, username: string, password: string) => Promise<void>;
   logout: () => void;
-  toggleVendorAccepting: (vendorId: string) => void;
 
+  // Vendor actions
+  toggleVendorAccepting: (vendorId: string) => Promise<void>;
+
+  // Cart actions
   addToCart: (item: MenuItem, qty?: number) => { ok: boolean; reason?: string };
   removeFromCart: (itemId: string) => void;
   setQty: (itemId: string, qty: number) => void;
   clearCart: () => void;
-
   toggleFavorite: (itemId: string) => void;
 
-  // Menu CRUD
-  addMenuItem: (item: Omit<MenuItem, "id">) => StoredMenuItem;
-  updateMenuItem: (id: string, patch: Partial<MenuItem>) => void;
-  deleteMenuItem: (id: string) => void;
+  // Menu CRUD (vendor)
+  addMenuItem: (item: { name: string; price: number; category: Category; description: string }) => Promise<void>;
+  updateMenuItem: (id: string, patch: Partial<Pick<MenuItem, "name" | "price" | "category" | "description">>) => Promise<void>;
+  deleteMenuItem: (id: string) => Promise<void>;
 
-  placeOrder: (opts: {
-    pickupTime: string;
-    payment: Order["payment"];
-    notes?: string;
-  }) => Order | null;
-  quickOrder: (itemId: string, pickupTime: string) => Order;
-
-  updateOrderStatus: (orderId: string, status: OrderStatus) => void;
-  updateOrderLines: (orderId: string, lines: CartLine[]) => void;
-  cancelOrder: (orderId: string, reason?: "user" | "vendor") => void;
+  // Orders
+  placeOrder: (opts: { pickupTime: string; payment: Order["payment"]; notes?: string }) => Promise<Order | null>;
+  updateOrderStatus: (orderId: string, status: OrderStatus) => Promise<void>;
+  updateOrderLines: (orderId: string, lines: CartLine[]) => Promise<void>;
+  cancelOrder: (orderId: string, reason?: "user" | "vendor") => Promise<void>;
 };
 
-const defaultAccepting = vendors.reduce<Record<string, boolean>>((acc, v) => {
-  acc[v.id] = v.accepting;
-  return acc;
-}, {});
+const mapApiOrder = (o: ApiOrder): Order => {
+  const placedAt = Date.parse(o.placed_at);
+  const total = o.lines.reduce((s, l) => s + (l.unit_price ?? 0) * l.qty, 0);
+  return {
+    id: String(o.public_id),
+    vendorId: o.vendor_id,
+    lines: o.lines.map((l) => ({ itemId: l.item_id, qty: l.qty })),
+    total,
+    pickupTime: o.pickup_time_24,
+    placedAt: Number.isFinite(placedAt) ? placedAt : Date.now(),
+    status: o.status,
+    customer: o.customer_display_name,
+    payment: o.payment,
+    notes: o.notes ?? undefined,
+    cancellationReason: o.cancellation_reason ?? undefined,
+  };
+};
 
 export const useApp = create<Store>()(
   persist(
     (set, get) => ({
-      cart: [],
-      cartVendorId: null,
-      favorites: ["hot-burger", "raju-roll", "sip-strawberry"],
-      orders: [],
-      customer: "Ahmed Khan",
-
+      token: null,
       role: null,
       vendorLogin: null,
       username: null,
       displayName: null,
+      customer: "Guest",
 
-      vendorAccepting: defaultAccepting,
+      vendors: [],
+      menuItems: [],
+      vendorAccepting: {},
+      orders: [],
+      _orderUuidByPublicId: {},
 
-      customItems: [],
-      itemOverrides: {},
-      removedItemIds: [],
+      cart: [],
+      cartVendorId: null,
+      favorites: [],
 
-      orderCounter: 1001,
-      itemCounter: 1,
+      bootstrap: async () => {
+        const v = await apiFetch<{ vendors: ApiVendor[] }>("/api/vendors");
+        const vendors = v.vendors.map((x) =>
+          vendorWithImage({
+            id: x.id,
+            name: x.name,
+            tagline: x.tagline,
+            location: x.location,
+            hours: x.hours,
+            prepTime: x.prep_time,
+            accepting: x.accepting,
+          }),
+        );
+        const vendorAccepting = vendors.reduce<Record<string, boolean>>((acc, x) => {
+          acc[x.id] = x.accepting;
+          return acc;
+        }, {});
 
-      setRole: (role, opts) => {
-        if (role === "vendor") {
-          set({
-            role: "vendor",
-            vendorLogin: opts?.vendorId ?? vendors[0].id,
-            username: opts?.username ?? null,
-            displayName: opts?.displayName ?? null,
-            cart: [],
-            cartVendorId: null,
-          });
-        } else if (role === "customer") {
-          const display = opts?.displayName?.trim() || opts?.customer?.trim() || "Guest";
-          set({
-            role: "customer",
-            vendorLogin: null,
-            username: opts?.username ?? null,
-            displayName: display,
-            customer: display,
-          });
-        } else {
-          set({
-            role: null,
-            vendorLogin: null,
-            username: null,
-            displayName: null,
-          });
+        const m = await apiFetch<{ items: ApiMenuItem[] }>("/api/menu");
+        set({ vendors, vendorAccepting, menuItems: m.items });
+
+        // If user is already logged in (persisted), refresh their orders.
+        if (get().token && get().role) {
+          await get().refreshOrders();
         }
       },
+
+      refreshOrders: async () => {
+        const { role, token } = get();
+        if (!role || !token) {
+          set({ orders: [], _orderUuidByPublicId: {} });
+          return;
+        }
+
+        if (role === "customer") {
+          const r = await apiFetch<{ orders: ApiOrder[] }>("/api/orders/me", { token });
+          const map: Record<string, string> = {};
+          for (const o of r.orders) map[String(o.public_id)] = o.id;
+          set({ orders: r.orders.map(mapApiOrder), _orderUuidByPublicId: map });
+        } else {
+          const r = await apiFetch<{ orders: ApiOrder[] }>("/api/vendor/orders", { token });
+          const map: Record<string, string> = {};
+          for (const o of r.orders) map[String(o.public_id)] = o.id;
+          set({ orders: r.orders.map(mapApiOrder), _orderUuidByPublicId: map });
+        }
+      },
+
+      login: async (username, password) => {
+        const r = await apiFetch<{
+          token: string;
+          user: { username: string; role: "customer" | "vendor"; displayName: string; vendorId?: string | null };
+        }>("/api/auth/login", { method: "POST", body: { username, password } });
+
+        set({
+          token: r.token,
+          role: r.user.role,
+          username: r.user.username,
+          displayName: r.user.displayName,
+          customer: r.user.displayName,
+          vendorLogin: r.user.role === "vendor" ? (r.user.vendorId ?? null) : null,
+          cart: [],
+          cartVendorId: null,
+        });
+        await get().refreshOrders();
+      },
+
+      signup: async (displayName, username, password) => {
+        const r = await apiFetch<{
+          token: string;
+          user: { username: string; role: "customer"; displayName: string };
+        }>("/api/auth/signup", { method: "POST", body: { displayName, username, password } });
+
+        set({
+          token: r.token,
+          role: "customer",
+          username: r.user.username,
+          displayName: r.user.displayName,
+          customer: r.user.displayName,
+          vendorLogin: null,
+          cart: [],
+          cartVendorId: null,
+        });
+        await get().refreshOrders();
+      },
+
       logout: () =>
         set({
+          token: null,
           role: null,
           vendorLogin: null,
           username: null,
           displayName: null,
+          customer: "Guest",
+          orders: [],
           cart: [],
           cartVendorId: null,
         }),
 
-      toggleVendorAccepting: (vendorId) => {
-        const map = { ...get().vendorAccepting };
-        map[vendorId] = !(map[vendorId] ?? true);
-        set({ vendorAccepting: map });
+      toggleVendorAccepting: async (vendorId) => {
+        const { token, role, vendorLogin, vendorAccepting } = get();
+        if (!token || role !== "vendor" || vendorLogin !== vendorId) return;
+        const next = !(vendorAccepting[vendorId] ?? true);
+        await apiFetch("/api/vendors/" + encodeURIComponent(vendorId) + "/accepting", {
+          method: "PATCH",
+          token,
+          body: { accepting: next },
+        });
+        set({ vendorAccepting: { ...vendorAccepting, [vendorId]: next } });
       },
 
       addToCart: (item, qty = 1) => {
@@ -161,10 +261,7 @@ export const useApp = create<Store>()(
           return { ok: false, reason: "This dhaba is closed right now." };
         }
         if (cartVendorId && cartVendorId !== item.vendorId) {
-          return {
-            ok: false,
-            reason: "Your cart has items from another vendor. Clear it first.",
-          };
+          return { ok: false, reason: "Your cart has items from another vendor. Clear it first." };
         }
         const existing = cart.find((l) => l.itemId === item.id);
         const next = existing
@@ -175,165 +272,139 @@ export const useApp = create<Store>()(
       },
       removeFromCart: (itemId) => {
         const next = get().cart.filter((l) => l.itemId !== itemId);
-        set({
-          cart: next,
-          cartVendorId: next.length ? get().cartVendorId : null,
-        });
+        set({ cart: next, cartVendorId: next.length ? get().cartVendorId : null });
       },
       setQty: (itemId, qty) => {
         if (qty <= 0) return get().removeFromCart(itemId);
-        set({
-          cart: get().cart.map((l) => (l.itemId === itemId ? { ...l, qty } : l)),
-        });
+        set({ cart: get().cart.map((l) => (l.itemId === itemId ? { ...l, qty } : l)) });
       },
       clearCart: () => set({ cart: [], cartVendorId: null }),
-
       toggleFavorite: (itemId) => {
         const f = get().favorites;
-        set({
-          favorites: f.includes(itemId) ? f.filter((x) => x !== itemId) : [...f, itemId],
-        });
+        set({ favorites: f.includes(itemId) ? f.filter((x) => x !== itemId) : [...f, itemId] });
       },
 
-      addMenuItem: (input) => {
-        const { itemCounter } = get();
-        const item: StoredMenuItem = {
-          ...input,
-          id: `custom-${itemCounter}`,
-          custom: true,
-        };
-        set({
-          customItems: [...get().customItems, item],
-          itemCounter: itemCounter + 1,
+      addMenuItem: async (item) => {
+        const { token, role } = get();
+        if (!token || role !== "vendor") return;
+        const r = await apiFetch<{ item: ApiMenuItem }>("/api/vendor/menu-items", {
+          method: "POST",
+          token,
+          body: item,
         });
-        return item;
-      },
-      updateMenuItem: (id, patch) => {
-        const { customItems, itemOverrides } = get();
-        // If it's a custom item, edit in place. Otherwise persist an override.
-        const isCustom = customItems.some((c) => c.id === id);
-        if (isCustom) {
-          set({
-            customItems: customItems.map((c) => (c.id === id ? { ...c, ...patch, id: c.id } : c)),
-          });
-        } else {
-          set({
-            itemOverrides: { ...itemOverrides, [id]: { ...itemOverrides[id], ...patch } },
-          });
-        }
-      },
-      deleteMenuItem: (id) => {
-        const { customItems, removedItemIds } = get();
-        const isCustom = customItems.some((c) => c.id === id);
-        if (isCustom) {
-          set({ customItems: customItems.filter((c) => c.id !== id) });
-        } else if (!removedItemIds.includes(id)) {
-          set({ removedItemIds: [...removedItemIds, id] });
-        }
+        set({ menuItems: [r.item, ...get().menuItems] });
       },
 
-      placeOrder: ({ pickupTime, payment, notes }) => {
-        const { cart, cartVendorId, customer, orderCounter } = get();
+      updateMenuItem: async (id, patch) => {
+        const { token, role } = get();
+        if (!token || role !== "vendor") return;
+        const r = await apiFetch<{ item: ApiMenuItem }>("/api/vendor/menu-items/" + encodeURIComponent(id), {
+          method: "PATCH",
+          token,
+          body: patch,
+        });
+        set({ menuItems: get().menuItems.map((x) => (x.id === id ? r.item : x)) });
+      },
+
+      deleteMenuItem: async (id) => {
+        const { token, role } = get();
+        if (!token || role !== "vendor") return;
+        await apiFetch("/api/vendor/menu-items/" + encodeURIComponent(id), { method: "DELETE", token });
+        set({ menuItems: get().menuItems.filter((x) => x.id !== id) });
+      },
+
+      placeOrder: async ({ pickupTime, payment, notes }) => {
+        const { token, role, cart, cartVendorId } = get();
+        if (!token || role !== "customer") return null;
         if (!cart.length || !cartVendorId) return null;
-        const total = cart.reduce((s, l) => {
-          const it = liveMenuFromState(get())().find((m) => m.id === l.itemId);
-          return s + (it?.price ?? 0) * l.qty;
-        }, 0);
-        const order: Order = {
-          id: String(orderCounter),
-          vendorId: cartVendorId,
-          lines: cart,
-          total,
-          pickupTime,
-          placedAt: Date.now(),
-          status: "Pending",
-          customer,
-          payment,
-          notes: notes?.trim() || undefined,
-        };
-        set({
-          orders: [order, ...get().orders],
-          cart: [],
-          cartVendorId: null,
-          orderCounter: orderCounter + 1,
+
+        await apiFetch("/api/orders", {
+          method: "POST",
+          token,
+          body: { vendorId: cartVendorId, pickupTime, payment, notes, lines: cart },
         });
-        return order;
+
+        // Refresh orders from server (authoritative)
+        await get().refreshOrders();
+        set({ cart: [], cartVendorId: null });
+
+        return get().orders[0] ?? null;
       },
 
-      quickOrder: (itemId, pickupTime) => {
-        const item = liveMenuFromState(get())().find((m) => m.id === itemId)!;
-        const { orderCounter } = get();
-        const order: Order = {
-          id: String(orderCounter),
-          vendorId: item.vendorId,
-          lines: [{ itemId, qty: 1 }],
-          total: item.price,
-          pickupTime,
-          placedAt: Date.now(),
-          status: "Pending",
-          customer: get().customer,
-          payment: "EasyPaisa",
-        };
-        set({
-          orders: [order, ...get().orders],
-          orderCounter: orderCounter + 1,
+      updateOrderStatus: async (orderId, status) => {
+        const { token } = get();
+        if (!token) return;
+        // Backend route uses UUID internally; we store public id in UI.
+        // So we resolve public id -> uuid from the loaded orders list.
+        const match = get()._orderUuidByPublicId?.[orderId];
+        if (!match) return;
+        await apiFetch("/api/orders/" + encodeURIComponent(match) + "/status", {
+          method: "PATCH",
+          token,
+          body: { status },
         });
-        return order;
+        await get().refreshOrders();
       },
 
-      updateOrderStatus: (orderId, status) => {
-        set({
-          orders: get().orders.map((o) => (o.id === orderId ? { ...o, status } : o)),
+      updateOrderLines: async (orderId, lines) => {
+        const { token } = get();
+        if (!token) return;
+        const match = get()._orderUuidByPublicId?.[orderId];
+        if (!match) return;
+        await apiFetch("/api/orders/" + encodeURIComponent(match) + "/lines", {
+          method: "PATCH",
+          token,
+          body: { lines },
         });
+        await get().refreshOrders();
       },
 
-      updateOrderLines: (orderId, lines) => {
-        set({
-          orders: get().orders.map((o) => {
-            if (o.id === orderId) {
-              // Recalculate total based on new lines
-              const liveMenu = liveMenuFromState(get())();
-              const total = lines.reduce((s, l) => {
-                const it = liveMenu.find((m) => m.id === l.itemId);
-                return s + (it?.price ?? 0) * l.qty;
-              }, 0);
-              return { ...o, lines, total };
-            }
-            return o;
-          }),
+      cancelOrder: async (orderId, reason = "vendor") => {
+        const { token } = get();
+        if (!token) return;
+        const match = get()._orderUuidByPublicId?.[orderId];
+        if (!match) return;
+        await apiFetch("/api/orders/" + encodeURIComponent(match) + "/status", {
+          method: "PATCH",
+          token,
+          body: { status: "Cancelled", cancellationReason: reason },
         });
+        await get().refreshOrders();
       },
 
-      cancelOrder: (orderId, reason = "vendor") => {
-        set({
-          orders: get().orders.map((o) =>
-            o.id === orderId ? { ...o, status: "Cancelled", cancellationReason: reason } : o,
-          ),
-        });
-      },
-    }),
+    } as any),
     {
       name: "campus-dhaba",
-      version: 3,
+      version: 4,
       migrate: (persisted: unknown) => {
-        const state = (persisted ?? {}) as Partial<Store>;
+        const s = (persisted ?? {}) as Partial<Store>;
         return {
-          ...state,
-          role: state.role ?? null,
-          vendorLogin: state.vendorLogin ?? null,
-          username: state.username ?? null,
-          displayName: state.displayName ?? null,
-          vendorAccepting: { ...defaultAccepting, ...(state.vendorAccepting ?? {}) },
-          customItems: state.customItems ?? [],
-          itemOverrides: state.itemOverrides ?? {},
-          removedItemIds: state.removedItemIds ?? [],
-          itemCounter: state.itemCounter ?? 1,
-          orderCounter:
-            state.orderCounter && state.orderCounter >= 1001
-              ? state.orderCounter
-              : 1001 + (state.orders?.length ?? 0),
+          token: (s as any).token ?? null,
+          role: s.role ?? null,
+          vendorLogin: s.vendorLogin ?? null,
+          username: s.username ?? null,
+          displayName: s.displayName ?? null,
+          customer: s.customer ?? "Guest",
+          cart: s.cart ?? [],
+          cartVendorId: s.cartVendorId ?? null,
+          favorites: s.favorites ?? [],
+          vendors: [],
+          menuItems: [],
+          vendorAccepting: {},
+          orders: [],
         } as Store;
       },
+      partialize: (s) => ({
+        token: s.token,
+        role: s.role,
+        vendorLogin: s.vendorLogin,
+        username: s.username,
+        displayName: s.displayName,
+        customer: s.customer,
+        cart: s.cart,
+        cartVendorId: s.cartVendorId,
+        favorites: s.favorites,
+      }),
     },
   ),
 );
@@ -348,60 +419,33 @@ if (typeof window !== "undefined") {
 }
 
 // ---------- Live menu selectors ----------
-// The "live" menu = base seed (with overrides) ∪ vendor-added custom items,
-// minus anything in removedItemIds. We expose both a hook-friendly selector
-// and a low-level helper for places that already have raw state.
-
-// IMPORTANT (React 19 + SSR): selectors used with useSyncExternalStore must
-// return a stable snapshot when the underlying store state hasn't changed.
-// If we compute a *new array* each time, React can enter an update loop and
-// throw: "The result of getServerSnapshot should be cached".
-//
-// This memoizer returns the same array reference as long as the relevant
-// state slice references are unchanged (Zustand updates immutably, so that
-// means "no actual change").
-let _lm_customItems: Store["customItems"] | null = null;
-let _lm_itemOverrides: Store["itemOverrides"] | null = null;
-let _lm_removedIds: Store["removedItemIds"] | null = null;
+let _lm_menuItems: Store["menuItems"] | null = null;
 let _lm_cached: MenuItem[] | null = null;
 
 const computeLiveMenu = (state: Store): MenuItem[] => {
-  if (
-    _lm_cached &&
-    _lm_customItems === state.customItems &&
-    _lm_itemOverrides === state.itemOverrides &&
-    _lm_removedIds === state.removedItemIds
-  ) {
-    return _lm_cached;
-  }
+  if (_lm_cached && _lm_menuItems === state.menuItems) return _lm_cached;
 
-  const removed = new Set(state.removedItemIds);
-  const overrides = state.itemOverrides;
-  const basePart = baseMenu
-    .filter((m) => !removed.has(m.id))
-    .map((m) => (overrides[m.id] ? { ...m, ...overrides[m.id] } : m));
-  const customPart = state.customItems.filter((c) => !removed.has(c.id));
-
-  _lm_customItems = state.customItems;
-  _lm_itemOverrides = state.itemOverrides;
-  _lm_removedIds = state.removedItemIds;
-  _lm_cached = [...basePart, ...customPart];
+  _lm_menuItems = state.menuItems;
+  _lm_cached = state.menuItems
+    .filter((x) => x.active)
+    .map((x) => {
+      const cat = x.category as Category;
+      return {
+        id: x.id,
+        vendorId: x.vendor_id,
+        name: x.name,
+        price: x.price,
+        category: cat,
+        description: x.description ?? "",
+        image: menuItemImage(x.id, cat),
+      } satisfies MenuItem;
+    });
   return _lm_cached;
 };
 
-const liveMenuFromState = (state: Store) => (): MenuItem[] => computeLiveMenu(state);
-
-/** Selector helper: returns the live menu computed from store state. */
 export const selectLiveMenu = (s: Store): MenuItem[] => computeLiveMenu(s);
-
-/** React hook returning the live, vendor-edited menu. */
 export const useLiveMenu = (): MenuItem[] => useApp(selectLiveMenu);
-
-/** Look up a single item against the live menu (state version). */
-export const findLiveItem = (state: Store, id: string) =>
-  computeLiveMenu(state).find((m) => m.id === id);
-
-/** Re-export categories helper for convenience. */
+export const findLiveItem = (state: Store, id: string) => computeLiveMenu(state).find((m) => m.id === id);
 export const itemsForVendorCategory = (list: MenuItem[], vendorId: string, cat: Category) =>
   list.filter((m) => m.vendorId === vendorId && m.category === cat);
 
@@ -463,7 +507,7 @@ export const compareTime24 = (a: string, b: string) => {
 };
 
 const vendorPrepUpperMinutes = (vendorId: string): number => {
-  const v = getVendor(vendorId);
+  const v = useApp.getState().vendors.find((x) => x.id === vendorId);
   if (!v) return 10;
   const match = v.prepTime.match(/(\d+)\s*[–\-to]+\s*(\d+)/);
   if (match) return parseInt(match[2], 10);

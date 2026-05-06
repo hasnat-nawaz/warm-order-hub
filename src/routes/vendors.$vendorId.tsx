@@ -1,5 +1,5 @@
 import { createFileRoute, Link, redirect, useNavigate } from "@tanstack/react-router";
-import { CATEGORIES, CATEGORY_IMAGES, getVendor, type Category } from "@/data/menu";
+import { CATEGORIES, CATEGORY_IMAGES, type Category } from "@/data/menu";
 import { useApp, useLiveMenu } from "@/store/useApp";
 import { ArrowLeft, Clock, MapPin, Minus, Plus, Check } from "lucide-react";
 import { useMemo, useState } from "react";
@@ -20,7 +20,8 @@ export const Route = createFileRoute("/vendors/$vendorId")({
 
 function VendorPage() {
   const { vendorId } = Route.useParams();
-  const vendor = getVendor(vendorId);
+  const vendors = useApp((s) => s.vendors);
+  const vendor = vendors.find((v) => v.id === vendorId);
   const liveMenu = useLiveMenu();
   const items = useMemo(
     () => liveMenu.filter((m) => m.vendorId === vendorId),
