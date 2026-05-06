@@ -32,7 +32,7 @@ function SignupPage() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
+
     if (!name.trim() || !username.trim() || !password) {
       setError("Please fill in all fields.");
       return;
@@ -47,8 +47,8 @@ function SignupPage() {
       await signup(name.trim(), username.trim(), password);
       toast.success(`Account created! Welcome, ${name.trim()}!`);
       navigate({ to: safeRedirect ?? "/" });
-    } catch (err: any) {
-      setError(err?.message ?? "Could not create account.");
+    } catch (err: unknown) {
+      setError(err instanceof Error ? err.message : "Could not create account.");
     } finally {
       setSubmitting(false);
     }

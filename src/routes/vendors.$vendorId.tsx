@@ -110,189 +110,201 @@ function VendorPage() {
         className="mx-auto max-w-5xl px-4 pb-24 sm:px-6"
         style={{ contain: "layout" }}
       >
-
-
-      <motion.div variants={blockVariants} style={{ willChange: "transform, opacity" }} className="relative mt-6 overflow-hidden rounded-3xl">
-        <img
-          src={vendor.image}
-          alt={vendor.name}
-          className="aspect-[16/8] w-full object-cover sm:aspect-[16/6]"
-          width={1024}
-          height={384}
-        />
-        <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/40 to-transparent" />
-        <div className="absolute right-4 top-4">
-          {accepting ? (
-            <span className="rounded-full bg-primary px-2.5 py-1 text-[10px] font-bold uppercase tracking-wider text-primary-foreground shadow-warm">
-              ● Open
-            </span>
-          ) : (
-            <span className="rounded-full bg-background/90 px-2.5 py-1 text-[10px] font-bold uppercase tracking-wider text-muted-foreground backdrop-blur">
-              Closed
-            </span>
-          )}
-        </div>
-        <div className="absolute bottom-4 left-4 right-4 text-cream sm:bottom-5 sm:left-5 sm:right-5">
-          <h1 className="font-display text-2xl font-black sm:text-3xl md:text-4xl lg:text-5xl">
-            {vendor.name}
-          </h1>
-          <p className="mt-1 text-sm opacity-90">{vendor.tagline}</p>
-          <div className="mt-3 flex flex-wrap gap-2 text-xs sm:gap-3">
-            <span className="inline-flex items-center gap-1 rounded-full bg-background/15 px-2.5 py-1 backdrop-blur">
-              <MapPin className="h-3 w-3" /> {vendor.location}
-            </span>
-            <span className="inline-flex items-center gap-1 rounded-full bg-background/15 px-2.5 py-1 backdrop-blur">
-              <Clock className="h-3 w-3" /> {vendor.prepTime}
-            </span>
+        <motion.div
+          variants={blockVariants}
+          style={{ willChange: "transform, opacity" }}
+          className="relative mt-6 overflow-hidden rounded-3xl"
+        >
+          <img
+            src={vendor.image}
+            alt={vendor.name}
+            className="aspect-[16/8] w-full object-cover sm:aspect-[16/6]"
+            width={1024}
+            height={384}
+          />
+          <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/40 to-transparent" />
+          <div className="absolute right-4 top-4">
+            {accepting ? (
+              <span className="rounded-full bg-primary px-2.5 py-1 text-[10px] font-bold uppercase tracking-wider text-primary-foreground shadow-warm">
+                ● Open
+              </span>
+            ) : (
+              <span className="rounded-full bg-background/90 px-2.5 py-1 text-[10px] font-bold uppercase tracking-wider text-muted-foreground backdrop-blur">
+                Closed
+              </span>
+            )}
           </div>
-        </div>
-      </motion.div>
+          <div className="absolute bottom-4 left-4 right-4 text-cream sm:bottom-5 sm:left-5 sm:right-5">
+            <h1 className="font-display text-2xl font-black sm:text-3xl md:text-4xl lg:text-5xl">
+              {vendor.name}
+            </h1>
+            <p className="mt-1 text-sm opacity-90">{vendor.tagline}</p>
+            <div className="mt-3 flex flex-wrap gap-2 text-xs sm:gap-3">
+              <span className="inline-flex items-center gap-1 rounded-full bg-background/15 px-2.5 py-1 backdrop-blur">
+                <MapPin className="h-3 w-3" /> {vendor.location}
+              </span>
+              <span className="inline-flex items-center gap-1 rounded-full bg-background/15 px-2.5 py-1 backdrop-blur">
+                <Clock className="h-3 w-3" /> {vendor.prepTime}
+              </span>
+            </div>
+          </div>
+        </motion.div>
 
-      {!accepting && (
-        <div className="mt-6 rounded-2xl border border-border bg-card p-4 text-sm text-muted-foreground">
-          <span className="font-semibold text-foreground">{vendor.name}</span> isn't accepting
-          orders right now. You can still browse the menu — check back when they reopen.
-        </div>
-      )}
+        {!accepting && (
+          <div className="mt-6 rounded-2xl border border-border bg-card p-4 text-sm text-muted-foreground">
+            <span className="font-semibold text-foreground">{vendor.name}</span> isn't accepting
+            orders right now. You can still browse the menu — check back when they reopen.
+          </div>
+        )}
 
-      {cartVendorId && cartVendorId !== vendor.id && (
-        <div className="mt-6 rounded-2xl border border-destructive/30 bg-destructive/5 p-4 text-sm">
-          You have items from another vendor in your cart.{" "}
-          <button
-            onClick={() => {
-              clearCart();
-              toast.success("Cart cleared");
-            }}
-            className="font-semibold text-destructive underline"
+        {cartVendorId && cartVendorId !== vendor.id && (
+          <div className="mt-6 rounded-2xl border border-destructive/30 bg-destructive/5 p-4 text-sm">
+            You have items from another vendor in your cart.{" "}
+            <button
+              onClick={() => {
+                clearCart();
+                toast.success("Cart cleared");
+              }}
+              className="font-semibold text-destructive underline"
+            >
+              Clear cart
+            </button>
+          </div>
+        )}
+
+        {/* Category cards — tap to scroll to section */}
+        {presentCategories.length > 0 && (
+          <motion.section
+            variants={blockVariants}
+            style={{ willChange: "transform, opacity" }}
+            className="mt-8"
           >
-            Clear cart
-          </button>
-        </div>
-      )}
-
-      {/* Category cards — tap to scroll to section */}
-      {presentCategories.length > 0 && (
-        <motion.section variants={blockVariants} style={{ willChange: "transform, opacity" }} className="mt-8">
-          <div className="mb-4 flex items-end justify-between">
-            <h2 className="font-display text-2xl font-bold">Browse by category</h2>
-            <span className="text-xs text-muted-foreground">Tap a card</span>
-          </div>
-          <div className="grid gap-4 sm:grid-cols-2 md:grid-cols-3">
-            {presentCategories.map((cat, i) => {
-              const count = items.filter((i) => i.category === cat).length;
-              return (
-                <motion.a
-                  key={cat}
-                  href={`#${sectionId(cat)}`}
-                  initial={{ opacity: 0, scale: 0.95 }}
-                  animate={{ opacity: 1, scale: 1 }}
-                  transition={{ duration: 0.3, delay: i * 0.04, ease: "easeOut" }}
-                  whileTap={{ scale: 0.97 }}
-                  className="group relative overflow-hidden rounded-3xl bg-card shadow-card transition-all hover:-translate-y-0.5 hover:shadow-warm"
-                >
-                  <div className="relative aspect-[5/3]">
-                    <img
-                      src={CATEGORY_IMAGES[cat]}
-                      alt={cat}
-                      className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105"
-                      loading="lazy"
-                    />
-                    <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/30 to-transparent" />
-                    <div className="absolute bottom-3 left-4 text-cream">
-                      <h3 className="font-display text-2xl font-black">{cat}</h3>
-                      <p className="text-xs opacity-90">
-                        {count} item{count === 1 ? "" : "s"}
-                      </p>
-                    </div>
-                  </div>
-                </motion.a>
-              );
-            })}
-          </div>
-        </motion.section>
-      )}
-
-      {/* Menu by category */}
-      {presentCategories.map((cat) => (
-        <motion.section variants={blockVariants} style={{ willChange: "transform, opacity" }} key={cat} id={sectionId(cat)} className="mt-12 scroll-mt-24">
-          <h2 className="mb-4 font-display text-2xl font-bold">{cat}</h2>
-          <div className="grid gap-4 md:grid-cols-2">
-            {items
-              .filter((i) => i.category === cat)
-              .map((item) => {
-                const qty = qtys[item.id] ?? 1;
+            <div className="mb-4 flex items-end justify-between">
+              <h2 className="font-display text-2xl font-bold">Browse by category</h2>
+              <span className="text-xs text-muted-foreground">Tap a card</span>
+            </div>
+            <div className="grid gap-4 sm:grid-cols-2 md:grid-cols-3">
+              {presentCategories.map((cat, i) => {
+                const count = items.filter((i) => i.category === cat).length;
                 return (
-                  <motion.article
-                    key={item.id}
+                  <motion.a
+                    key={cat}
+                    href={`#${sectionId(cat)}`}
                     initial={{ opacity: 0, scale: 0.95 }}
                     animate={{ opacity: 1, scale: 1 }}
-                    transition={{ duration: 0.3, ease: "easeOut" }}
-                    className="flex flex-col gap-4 rounded-2xl border border-border bg-card p-4 transition-shadow hover:shadow-card sm:flex-row"
+                    transition={{ duration: 0.3, delay: i * 0.04, ease: "easeOut" }}
+                    whileTap={{ scale: 0.97 }}
+                    className="group relative overflow-hidden rounded-3xl bg-card shadow-card transition-all hover:-translate-y-0.5 hover:shadow-warm"
                   >
-                    <img
-                      src={item.image}
-                      alt={item.name}
-                      className="h-32 w-full flex-shrink-0 rounded-xl object-cover sm:h-28 sm:w-28"
-                      loading="lazy"
-                      width={112}
-                      height={112}
-                    />
-                    <div className="flex min-w-0 flex-1 flex-col">
-                      <h3 className="font-display text-lg font-bold leading-tight">{item.name}</h3>
-                      <p className="mt-1 line-clamp-2 text-sm text-muted-foreground">
-                        {item.description}
-                      </p>
-                      <div className="mt-auto flex flex-wrap items-center justify-between gap-2 pt-3">
-                        <div className="font-display text-lg font-bold text-primary">
-                          Rs. {item.price}
-                        </div>
-                        <div className="flex items-center gap-2">
-                          <div className="flex items-center rounded-full border border-border">
-                            <button
-                              onClick={() => setQty(item.id, qty - 1)}
-                              aria-label="Decrease"
-                              className="grid h-8 w-8 place-items-center text-muted-foreground hover:text-foreground"
-                            >
-                              <Minus className="h-3.5 w-3.5" />
-                            </button>
-                            <span className="w-6 text-center text-sm font-bold">{qty}</span>
-                            <button
-                              onClick={() => setQty(item.id, qty + 1)}
-                              aria-label="Increase"
-                              className="grid h-8 w-8 place-items-center text-muted-foreground hover:text-foreground"
-                            >
-                              <Plus className="h-3.5 w-3.5" />
-                            </button>
-                          </div>
-                          <button
-                            onClick={() => handleAdd(item.id)}
-                            disabled={!accepting || addingItem === item.id}
-                            className="flex items-center justify-center min-w-[60px] rounded-full bg-foreground px-3 py-2 text-xs font-bold text-background transition-colors hover:bg-foreground/90 disabled:cursor-not-allowed disabled:bg-primary disabled:text-primary-foreground sm:px-4"
-                          >
-                            {addingItem === item.id ? (
-                              <motion.div
-                                initial={{ scale: 0.5, opacity: 0 }}
-                                animate={{ scale: 1, opacity: 1 }}
-                              >
-                                <Check className="h-4 w-4" />
-                              </motion.div>
-                            ) : accepting ? (
-                              "Add"
-                            ) : (
-                              "Closed"
-                            )}
-                          </button>
-                        </div>
+                    <div className="relative aspect-[5/3]">
+                      <img
+                        src={CATEGORY_IMAGES[cat]}
+                        alt={cat}
+                        className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105"
+                        loading="lazy"
+                      />
+                      <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/30 to-transparent" />
+                      <div className="absolute bottom-3 left-4 text-cream">
+                        <h3 className="font-display text-2xl font-black">{cat}</h3>
+                        <p className="text-xs opacity-90">
+                          {count} item{count === 1 ? "" : "s"}
+                        </p>
                       </div>
                     </div>
-                  </motion.article>
+                  </motion.a>
                 );
               })}
-          </div>
-        </motion.section>
-      ))}
+            </div>
+          </motion.section>
+        )}
 
-
+        {/* Menu by category */}
+        {presentCategories.map((cat) => (
+          <motion.section
+            variants={blockVariants}
+            style={{ willChange: "transform, opacity" }}
+            key={cat}
+            id={sectionId(cat)}
+            className="mt-12 scroll-mt-24"
+          >
+            <h2 className="mb-4 font-display text-2xl font-bold">{cat}</h2>
+            <div className="grid gap-4 md:grid-cols-2">
+              {items
+                .filter((i) => i.category === cat)
+                .map((item) => {
+                  const qty = qtys[item.id] ?? 1;
+                  return (
+                    <motion.article
+                      key={item.id}
+                      initial={{ opacity: 0, scale: 0.95 }}
+                      animate={{ opacity: 1, scale: 1 }}
+                      transition={{ duration: 0.3, ease: "easeOut" }}
+                      className="flex flex-col gap-4 rounded-2xl border border-border bg-card p-4 transition-shadow hover:shadow-card sm:flex-row"
+                    >
+                      <img
+                        src={item.image}
+                        alt={item.name}
+                        className="h-32 w-full flex-shrink-0 rounded-xl object-cover sm:h-28 sm:w-28"
+                        loading="lazy"
+                        width={112}
+                        height={112}
+                      />
+                      <div className="flex min-w-0 flex-1 flex-col">
+                        <h3 className="font-display text-lg font-bold leading-tight">
+                          {item.name}
+                        </h3>
+                        <p className="mt-1 line-clamp-2 text-sm text-muted-foreground">
+                          {item.description}
+                        </p>
+                        <div className="mt-auto flex flex-wrap items-center justify-between gap-2 pt-3">
+                          <div className="font-display text-lg font-bold text-primary">
+                            Rs. {item.price}
+                          </div>
+                          <div className="flex items-center gap-2">
+                            <div className="flex items-center rounded-full border border-border">
+                              <button
+                                onClick={() => setQty(item.id, qty - 1)}
+                                aria-label="Decrease"
+                                className="grid h-8 w-8 place-items-center text-muted-foreground hover:text-foreground"
+                              >
+                                <Minus className="h-3.5 w-3.5" />
+                              </button>
+                              <span className="w-6 text-center text-sm font-bold">{qty}</span>
+                              <button
+                                onClick={() => setQty(item.id, qty + 1)}
+                                aria-label="Increase"
+                                className="grid h-8 w-8 place-items-center text-muted-foreground hover:text-foreground"
+                              >
+                                <Plus className="h-3.5 w-3.5" />
+                              </button>
+                            </div>
+                            <button
+                              onClick={() => handleAdd(item.id)}
+                              disabled={!accepting || addingItem === item.id}
+                              className="flex items-center justify-center min-w-[60px] rounded-full bg-foreground px-3 py-2 text-xs font-bold text-background transition-colors hover:bg-foreground/90 disabled:cursor-not-allowed disabled:bg-primary disabled:text-primary-foreground sm:px-4"
+                            >
+                              {addingItem === item.id ? (
+                                <motion.div
+                                  initial={{ scale: 0.5, opacity: 0 }}
+                                  animate={{ scale: 1, opacity: 1 }}
+                                >
+                                  <Check className="h-4 w-4" />
+                                </motion.div>
+                              ) : accepting ? (
+                                "Add"
+                              ) : (
+                                "Closed"
+                              )}
+                            </button>
+                          </div>
+                        </div>
+                      </div>
+                    </motion.article>
+                  );
+                })}
+            </div>
+          </motion.section>
+        ))}
       </motion.main>
     </>
   );

@@ -1,4 +1,12 @@
-import { Outlet, Link, createRootRoute, HeadContent, Scripts, useRouter, useRouterState } from "@tanstack/react-router";
+import {
+  Outlet,
+  Link,
+  createRootRoute,
+  HeadContent,
+  Scripts,
+  useRouter,
+  useRouterState,
+} from "@tanstack/react-router";
 import { Header } from "@/components/Header";
 import { useApp } from "@/store/useApp";
 import { Toaster } from "@/components/ui/sonner";
@@ -132,7 +140,9 @@ function RootComponent() {
   const bootstrap = useApp((s) => s.bootstrap);
   const router = useRouter();
   const path = useRouterState({ select: (s) => s.location.pathname });
-  const routerStatus = useRouterState({ select: (s) => (s as any).status as string | undefined });
+  const routerStatus = useRouterState({
+    select: (s) => (s as { status?: string }).status,
+  });
   const [showBoot, setShowBoot] = useState(true);
 
   useEffect(() => {

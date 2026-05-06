@@ -7,7 +7,17 @@ import {
   suggestedPickupForVendor,
   useLiveMenu,
 } from "@/store/useApp";
-import { ArrowLeft, Minus, Plus, Trash2, Calendar, MessageSquare, CreditCard, ChevronDown, Clock } from "lucide-react";
+import {
+  ArrowLeft,
+  Minus,
+  Plus,
+  Trash2,
+  Calendar,
+  MessageSquare,
+  CreditCard,
+  ChevronDown,
+  Clock,
+} from "lucide-react";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { toast } from "sonner";
 import { useNow } from "@/hooks/use-now";
@@ -59,31 +69,39 @@ function WheelColumn({
   return (
     <div className="relative h-48 flex-1 overflow-hidden rounded-2xl bg-secondary/20 before:absolute before:inset-x-0 before:top-0 before:z-10 before:h-16 before:bg-gradient-to-b before:from-card before:to-transparent before:pointer-events-none after:absolute after:inset-x-0 after:bottom-0 after:z-10 after:h-16 after:bg-gradient-to-t after:from-card after:to-transparent after:pointer-events-none">
       <div className="absolute inset-x-0 top-1/2 -mt-6 h-12 border-y-2 border-primary/20 pointer-events-none" />
-      <div 
+      <div
         ref={scrollRef}
         className="h-full overflow-y-auto snap-y snap-mandatory no-scrollbar"
         onScroll={handleScroll}
       >
         <div className="h-[calc(50%-1.5rem)]" />
         {options.map((opt) => (
-          <div 
-            key={opt} 
+          <div
+            key={opt}
             className="h-12 snap-center flex items-center justify-center font-display text-2xl font-bold cursor-pointer transition-colors"
             onClick={(e) => {
-               const parent = e.currentTarget.parentElement;
-               if (parent) {
-                 const itemHeight = e.currentTarget.clientHeight;
-                 parent.scrollTo({ top: options.indexOf(opt) * itemHeight, behavior: 'smooth' });
-               }
+              const parent = e.currentTarget.parentElement;
+              if (parent) {
+                const itemHeight = e.currentTarget.clientHeight;
+                parent.scrollTo({ top: options.indexOf(opt) * itemHeight, behavior: "smooth" });
+              }
             }}
           >
-            <span className={opt === localValue ? "text-primary scale-110 transition-transform" : "text-muted-foreground opacity-50 transition-transform"}>{opt}</span>
+            <span
+              className={
+                opt === localValue
+                  ? "text-primary scale-110 transition-transform"
+                  : "text-muted-foreground opacity-50 transition-transform"
+              }
+            >
+              {opt}
+            </span>
           </div>
         ))}
         <div className="h-[calc(50%-1.5rem)]" />
       </div>
     </div>
-  )
+  );
 }
 
 const parseTime = (t: string) => {
@@ -293,7 +311,9 @@ function CartPage() {
                       height={112}
                     />
                     <div className="min-w-0 flex-1">
-                      <div className="font-display text-base font-bold sm:text-lg md:text-xl">{item.name}</div>
+                      <div className="font-display text-base font-bold sm:text-lg md:text-xl">
+                        {item.name}
+                      </div>
                       <div className="mt-0.5 text-sm text-muted-foreground">
                         Rs. {item.price} <span className="opacity-60">each</span>
                       </div>
@@ -302,31 +322,31 @@ function CartPage() {
                   <div className="flex items-center justify-between gap-3 sm:gap-4 sm:ml-auto">
                     <div className="flex items-center rounded-full border border-border bg-background">
                       <button
-                      onClick={() => setQty(line.itemId, line.qty - 1)}
-                      aria-label="Decrease quantity"
-                      className="grid h-12 w-12 place-items-center transition-colors hover:bg-muted"
-                    >
-                      <Minus className="h-5 w-5" />
-                    </button>
-                    <QtyInput itemId={line.itemId} qty={line.qty} />
-                    <button
-                      onClick={() => setQty(line.itemId, line.qty + 1)}
-                      aria-label="Increase quantity"
-                      className="grid h-12 w-12 place-items-center transition-colors hover:bg-muted"
-                    >
-                      <Plus className="h-5 w-5" />
-                    </button>
-                  </div>
-                  <div className="font-display text-base font-bold sm:text-lg md:text-xl">
+                        onClick={() => setQty(line.itemId, line.qty - 1)}
+                        aria-label="Decrease quantity"
+                        className="grid h-12 w-12 place-items-center transition-colors hover:bg-muted"
+                      >
+                        <Minus className="h-5 w-5" />
+                      </button>
+                      <QtyInput itemId={line.itemId} qty={line.qty} />
+                      <button
+                        onClick={() => setQty(line.itemId, line.qty + 1)}
+                        aria-label="Increase quantity"
+                        className="grid h-12 w-12 place-items-center transition-colors hover:bg-muted"
+                      >
+                        <Plus className="h-5 w-5" />
+                      </button>
+                    </div>
+                    <div className="font-display text-base font-bold sm:text-lg md:text-xl">
                       Rs. {item.price * line.qty}
                     </div>
                     <button
-                    onClick={() => removeFromCart(line.itemId)}
-                    aria-label="Remove from cart"
-                    className="grid h-12 w-12 place-items-center rounded-full text-muted-foreground transition-colors hover:bg-destructive/10 hover:text-destructive"
-                  >
-                    <Trash2 className="h-5 w-5" />
-                  </button>
+                      onClick={() => removeFromCart(line.itemId)}
+                      aria-label="Remove from cart"
+                      className="grid h-12 w-12 place-items-center rounded-full text-muted-foreground transition-colors hover:bg-destructive/10 hover:text-destructive"
+                    >
+                      <Trash2 className="h-5 w-5" />
+                    </button>
                   </div>
                 </motion.div>
               );
@@ -340,11 +360,17 @@ function CartPage() {
             <div className="flex items-center gap-2 text-sm font-bold">
               <Calendar className="h-4 w-4 text-primary" /> Pickup time
             </div>
-            <div className={`mt-3 rounded-2xl px-4 py-3 text-center transition-colors ${timeInvalid ? "bg-destructive/10" : "bg-primary/5"}`}>
-              <div className={`text-[10px] font-bold uppercase tracking-widest ${timeInvalid ? "text-destructive/70" : "text-muted-foreground"}`}>
+            <div
+              className={`mt-3 rounded-2xl px-4 py-3 text-center transition-colors ${timeInvalid ? "bg-destructive/10" : "bg-primary/5"}`}
+            >
+              <div
+                className={`text-[10px] font-bold uppercase tracking-widest ${timeInvalid ? "text-destructive/70" : "text-muted-foreground"}`}
+              >
                 Pickup at
               </div>
-              <div className={`mt-0.5 font-display text-3xl font-black sm:text-4xl ${timeInvalid ? "text-destructive" : "text-primary"}`}>
+              <div
+                className={`mt-0.5 font-display text-3xl font-black sm:text-4xl ${timeInvalid ? "text-destructive" : "text-primary"}`}
+              >
                 {format12(pickup)}
               </div>
             </div>
@@ -371,9 +397,9 @@ function CartPage() {
           <AnimatePresence>
             {timePickerOpen && (
               <div className="fixed inset-0 z-50 flex items-center justify-center px-4 sm:px-0">
-                <motion.div 
-                  initial={{ opacity: 0 }} 
-                  animate={{ opacity: 1 }} 
+                <motion.div
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
                   exit={{ opacity: 0 }}
                   transition={{ duration: 0.2 }}
                   className="absolute inset-0 bg-black/60 backdrop-blur-sm"
@@ -392,14 +418,16 @@ function CartPage() {
                   <p className="mt-1 text-sm text-muted-foreground">
                     Choose when you'd like to pick up your order.
                   </p>
-                  
+
                   <div className="my-8 flex justify-center gap-3">
                     <WheelColumn options={HOURS} value={tempH} onChange={setTempH} />
-                    <span className="flex items-center font-display text-3xl font-bold text-primary/50">:</span>
+                    <span className="flex items-center font-display text-3xl font-bold text-primary/50">
+                      :
+                    </span>
                     <WheelColumn options={MINUTES} value={tempM} onChange={setTempM} />
                     <WheelColumn options={["AM", "PM"]} value={tempA} onChange={setTempA} />
                   </div>
-                  
+
                   {compareTime24(buildTime(tempH, tempM, tempA), suggested) < 0 && (
                     <p className="mb-4 text-center text-sm font-semibold text-destructive">
                       Must be at or after {format12(suggested)}
@@ -407,25 +435,25 @@ function CartPage() {
                   )}
 
                   <div className="flex gap-3 justify-end">
-                     <button
-                       onClick={() => setTimePickerOpen(false)}
-                       className="rounded-full border border-border bg-card px-5 py-2.5 text-sm font-bold transition-colors hover:bg-secondary"
-                     >
-                       Cancel
-                     </button>
-                     <button
-                       onClick={() => {
-                         const t = buildTime(tempH, tempM, tempA);
-                         if (compareTime24(t, suggested) >= 0) {
-                           handlePickupChange(t);
-                           setTimePickerOpen(false);
-                         }
-                       }}
-                       disabled={compareTime24(buildTime(tempH, tempM, tempA), suggested) < 0}
-                       className="rounded-full bg-primary px-5 py-2.5 text-sm font-bold text-primary-foreground shadow-warm transition-all hover:-translate-y-0.5 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:translate-y-0"
-                     >
-                       Save
-                     </button>
+                    <button
+                      onClick={() => setTimePickerOpen(false)}
+                      className="rounded-full border border-border bg-card px-5 py-2.5 text-sm font-bold transition-colors hover:bg-secondary"
+                    >
+                      Cancel
+                    </button>
+                    <button
+                      onClick={() => {
+                        const t = buildTime(tempH, tempM, tempA);
+                        if (compareTime24(t, suggested) >= 0) {
+                          handlePickupChange(t);
+                          setTimePickerOpen(false);
+                        }
+                      }}
+                      disabled={compareTime24(buildTime(tempH, tempM, tempA), suggested) < 0}
+                      className="rounded-full bg-primary px-5 py-2.5 text-sm font-bold text-primary-foreground shadow-warm transition-all hover:-translate-y-0.5 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:translate-y-0"
+                    >
+                      Save
+                    </button>
                   </div>
                 </motion.div>
               </div>

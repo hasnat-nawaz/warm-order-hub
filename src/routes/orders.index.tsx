@@ -1,6 +1,16 @@
 import { createFileRoute, Link, redirect } from "@tanstack/react-router";
 import { useApp, format12, useLiveMenu } from "@/store/useApp";
-import { ArrowLeft, CalendarDays, ChevronLeft, ChevronRight, Filter, Edit2, ShoppingBag, XCircle, AlertTriangle } from "lucide-react";
+import {
+  ArrowLeft,
+  CalendarDays,
+  ChevronLeft,
+  ChevronRight,
+  Filter,
+  Edit2,
+  ShoppingBag,
+  XCircle,
+  AlertTriangle,
+} from "lucide-react";
 import { useMemo, useState } from "react";
 import { Calendar } from "@/components/ui/calendar";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
@@ -113,22 +123,23 @@ function OrdersPage() {
         className="mx-auto max-w-3xl px-4 py-8 sm:px-6 sm:py-10"
       >
         <motion.div variants={blockVariants} style={{ willChange: "transform, opacity" }}>
-        <div className="mt-3 flex items-center gap-3">
-          <div className="grid h-12 w-12 flex-shrink-0 place-items-center rounded-2xl bg-gradient-warm text-primary-foreground shadow-warm">
-            <ShoppingBag className="h-6 w-6" />
+          <div className="mt-3 flex items-center gap-3">
+            <div className="grid h-12 w-12 flex-shrink-0 place-items-center rounded-2xl bg-gradient-warm text-primary-foreground shadow-warm">
+              <ShoppingBag className="h-6 w-6" />
+            </div>
+            <h1 className="font-display text-3xl font-bold leading-tight sm:text-4xl">My orders</h1>
           </div>
-          <h1 className="font-display text-3xl font-bold leading-tight sm:text-4xl">
-            My orders
-          </h1>
-        </div>
-        <p className="mt-1 text-sm text-muted-foreground">
-          Browse orders by day. Pick a date from the calendar to filter.
-        </p>
-
+          <p className="mt-1 text-sm text-muted-foreground">
+            Browse orders by day. Pick a date from the calendar to filter.
+          </p>
         </motion.div>
 
         {/* Filter row */}
-        <motion.div variants={blockVariants} style={{ willChange: "transform, opacity" }} className="mt-6 flex flex-wrap items-center gap-2">
+        <motion.div
+          variants={blockVariants}
+          style={{ willChange: "transform, opacity" }}
+          className="mt-6 flex flex-wrap items-center gap-2"
+        >
           <button
             onClick={() => stepDay(-1)}
             aria-label="Previous day"
@@ -187,20 +198,32 @@ function OrdersPage() {
           </button>
         </motion.div>
 
-        <motion.div variants={blockVariants} style={{ willChange: "transform, opacity" }} className="mt-2 text-xs text-muted-foreground">
+        <motion.div
+          variants={blockVariants}
+          style={{ willChange: "transform, opacity" }}
+          className="mt-2 text-xs text-muted-foreground"
+        >
           Showing <span className="font-bold text-foreground">{filtered.length}</span> order
           {filtered.length === 1 ? "" : "s"}
           {filterDate ? " on this day" : " in total"}
         </motion.div>
 
         {filtered.length === 0 ? (
-          <motion.div variants={blockVariants} style={{ willChange: "transform, opacity" }} className="mt-10 rounded-2xl border border-dashed border-border p-10 text-center text-sm text-muted-foreground">
+          <motion.div
+            variants={blockVariants}
+            style={{ willChange: "transform, opacity" }}
+            className="mt-10 rounded-2xl border border-dashed border-border p-10 text-center text-sm text-muted-foreground"
+          >
             {orders.length === 0
               ? "No orders yet. Place your first one!"
               : "No orders for this day. Try a different date."}
           </motion.div>
         ) : (
-          <motion.div variants={blockVariants} style={{ willChange: "transform, opacity" }} className="mt-6 space-y-3">
+          <motion.div
+            variants={blockVariants}
+            style={{ willChange: "transform, opacity" }}
+            className="mt-6 space-y-3"
+          >
             <AnimatePresence initial={false}>
               {filtered.map((o) => {
                 const v = vendors.find((x) => x.id === o.vendorId);
@@ -282,7 +305,12 @@ function OrdersPage() {
       </motion.main>
 
       {/* Cancel-order confirmation dialog */}
-      <AlertDialog open={!!cancelTarget} onOpenChange={(open) => { if (!open) setCancelTarget(null); }}>
+      <AlertDialog
+        open={!!cancelTarget}
+        onOpenChange={(open) => {
+          if (!open) setCancelTarget(null);
+        }}
+      >
         <AlertDialogContent className="max-w-sm">
           <AlertDialogTitle className="flex items-center gap-3">
             <AlertTriangle className="h-5 w-5 text-destructive" />

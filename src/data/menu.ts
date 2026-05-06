@@ -82,22 +82,15 @@ export type Category = (typeof CATEGORIES)[number];
 
 /** A representative image for each category card. */
 export const CATEGORY_IMAGES: Record<Category, string> = {
-  Breakfast:
-    img_b2e3cd02d3,
-  Fastfood:
-    img_a729e9ff05,
+  Breakfast: img_b2e3cd02d3,
+  Fastfood: img_a729e9ff05,
   Desi: img_c92351172f,
-  Chinese:
-    img_138c7f4a8e,
-  Drinks:
-    img_ba674455a1,
-  Juices:
-    img_10e2ab2e51,
+  Chinese: img_138c7f4a8e,
+  Drinks: img_ba674455a1,
+  Juices: img_10e2ab2e51,
   Tea: img_79dc7f6de8,
-  Coffee:
-    img_3c735c7356,
-  Snacks:
-    img_55b46d4c09,
+  Coffee: img_3c735c7356,
+  Snacks: img_55b46d4c09,
 };
 
 export type MenuItem = {

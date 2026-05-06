@@ -45,13 +45,15 @@ function ProfileChip({
   isVendor: boolean;
   compact?: boolean;
 }) {
-  const base = `inline-flex items-center gap-2 rounded-full border border-border bg-card text-foreground ${compact ? "px-2 py-1.5 text-xs" : "px-2 py-1.5 text-sm"
-    }`;
+  const base = `inline-flex items-center gap-2 rounded-full border border-border bg-card text-foreground ${
+    compact ? "px-2 py-1.5 text-xs" : "px-2 py-1.5 text-sm"
+  }`;
   return (
     <div className={base} aria-label={`Signed in as ${name}`}>
       <span
-        className={`grid place-items-center rounded-full bg-foreground text-background ${compact ? "h-6 w-6" : "h-7 w-7"
-          }`}
+        className={`grid place-items-center rounded-full bg-foreground text-background ${
+          compact ? "h-6 w-6" : "h-7 w-7"
+        }`}
       >
         {isVendor ? (
           <ChefHat className={compact ? "h-3 w-3" : "h-3.5 w-3.5"} strokeWidth={2.5} />
@@ -90,7 +92,7 @@ const ProfileChipTrigger = forwardRef<
         className={cn(
           "grid place-items-center rounded-full flex-shrink-0",
           "md:bg-foreground md:text-background",
-          compact ? "md:h-6 md:w-6" : "md:h-7 md:w-7"
+          compact ? "md:h-6 md:w-6" : "md:h-7 md:w-7",
         )}
       >
         {isVendor ? (
@@ -99,7 +101,9 @@ const ProfileChipTrigger = forwardRef<
           <User className="h-5 w-5 md:h-3 md:w-3" strokeWidth={2.5} />
         )}
       </span>
-      <span className="hidden md:block max-w-[8rem] truncate font-semibold sm:max-w-[12rem]">{name}</span>
+      <span className="hidden md:block max-w-[8rem] truncate font-semibold sm:max-w-[12rem]">
+        {name}
+      </span>
     </button>
   );
 });
@@ -154,10 +158,12 @@ export function Header() {
         to={l.to}
         className={
           mobile
-            ? `block rounded-xl px-3 py-2.5 text-base font-medium transition-colors ${active ? "bg-primary/10 text-primary" : "text-foreground hover:bg-secondary"
-            }`
-            : `relative px-1 py-2 text-sm font-medium transition-colors ${active ? "text-primary" : "text-muted-foreground hover:text-foreground"
-            }`
+            ? `block rounded-xl px-3 py-2.5 text-base font-medium transition-colors ${
+                active ? "bg-primary/10 text-primary" : "text-foreground hover:bg-secondary"
+              }`
+            : `relative px-1 py-2 text-sm font-medium transition-colors ${
+                active ? "text-primary" : "text-muted-foreground hover:text-foreground"
+              }`
         }
       >
         {l.label}
@@ -202,114 +208,124 @@ export function Header() {
 
   return (
     <>
-    {/* Spacer to offset fixed header height */}
-    <div className="h-16" />
-    <header
-      ref={headerRef}
-      className="fixed top-0 left-0 right-0 z-50 border-b border-border/60 bg-background/80 backdrop-blur-xl"
-    >
-      <div className="relative flex h-16 w-full items-center justify-between gap-2 px-1 sm:px-2 md:px-3">
-        <div className="flex items-center gap-2 md:flex-1">
-          {/* Mobile Profile/Sign In */}
-          <div className="md:hidden">
-            {role ? (
-              <AccountDropdown compact />
-            ) : (
-              <Link
-                to="/login"
-                className="inline-flex items-center justify-center gap-1.5 rounded-full border border-primary/30 bg-primary/10 px-3 h-10 text-sm font-semibold text-primary transition-colors hover:bg-primary/20"
-              >
-                Sign in
-              </Link>
-            )}
+      {/* Spacer to offset fixed header height */}
+      <div className="h-16" />
+      <header
+        ref={headerRef}
+        className="fixed top-0 left-0 right-0 z-50 border-b border-border/60 bg-background/80 backdrop-blur-xl"
+      >
+        <div className="relative flex h-16 w-full items-center justify-between gap-2 px-1 sm:px-2 md:px-3">
+          <div className="flex items-center gap-2 md:flex-1">
+            {/* Mobile Profile/Sign In */}
+            <div className="md:hidden">
+              {role ? (
+                <AccountDropdown compact />
+              ) : (
+                <Link
+                  to="/login"
+                  className="inline-flex items-center justify-center gap-1.5 rounded-full border border-primary/30 bg-primary/10 px-3 h-10 text-sm font-semibold text-primary transition-colors hover:bg-primary/20"
+                >
+                  Sign in
+                </Link>
+              )}
+            </div>
+
+            {/* Desktop Logo */}
+            <Link
+              to={isVendor ? "/vendor" : "/"}
+              className="hidden min-w-0 items-center gap-2 md:flex"
+            >
+              <div className="grid h-10 w-10 flex-shrink-0 place-items-center rounded-xl bg-gradient-warm shadow-warm">
+                <Flame className="h-5 w-5 text-primary-foreground" strokeWidth={2.5} />
+              </div>
+              <div className="min-w-0 leading-tight">
+                <div className="truncate font-display text-lg font-bold">Campus Dhaba</div>
+                <div className="text-[10px] uppercase tracking-[0.18em] text-muted-foreground">
+                  {isVendor ? "Vendor Console" : "GIKI · Eat fast"}
+                </div>
+              </div>
+            </Link>
           </div>
 
-          {/* Desktop Logo */}
-          <Link to={isVendor ? "/vendor" : "/"} className="hidden min-w-0 items-center gap-2 md:flex">
-            <div className="grid h-10 w-10 flex-shrink-0 place-items-center rounded-xl bg-gradient-warm shadow-warm">
-              <Flame className="h-5 w-5 text-primary-foreground" strokeWidth={2.5} />
-            </div>
-            <div className="min-w-0 leading-tight">
-              <div className="truncate font-display text-lg font-bold">Campus Dhaba</div>
-              <div className="text-[10px] uppercase tracking-[0.18em] text-muted-foreground">
+          {/* Center Container */}
+          <div className="flex items-center justify-center">
+            {/* Desktop nav */}
+            <nav className="hidden items-center gap-6 md:flex">
+              {links.map((l) => renderLink(l))}
+            </nav>
+
+            {/* Mobile Logo Text */}
+            <Link
+              to={isVendor ? "/vendor" : "/"}
+              className="flex flex-col items-center justify-center md:hidden"
+            >
+              <div className="font-display text-lg font-bold leading-tight text-foreground">
+                Campus Dhaba
+              </div>
+              <div className="text-[10px] uppercase tracking-[0.18em] text-muted-foreground mt-0.5">
                 {isVendor ? "Vendor Console" : "GIKI · Eat fast"}
               </div>
-            </div>
-          </Link>
-        </div>
-
-        {/* Center Container */}
-        <div className="flex items-center justify-center">
-          {/* Desktop nav */}
-          <nav className="hidden items-center gap-6 md:flex">{links.map((l) => renderLink(l))}</nav>
-
-          {/* Mobile Logo Text */}
-          <Link to={isVendor ? "/vendor" : "/"} className="flex flex-col items-center justify-center md:hidden">
-            <div className="font-display text-lg font-bold leading-tight text-foreground">Campus Dhaba</div>
-            <div className="text-[10px] uppercase tracking-[0.18em] text-muted-foreground mt-0.5">
-              {isVendor ? "Vendor Console" : "GIKI · Eat fast"}
-            </div>
-          </Link>
-        </div>
-
-        <div className="flex items-center justify-end gap-1.5 md:flex-1">
-          {/* Customer-only cart — icon-only takeout-bag for a food-first feel */}
-          {!isVendor && (
-            <Link
-              to="/cart"
-              aria-label={cartCount > 0 ? `Cart, ${cartCount} items` : "Cart"}
-              className="relative grid h-10 w-10 place-items-center rounded-full bg-foreground text-background shadow-warm ring-1 ring-black/5 transition-transform hover:-translate-y-0.5 active:translate-y-0"
-            >
-              <ShoppingBag className="h-5 w-5" strokeWidth={2.25} />
-              {cartCount > 0 && (
-                <span className="absolute -right-1 -top-1 grid h-5 min-w-5 place-items-center rounded-full bg-primary px-1.5 text-[10px] font-bold text-primary-foreground ring-2 ring-background">
-                  {cartCount}
-                </span>
-              )}
             </Link>
-          )}
+          </div>
 
-          {/* Desktop Account / Sign in */}
-          <div className="hidden md:block">
-            {role ? (
-              <AccountDropdown compact />
-            ) : (
+          <div className="flex items-center justify-end gap-1.5 md:flex-1">
+            {/* Customer-only cart — icon-only takeout-bag for a food-first feel */}
+            {!isVendor && (
               <Link
-                to="/login"
-                className="inline-flex items-center justify-center gap-1.5 rounded-full border border-primary/30 bg-primary/10 px-4 h-10 text-sm font-semibold text-primary transition-colors hover:bg-primary/20"
+                to="/cart"
+                aria-label={cartCount > 0 ? `Cart, ${cartCount} items` : "Cart"}
+                className="relative grid h-10 w-10 place-items-center rounded-full bg-foreground text-background shadow-warm ring-1 ring-black/5 transition-transform hover:-translate-y-0.5 active:translate-y-0"
               >
-                Sign in
+                <ShoppingBag className="h-5 w-5" strokeWidth={2.25} />
+                {cartCount > 0 && (
+                  <span className="absolute -right-1 -top-1 grid h-5 min-w-5 place-items-center rounded-full bg-primary px-1.5 text-[10px] font-bold text-primary-foreground ring-2 ring-background">
+                    {cartCount}
+                  </span>
+                )}
               </Link>
             )}
-          </div>
 
-          {/* Mobile menu toggle */}
-          <button
-            aria-label={open ? "Close menu" : "Open menu"}
-            aria-expanded={open}
-            onClick={() => setOpen((o) => !o)}
-            className="grid h-10 w-10 place-items-center rounded-full bg-foreground text-background shadow-warm ring-1 ring-black/5 transition-transform hover:-translate-y-0.5 active:translate-y-0 md:hidden"
-          >
-            {open ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
-          </button>
-        </div>
-      </div>
+            {/* Desktop Account / Sign in */}
+            <div className="hidden md:block">
+              {role ? (
+                <AccountDropdown compact />
+              ) : (
+                <Link
+                  to="/login"
+                  className="inline-flex items-center justify-center gap-1.5 rounded-full border border-primary/30 bg-primary/10 px-4 h-10 text-sm font-semibold text-primary transition-colors hover:bg-primary/20"
+                >
+                  Sign in
+                </Link>
+              )}
+            </div>
 
-      {/* Mobile drawer */}
-      {open && (
-        <div className="border-t border-border/60 bg-background/95 backdrop-blur-xl md:hidden">
-          <div className="space-y-3 px-4 py-4 sm:px-6">
-            <nav className="flex flex-col gap-1">
-              {links.map((l) => (
-                <div key={l.to} onClick={() => setOpen(false)}>
-                  {renderLink(l, true)}
-                </div>
-              ))}
-            </nav>
+            {/* Mobile menu toggle */}
+            <button
+              aria-label={open ? "Close menu" : "Open menu"}
+              aria-expanded={open}
+              onClick={() => setOpen((o) => !o)}
+              className="grid h-10 w-10 place-items-center rounded-full bg-foreground text-background shadow-warm ring-1 ring-black/5 transition-transform hover:-translate-y-0.5 active:translate-y-0 md:hidden"
+            >
+              {open ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
+            </button>
           </div>
         </div>
-      )}
-    </header>
+
+        {/* Mobile drawer */}
+        {open && (
+          <div className="border-t border-border/60 bg-background/95 backdrop-blur-xl md:hidden">
+            <div className="space-y-3 px-4 py-4 sm:px-6">
+              <nav className="flex flex-col gap-1">
+                {links.map((l) => (
+                  <div key={l.to} onClick={() => setOpen(false)}>
+                    {renderLink(l, true)}
+                  </div>
+                ))}
+              </nav>
+            </div>
+          </div>
+        )}
+      </header>
     </>
   );
 }

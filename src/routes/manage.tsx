@@ -17,7 +17,16 @@ import {
   AlertDialogDescription,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
-import { ImagePlus, Pencil, Plus, Trash2, X, ChefHat, ListChecks, AlertTriangle } from "lucide-react";
+import {
+  ImagePlus,
+  Pencil,
+  Plus,
+  Trash2,
+  X,
+  ChefHat,
+  ListChecks,
+  AlertTriangle,
+} from "lucide-react";
 import { useMemo, useRef, useState } from "react";
 import { toast } from "sonner";
 import { motion } from "framer-motion";
@@ -97,8 +106,17 @@ function ManagePage() {
   };
 
   return (
-    <motion.main variants={containerVariants} initial="hidden" animate="showSections" className="mx-auto max-w-6xl px-4 py-8 sm:px-6 sm:py-10">
-      <motion.div variants={blockVariants} style={{ willChange: "transform, opacity" }} className="flex flex-wrap items-end justify-between gap-4">
+    <motion.main
+      variants={containerVariants}
+      initial="hidden"
+      animate="showSections"
+      className="mx-auto max-w-6xl px-4 py-8 sm:px-6 sm:py-10"
+    >
+      <motion.div
+        variants={blockVariants}
+        style={{ willChange: "transform, opacity" }}
+        className="flex flex-wrap items-end justify-between gap-4"
+      >
         <div>
           <div className="flex items-center gap-2 text-xs font-bold uppercase tracking-wider text-primary">
             <ChefHat className="h-4 w-4" /> {vendor.name}
@@ -113,7 +131,11 @@ function ManagePage() {
         </div>
       </motion.div>
 
-      <motion.div variants={blockVariants} style={{ willChange: "transform, opacity" }} className="mt-8 grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
+      <motion.div
+        variants={blockVariants}
+        style={{ willChange: "transform, opacity" }}
+        className="mt-8 grid gap-5 sm:grid-cols-2 lg:grid-cols-3"
+      >
         {CATEGORIES.map((cat, i) => {
           const items = grouped[cat];
           return (
@@ -499,84 +521,84 @@ function AddItemDialog({
           }}
         >
           <DialogHeader>
-          <DialogTitle className="font-display text-2xl">
-            Add item {category && <span className="text-primary">to {category}</span>}
-          </DialogTitle>
-          <DialogDescription>
-            Upload a picture and fill in the details. It'll show up to customers immediately.
-          </DialogDescription>
-        </DialogHeader>
+            <DialogTitle className="font-display text-2xl">
+              Add item {category && <span className="text-primary">to {category}</span>}
+            </DialogTitle>
+            <DialogDescription>
+              Upload a picture and fill in the details. It'll show up to customers immediately.
+            </DialogDescription>
+          </DialogHeader>
 
-        <div className="mt-2 space-y-3">
-          <div className="flex flex-col items-center">
-            <button
-              type="button"
-              onClick={() => fileRef.current?.click()}
-              className="group relative h-32 w-full overflow-hidden rounded-2xl border-2 border-dashed border-border bg-background"
-            >
-              {image ? (
-                <img src={image} alt="" className="h-full w-full object-cover" />
-              ) : (
-                <div className="grid h-full place-items-center text-muted-foreground">
-                  <div className="flex flex-col items-center gap-1.5">
-                    <ImagePlus className="h-6 w-6" />
-                    <span className="text-xs font-semibold">Tap to upload picture</span>
+          <div className="mt-2 space-y-3">
+            <div className="flex flex-col items-center">
+              <button
+                type="button"
+                onClick={() => fileRef.current?.click()}
+                className="group relative h-32 w-full overflow-hidden rounded-2xl border-2 border-dashed border-border bg-background"
+              >
+                {image ? (
+                  <img src={image} alt="" className="h-full w-full object-cover" />
+                ) : (
+                  <div className="grid h-full place-items-center text-muted-foreground">
+                    <div className="flex flex-col items-center gap-1.5">
+                      <ImagePlus className="h-6 w-6" />
+                      <span className="text-xs font-semibold">Tap to upload picture</span>
+                    </div>
                   </div>
-                </div>
-              )}
-              <span className="absolute inset-0 grid place-items-center bg-black/40 text-cream opacity-0 transition-opacity group-hover:opacity-100">
-                <ImagePlus className="h-5 w-5" />
-              </span>
-            </button>
+                )}
+                <span className="absolute inset-0 grid place-items-center bg-black/40 text-cream opacity-0 transition-opacity group-hover:opacity-100">
+                  <ImagePlus className="h-5 w-5" />
+                </span>
+              </button>
+              <input
+                ref={fileRef}
+                type="file"
+                accept="image/*"
+                className="hidden"
+                onChange={(e) => e.target.files?.[0] && handleFile(e.target.files[0])}
+              />
+            </div>
+
             <input
-              ref={fileRef}
-              type="file"
-              accept="image/*"
-              className="hidden"
-              onChange={(e) => e.target.files?.[0] && handleFile(e.target.files[0])}
+              value={name}
+              onChange={(e) => setName(e.target.value)}
+              placeholder="Item name"
+              className="w-full rounded-xl border border-input bg-background px-3 py-2.5 text-sm focus:border-primary focus:outline-none"
+            />
+            <input
+              value={price}
+              onChange={(e) => setPrice(e.target.value.replace(/[^0-9]/g, ""))}
+              inputMode="numeric"
+              placeholder="Price (Rs.)"
+              className="w-full rounded-xl border border-input bg-background px-3 py-2.5 text-sm focus:border-primary focus:outline-none"
+            />
+            <textarea
+              value={description}
+              onChange={(e) => setDescription(e.target.value.slice(0, 160))}
+              rows={2}
+              placeholder="Short description (optional)"
+              className="w-full resize-none rounded-xl border border-input bg-background px-3 py-2.5 text-sm focus:border-primary focus:outline-none"
             />
           </div>
 
-          <input
-            value={name}
-            onChange={(e) => setName(e.target.value)}
-            placeholder="Item name"
-            className="w-full rounded-xl border border-input bg-background px-3 py-2.5 text-sm focus:border-primary focus:outline-none"
-          />
-          <input
-            value={price}
-            onChange={(e) => setPrice(e.target.value.replace(/[^0-9]/g, ""))}
-            inputMode="numeric"
-            placeholder="Price (Rs.)"
-            className="w-full rounded-xl border border-input bg-background px-3 py-2.5 text-sm focus:border-primary focus:outline-none"
-          />
-          <textarea
-            value={description}
-            onChange={(e) => setDescription(e.target.value.slice(0, 160))}
-            rows={2}
-            placeholder="Short description (optional)"
-            className="w-full resize-none rounded-xl border border-input bg-background px-3 py-2.5 text-sm focus:border-primary focus:outline-none"
-          />
-        </div>
-
-        <DialogFooter className="mt-4 gap-3 sm:gap-3">
-          <button
-            type="button"
-            onClick={() => {
-              reset();
-              onClose();
-            }}
-            className="inline-flex items-center justify-center gap-1.5 rounded-full border border-border bg-card px-5 py-2.5 text-sm font-bold"
-          >
-            <X className="h-4 w-4" /> Cancel
-          </button>
-          <button
-            type="submit"
-            className="inline-flex items-center justify-center gap-1.5 rounded-full bg-primary px-6 py-2.5 text-sm font-bold text-primary-foreground shadow-warm"
-          >
-            <ListChecks className="h-4 w-4" /> Add item
-          </button>
-        </DialogFooter>
+          <DialogFooter className="mt-4 gap-3 sm:gap-3">
+            <button
+              type="button"
+              onClick={() => {
+                reset();
+                onClose();
+              }}
+              className="inline-flex items-center justify-center gap-1.5 rounded-full border border-border bg-card px-5 py-2.5 text-sm font-bold"
+            >
+              <X className="h-4 w-4" /> Cancel
+            </button>
+            <button
+              type="submit"
+              className="inline-flex items-center justify-center gap-1.5 rounded-full bg-primary px-6 py-2.5 text-sm font-bold text-primary-foreground shadow-warm"
+            >
+              <ListChecks className="h-4 w-4" /> Add item
+            </button>
+          </DialogFooter>
         </form>
       </DialogContent>
     </Dialog>

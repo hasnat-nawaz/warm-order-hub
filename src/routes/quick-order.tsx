@@ -62,7 +62,9 @@ function QuickOrderPage() {
       return;
     }
     if ((vendorAccepting[first.vendorId] ?? true) === false) {
-      toast.error(`${vendors.find((v) => v.id === first.vendorId)?.name ?? "This dhaba"} is closed right now.`);
+      toast.error(
+        `${vendors.find((v) => v.id === first.vendorId)?.name ?? "This dhaba"} is closed right now.`,
+      );
       return;
     }
 
@@ -115,7 +117,11 @@ function QuickOrderPage() {
         animate="showSections"
         className="mx-auto max-w-3xl px-4 py-8 sm:px-6 sm:py-10"
       >
-        <motion.div variants={blockVariants} style={{ willChange: "transform, opacity" }} className="mt-3 flex items-center gap-3">
+        <motion.div
+          variants={blockVariants}
+          style={{ willChange: "transform, opacity" }}
+          className="mt-3 flex items-center gap-3"
+        >
           <div className="grid h-12 w-12 place-items-center rounded-2xl bg-gradient-warm text-primary-foreground shadow-warm">
             <Zap className="h-6 w-6" />
           </div>
@@ -131,7 +137,11 @@ function QuickOrderPage() {
 
         {/* Repeat last order */}
         {lastOrder && lastVendor && (
-          <motion.section variants={blockVariants} style={{ willChange: "transform, opacity" }} className="group mt-8 overflow-hidden rounded-3xl bg-gradient-warm p-[1.5px] shadow-warm transition-all hover:-translate-y-0.5 hover:shadow-lg">
+          <motion.section
+            variants={blockVariants}
+            style={{ willChange: "transform, opacity" }}
+            className="group mt-8 overflow-hidden rounded-3xl bg-gradient-warm p-[1.5px] shadow-warm transition-all hover:-translate-y-0.5 hover:shadow-lg"
+          >
             <div className="rounded-[calc(1.5rem-1px)] bg-card p-5 sm:p-6">
               <div className="flex items-center gap-2 text-xs font-bold uppercase tracking-wider text-primary">
                 <Repeat className="h-3.5 w-3.5" /> Repeat last order
@@ -156,7 +166,10 @@ function QuickOrderPage() {
                   onClick={() => sendToCheckout(lastOrder.lines)}
                   className="rounded-full bg-primary px-5 py-2.5 text-sm font-bold text-primary-foreground shadow-sm transition-colors hover:bg-primary/90"
                 >
-                  Reorder <span className="inline-block transition-transform group-hover:translate-x-1">→</span>
+                  Reorder{" "}
+                  <span className="inline-block transition-transform group-hover:translate-x-1">
+                    →
+                  </span>
                 </button>
               </div>
             </div>
@@ -164,7 +177,11 @@ function QuickOrderPage() {
         )}
 
         {/* Favourites */}
-        <motion.section variants={blockVariants} style={{ willChange: "transform, opacity" }} className="mt-10">
+        <motion.section
+          variants={blockVariants}
+          style={{ willChange: "transform, opacity" }}
+          className="mt-10"
+        >
           <div className="mb-4 flex items-end justify-between">
             <h2 className="font-display text-2xl font-bold">Saved favourites</h2>
             <span className="text-xs text-muted-foreground">Tap to checkout</span>
@@ -185,7 +202,9 @@ function QuickOrderPage() {
                   key={id}
                   layout
                   className={`flex flex-col gap-3 rounded-3xl border border-border bg-card p-4 shadow-card transition-all sm:flex-row sm:flex-wrap sm:items-center sm:gap-4 sm:p-5 ${
-                    open ? "group hover:-translate-y-0.5 hover:border-primary/40 hover:shadow-md" : ""
+                    open
+                      ? "group hover:-translate-y-0.5 hover:border-primary/40 hover:shadow-md"
+                      : ""
                   }`}
                 >
                   <div className="flex items-center gap-3 sm:gap-4 sm:flex-1 sm:min-w-0">
@@ -199,29 +218,31 @@ function QuickOrderPage() {
                     />
                     <div className="min-w-0 flex-1">
                       <div className="font-display text-base font-bold leading-tight sm:text-lg md:text-xl">
-                      {item.name}
-                    </div>
-                    <div className="mt-0.5 text-sm text-muted-foreground">
-                      {vendor?.name} · Rs. {item.price}
-                      {!open && <span className="ml-2 font-semibold text-destructive">Closed</span>}
-                    </div>
+                        {item.name}
+                      </div>
+                      <div className="mt-0.5 text-sm text-muted-foreground">
+                        {vendor?.name} · Rs. {item.price}
+                        {!open && (
+                          <span className="ml-2 font-semibold text-destructive">Closed</span>
+                        )}
+                      </div>
                     </div>
                   </div>
                   <div className="flex items-center gap-2 sm:ml-auto">
                     <button
-                    onClick={() => toggleFavorite(id)}
-                    aria-label="Remove favourite"
-                    className="grid h-11 w-11 place-items-center rounded-full text-primary transition-colors hover:bg-primary/10"
-                  >
-                    <Heart className="h-5 w-5 fill-current" />
-                  </button>
-                  <button
-                    onClick={() => sendToCheckout([{ itemId: id, qty: 1 }])}
-                    disabled={!open}
-                    className="rounded-full border border-primary/30 bg-primary/5 px-4 py-2.5 text-xs font-bold text-primary transition-colors group-hover:bg-primary group-hover:text-primary-foreground disabled:cursor-not-allowed disabled:border-muted disabled:bg-muted/10 disabled:text-muted-foreground"
-                  >
-                    {open ? "Order now" : "Closed"}
-                  </button>
+                      onClick={() => toggleFavorite(id)}
+                      aria-label="Remove favourite"
+                      className="grid h-11 w-11 place-items-center rounded-full text-primary transition-colors hover:bg-primary/10"
+                    >
+                      <Heart className="h-5 w-5 fill-current" />
+                    </button>
+                    <button
+                      onClick={() => sendToCheckout([{ itemId: id, qty: 1 }])}
+                      disabled={!open}
+                      className="rounded-full border border-primary/30 bg-primary/5 px-4 py-2.5 text-xs font-bold text-primary transition-colors group-hover:bg-primary group-hover:text-primary-foreground disabled:cursor-not-allowed disabled:border-muted disabled:bg-muted/10 disabled:text-muted-foreground"
+                    >
+                      {open ? "Order now" : "Closed"}
+                    </button>
                   </div>
                 </motion.div>
               );
@@ -230,7 +251,11 @@ function QuickOrderPage() {
         </motion.section>
 
         {/* Add favourites */}
-        <motion.section variants={blockVariants} style={{ willChange: "transform, opacity" }} className="mt-12">
+        <motion.section
+          variants={blockVariants}
+          style={{ willChange: "transform, opacity" }}
+          className="mt-12"
+        >
           <h2 className="mb-4 font-display text-2xl font-bold">Popular</h2>
           <div className="grid gap-3 sm:grid-cols-2">
             {liveMenu

@@ -23,4 +23,3 @@ export function verifyToken(token: string): JwtPayload {
   const decoded = jwt.verify(token, JWT_SECRET_STR);
   return jwtPayloadSchema.parse(decoded);
 }
-

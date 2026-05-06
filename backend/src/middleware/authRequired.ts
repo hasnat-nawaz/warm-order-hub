@@ -12,7 +12,8 @@ export type AuthedRequest = Request & {
 export function authRequired(req: AuthedRequest, res: Response, next: NextFunction) {
   const auth = req.header("authorization") || "";
   const m = auth.match(/^Bearer\s+(.+)$/i);
-  if (!m) return res.status(401).json({ error: { code: "UNAUTHORIZED", message: "Missing token" } });
+  if (!m)
+    return res.status(401).json({ error: { code: "UNAUTHORIZED", message: "Missing token" } });
 
   try {
     const payload = verifyToken(m[1]);
@@ -26,4 +27,3 @@ export function authRequired(req: AuthedRequest, res: Response, next: NextFuncti
     return res.status(401).json({ error: { code: "UNAUTHORIZED", message: "Invalid token" } });
   }
 }
-

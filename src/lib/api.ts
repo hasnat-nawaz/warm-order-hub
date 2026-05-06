@@ -32,4 +32,3 @@ export async function apiFetch<T>(
   const data = json as T;
   return opts?.schema ? opts.schema.parse(data) : data;
 }
-

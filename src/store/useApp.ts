@@ -1,6 +1,12 @@
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
-import { type Category, type MenuItem, type Vendor, menuItemImage, vendorWithImage } from "@/data/menu";
+import {
+  type Category,
+  type MenuItem,
+  type Vendor,
+  menuItemImage,
+  vendorWithImage,
+} from "@/data/menu";
 import { apiFetch } from "@/lib/api";
 
 export type CartLine = { itemId: string; qty: number };
@@ -96,12 +102,24 @@ type Store = {
   toggleFavorite: (itemId: string) => void;
 
   // Menu CRUD (vendor)
-  addMenuItem: (item: { name: string; price: number; category: Category; description: string }) => Promise<void>;
-  updateMenuItem: (id: string, patch: Partial<Pick<MenuItem, "name" | "price" | "category" | "description">>) => Promise<void>;
+  addMenuItem: (item: {
+    name: string;
+    price: number;
+    category: Category;
+    description: string;
+  }) => Promise<void>;
+  updateMenuItem: (
+    id: string,
+    patch: Partial<Pick<MenuItem, "name" | "price" | "category" | "description">>,
+  ) => Promise<void>;
   deleteMenuItem: (id: string) => Promise<void>;
 
   // Orders
-  placeOrder: (opts: { pickupTime: string; payment: Order["payment"]; notes?: string }) => Promise<Order | null>;
+  placeOrder: (opts: {
+    pickupTime: string;
+    payment: Order["payment"];
+    notes?: string;
+  }) => Promise<Order | null>;
   updateOrderStatus: (orderId: string, status: OrderStatus) => Promise<void>;
   updateOrderLines: (orderId: string, lines: CartLine[]) => Promise<void>;
   cancelOrder: (orderId: string, reason?: "user" | "vendor") => Promise<void>;
@@ -195,7 +213,12 @@ export const useApp = create<Store>()(
       login: async (username, password) => {
         const r = await apiFetch<{
           token: string;
-          user: { username: string; role: "customer" | "vendor"; displayName: string; vendorId?: string | null };
+          user: {
+            username: string;
+            role: "customer" | "vendor";
+            displayName: string;
+            vendorId?: string | null;
+          };
         }>("/api/auth/login", { method: "POST", body: { username, password } });
 
         set({
@@ -261,7 +284,10 @@ export const useApp = create<Store>()(
           return { ok: false, reason: "This dhaba is closed right now." };
         }
         if (cartVendorId && cartVendorId !== item.vendorId) {
-          return { ok: false, reason: "Your cart has items from another vendor. Clear it first." };
+          return {
+            ok: false,
+            reason: "Your cart has items from another vendor. Clear it first.",
+          };
         }
         const existing = cart.find((l) => l.itemId === item.id);
         const next = existing
@@ -298,18 +324,24 @@ export const useApp = create<Store>()(
       updateMenuItem: async (id, patch) => {
         const { token, role } = get();
         if (!token || role !== "vendor") return;
-        const r = await apiFetch<{ item: ApiMenuItem }>("/api/vendor/menu-items/" + encodeURIComponent(id), {
-          method: "PATCH",
-          token,
-          body: patch,
-        });
+        const r = await apiFetch<{ item: ApiMenuItem }>(
+          "/api/vendor/menu-items/" + encodeURIComponent(id),
+          {
+            method: "PATCH",
+            token,
+            body: patch,
+          },
+        );
         set({ menuItems: get().menuItems.map((x) => (x.id === id ? r.item : x)) });
       },
 
       deleteMenuItem: async (id) => {
         const { token, role } = get();
         if (!token || role !== "vendor") return;
-        await apiFetch("/api/vendor/menu-items/" + encodeURIComponent(id), { method: "DELETE", token });
+        await apiFetch("/api/vendor/menu-items/" + encodeURIComponent(id), {
+          method: "DELETE",
+          token,
+        });
         set({ menuItems: get().menuItems.filter((x) => x.id !== id) });
       },
 
@@ -371,15 +403,14 @@ export const useApp = create<Store>()(
         });
         await get().refreshOrders();
       },
-
-    } as any),
+    }),
     {
       name: "campus-dhaba",
       version: 4,
       migrate: (persisted: unknown) => {
         const s = (persisted ?? {}) as Partial<Store>;
         return {
-          token: (s as any).token ?? null,
+          token: (s as Partial<Pick<Store, "token">>).token ?? null,
           role: s.role ?? null,
           vendorLogin: s.vendorLogin ?? null,
           username: s.username ?? null,
@@ -392,6 +423,7 @@ export const useApp = create<Store>()(
           menuItems: [],
           vendorAccepting: {},
           orders: [],
+          _orderUuidByPublicId: {},
         } as Store;
       },
       partialize: (s) => ({
@@ -445,7 +477,8 @@ const computeLiveMenu = (state: Store): MenuItem[] => {
 
 export const selectLiveMenu = (s: Store): MenuItem[] => computeLiveMenu(s);
 export const useLiveMenu = (): MenuItem[] => useApp(selectLiveMenu);
-export const findLiveItem = (state: Store, id: string) => computeLiveMenu(state).find((m) => m.id === id);
+export const findLiveItem = (state: Store, id: string) =>
+  computeLiveMenu(state).find((m) => m.id === id);
 export const itemsForVendorCategory = (list: MenuItem[], vendorId: string, cat: Category) =>
   list.filter((m) => m.vendorId === vendorId && m.category === cat);
 

@@ -40,9 +40,11 @@ function LoginPage() {
       await login(username, password);
       const state = useApp.getState();
       toast.success(`Welcome, ${state.displayName ?? state.username ?? "user"}!`);
-      navigate({ to: state.role === "vendor" ? (safeRedirect ?? "/vendor") : (safeRedirect ?? "/") });
-    } catch (err: any) {
-      setError(err?.message ?? "Invalid username or password.");
+      navigate({
+        to: state.role === "vendor" ? (safeRedirect ?? "/vendor") : (safeRedirect ?? "/"),
+      });
+    } catch (err: unknown) {
+      setError(err instanceof Error ? err.message : "Invalid username or password.");
     } finally {
       setSubmitting(false);
     }
@@ -141,7 +143,6 @@ function LoginPage() {
           {submitting ? "Signing in…" : "Sign in"}
           {!submitting && <ArrowRight className="h-4 w-4" />}
         </button>
-
       </form>
 
       <p className="mt-8 text-center text-sm text-muted-foreground">

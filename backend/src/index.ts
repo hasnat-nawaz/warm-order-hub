@@ -64,16 +64,30 @@ app.post("/api/auth/signup", async (req: Request, res: Response) => {
       [uname, hash, displayName],
     );
 
-    const user = q.rows[0] as { id: string; username: string; role: "customer"; display_name: string };
+    const user = q.rows[0] as {
+      id: string;
+      username: string;
+      role: "customer";
+      display_name: string;
+    };
     const token = signToken({ sub: user.id, role: "customer", vendorId: null });
     return res.json(
       ok({
         token,
-        user: { id: user.id, username: user.username, role: user.role, displayName: user.display_name },
+        user: {
+          id: user.id,
+          username: user.username,
+          role: user.role,
+          displayName: user.display_name,
+        },
       }).body,
     );
-  } catch (err: any) {
-    if (String(err?.code) === "23505") {
+  } catch (err: unknown) {
+    const pgCode =
+      typeof err === "object" && err && "code" in err
+        ? String((err as { code?: unknown }).code)
+        : null;
+    if (pgCode === "23505") {
       const e = apiError("CONFLICT", "Username already exists", 409);
       return res.status(e.status).json(e.body);
     }
@@ -241,36 +255,39 @@ const vendorMenuPatchSchema = z
   })
   .refine((x) => Object.keys(x).length > 0, { message: "Empty patch" });
 
-app.patch("/api/vendor/menu-items/:itemId", authRequired, async (req: AuthedRequest, res: Response) => {
-  if (req.user?.role !== "vendor" || !req.user.vendorId) {
-    const e = apiError("FORBIDDEN", "Only vendors can manage menu", 403);
-    return res.status(e.status).json(e.body);
-  }
-  const itemId = String(req.params.itemId || "");
-  const parsed = vendorMenuPatchSchema.safeParse(req.body);
-  if (!itemId || !parsed.success) {
-    const e = apiError("BAD_REQUEST", "Invalid request", 400);
-    return res.status(e.status).json(e.body);
-  }
-
-  try {
-    const existing = await pool.query(
-      `SELECT id, vendor_id FROM menu_items WHERE id = $1 LIMIT 1`,
-      [itemId],
-    );
-    const row = existing.rows[0] as { id: string; vendor_id: string } | undefined;
-    if (!row) {
-      const e = apiError("NOT_FOUND", "Item not found", 404);
+app.patch(
+  "/api/vendor/menu-items/:itemId",
+  authRequired,
+  async (req: AuthedRequest, res: Response) => {
+    if (req.user?.role !== "vendor" || !req.user.vendorId) {
+      const e = apiError("FORBIDDEN", "Only vendors can manage menu", 403);
       return res.status(e.status).json(e.body);
     }
-    if (row.vendor_id !== req.user.vendorId) {
-      const e = apiError("FORBIDDEN", "Not allowed", 403);
+    const itemId = String(req.params.itemId || "");
+    const parsed = vendorMenuPatchSchema.safeParse(req.body);
+    if (!itemId || !parsed.success) {
+      const e = apiError("BAD_REQUEST", "Invalid request", 400);
       return res.status(e.status).json(e.body);
     }
 
-    const patch = parsed.data;
-    const q = await pool.query(
-      `UPDATE menu_items
+    try {
+      const existing = await pool.query(
+        `SELECT id, vendor_id FROM menu_items WHERE id = $1 LIMIT 1`,
+        [itemId],
+      );
+      const row = existing.rows[0] as { id: string; vendor_id: string } | undefined;
+      if (!row) {
+        const e = apiError("NOT_FOUND", "Item not found", 404);
+        return res.status(e.status).json(e.body);
+      }
+      if (row.vendor_id !== req.user.vendorId) {
+        const e = apiError("FORBIDDEN", "Not allowed", 403);
+        return res.status(e.status).json(e.body);
+      }
+
+      const patch = parsed.data;
+      const q = await pool.query(
+        `UPDATE menu_items
        SET
          name = COALESCE($2, name),
          price = COALESCE($3, price),
@@ -279,50 +296,55 @@ app.patch("/api/vendor/menu-items/:itemId", authRequired, async (req: AuthedRequ
          active = COALESCE($6, active)
        WHERE id = $1
        RETURNING id, vendor_id, name, price, category, description, active`,
-      [
-        itemId,
-        patch.name ?? null,
-        typeof patch.price === "number" ? patch.price : null,
-        patch.category ?? null,
-        patch.description ?? null,
-        typeof patch.active === "boolean" ? patch.active : null,
-      ],
-    );
-    return res.json(ok({ item: q.rows[0] }).body);
-  } catch {
-    const e = apiError("INTERNAL", "Could not update menu item", 500);
-    return res.status(e.status).json(e.body);
-  }
-});
+        [
+          itemId,
+          patch.name ?? null,
+          typeof patch.price === "number" ? patch.price : null,
+          patch.category ?? null,
+          patch.description ?? null,
+          typeof patch.active === "boolean" ? patch.active : null,
+        ],
+      );
+      return res.json(ok({ item: q.rows[0] }).body);
+    } catch {
+      const e = apiError("INTERNAL", "Could not update menu item", 500);
+      return res.status(e.status).json(e.body);
+    }
+  },
+);
 
-app.delete("/api/vendor/menu-items/:itemId", authRequired, async (req: AuthedRequest, res: Response) => {
-  if (req.user?.role !== "vendor" || !req.user.vendorId) {
-    const e = apiError("FORBIDDEN", "Only vendors can manage menu", 403);
-    return res.status(e.status).json(e.body);
-  }
-  const itemId = String(req.params.itemId || "");
-  if (!itemId) {
-    const e = apiError("BAD_REQUEST", "Missing itemId", 400);
-    return res.status(e.status).json(e.body);
-  }
-  try {
-    const q = await pool.query(
-      `UPDATE menu_items
+app.delete(
+  "/api/vendor/menu-items/:itemId",
+  authRequired,
+  async (req: AuthedRequest, res: Response) => {
+    if (req.user?.role !== "vendor" || !req.user.vendorId) {
+      const e = apiError("FORBIDDEN", "Only vendors can manage menu", 403);
+      return res.status(e.status).json(e.body);
+    }
+    const itemId = String(req.params.itemId || "");
+    if (!itemId) {
+      const e = apiError("BAD_REQUEST", "Missing itemId", 400);
+      return res.status(e.status).json(e.body);
+    }
+    try {
+      const q = await pool.query(
+        `UPDATE menu_items
        SET active = FALSE
        WHERE id = $1 AND vendor_id = $2
        RETURNING id`,
-      [itemId, req.user.vendorId],
-    );
-    if (q.rowCount === 0) {
-      const e = apiError("NOT_FOUND", "Item not found", 404);
+        [itemId, req.user.vendorId],
+      );
+      if (q.rowCount === 0) {
+        const e = apiError("NOT_FOUND", "Item not found", 404);
+        return res.status(e.status).json(e.body);
+      }
+      return res.json(ok({ ok: true }).body);
+    } catch {
+      const e = apiError("INTERNAL", "Could not delete menu item", 500);
       return res.status(e.status).json(e.body);
     }
-    return res.json(ok({ ok: true }).body);
-  } catch {
-    const e = apiError("INTERNAL", "Could not delete menu item", 500);
-    return res.status(e.status).json(e.body);
-  }
-});
+  },
+);
 
 // ---------- Orders ----------
 const createOrderSchema = z.object({
@@ -330,7 +352,9 @@ const createOrderSchema = z.object({
   pickupTime: z.string().regex(/^\d{2}:\d{2}$/),
   payment: z.enum(["EasyPaisa", "JazzCash", "Cash on Pickup"]),
   notes: z.string().max(240).optional(),
-  lines: z.array(z.object({ itemId: z.string().min(1).max(64), qty: z.number().int().min(1).max(50) })).min(1),
+  lines: z
+    .array(z.object({ itemId: z.string().min(1).max(64), qty: z.number().int().min(1).max(50) }))
+    .min(1),
 });
 
 app.post("/api/orders", authRequired, async (req: AuthedRequest, res: Response) => {
@@ -418,14 +442,14 @@ app.get("/api/orders/me", authRequired, async (req: AuthedRequest, res: Response
     const ids = q.rows.map((r) => r.id);
     const linesQ =
       ids.length === 0
-        ? { rows: [] as any[] }
+        ? { rows: [] as Array<Record<string, unknown>> }
         : await pool.query(
             `SELECT order_id, item_id, qty, unit_price, item_name
              FROM order_lines
              WHERE order_id = ANY($1::uuid[])`,
             [ids],
           );
-    const linesByOrder = new Map<string, any[]>();
+    const linesByOrder = new Map<string, Array<Record<string, unknown>>>();
     for (const l of linesQ.rows) {
       const arr = linesByOrder.get(l.order_id) ?? [];
       arr.push(l);
@@ -455,14 +479,14 @@ app.get("/api/vendor/orders", authRequired, async (req: AuthedRequest, res: Resp
     const ids = q.rows.map((r) => r.id);
     const linesQ =
       ids.length === 0
-        ? { rows: [] as any[] }
+        ? { rows: [] as Array<Record<string, unknown>> }
         : await pool.query(
             `SELECT order_id, item_id, qty, unit_price, item_name
              FROM order_lines
              WHERE order_id = ANY($1::uuid[])`,
             [ids],
           );
-    const linesByOrder = new Map<string, any[]>();
+    const linesByOrder = new Map<string, Array<Record<string, unknown>>>();
     for (const l of linesQ.rows) {
       const arr = linesByOrder.get(l.order_id) ?? [];
       arr.push(l);
@@ -481,60 +505,66 @@ const updateStatusSchema = z.object({
   cancellationReason: z.enum(["user", "vendor"]).optional(),
 });
 
-app.patch("/api/orders/:orderId/status", authRequired, async (req: AuthedRequest, res: Response) => {
-  const orderId = String(req.params.orderId || "");
-  const parsed = updateStatusSchema.safeParse(req.body);
-  if (!orderId || !parsed.success) {
-    const e = apiError("BAD_REQUEST", "Invalid request", 400);
-    return res.status(e.status).json(e.body);
-  }
-
-  const { status, cancellationReason } = parsed.data;
-  const user = req.user!;
-
-  try {
-    const q = await pool.query(
-      `SELECT id, vendor_id, customer_user_id, status FROM orders WHERE id = $1 LIMIT 1`,
-      [orderId],
-    );
-    const row = q.rows[0] as
-      | { id: string; vendor_id: string; customer_user_id: string | null; status: string }
-      | undefined;
-    if (!row) {
-      const e = apiError("NOT_FOUND", "Order not found", 404);
+app.patch(
+  "/api/orders/:orderId/status",
+  authRequired,
+  async (req: AuthedRequest, res: Response) => {
+    const orderId = String(req.params.orderId || "");
+    const parsed = updateStatusSchema.safeParse(req.body);
+    if (!orderId || !parsed.success) {
+      const e = apiError("BAD_REQUEST", "Invalid request", 400);
       return res.status(e.status).json(e.body);
     }
 
-    const isCustomerOwner = user.role === "customer" && row.customer_user_id === user.id;
-    const isVendorOwner = user.role === "vendor" && user.vendorId && row.vendor_id === user.vendorId;
-    if (!isCustomerOwner && !isVendorOwner) {
-      const e = apiError("FORBIDDEN", "Not allowed", 403);
-      return res.status(e.status).json(e.body);
-    }
+    const { status, cancellationReason } = parsed.data;
+    const user = req.user!;
 
-    // cancellation reason rules
-    let reason: "user" | "vendor" | null = null;
-    if (status === "Cancelled") {
-      reason = (cancellationReason ??
-        (user.role === "customer" ? "user" : "vendor")) as "user" | "vendor";
-    }
+    try {
+      const q = await pool.query(
+        `SELECT id, vendor_id, customer_user_id, status FROM orders WHERE id = $1 LIMIT 1`,
+        [orderId],
+      );
+      const row = q.rows[0] as
+        | { id: string; vendor_id: string; customer_user_id: string | null; status: string }
+        | undefined;
+      if (!row) {
+        const e = apiError("NOT_FOUND", "Order not found", 404);
+        return res.status(e.status).json(e.body);
+      }
 
-    await pool.query(
-      `UPDATE orders
+      const isCustomerOwner = user.role === "customer" && row.customer_user_id === user.id;
+      const isVendorOwner =
+        user.role === "vendor" && user.vendorId && row.vendor_id === user.vendorId;
+      if (!isCustomerOwner && !isVendorOwner) {
+        const e = apiError("FORBIDDEN", "Not allowed", 403);
+        return res.status(e.status).json(e.body);
+      }
+
+      // cancellation reason rules
+      let reason: "user" | "vendor" | null = null;
+      if (status === "Cancelled") {
+        reason = cancellationReason ?? (user.role === "customer" ? "user" : "vendor");
+      }
+
+      await pool.query(
+        `UPDATE orders
        SET status = $2, cancellation_reason = $3
        WHERE id = $1`,
-      [orderId, status, reason],
-    );
+        [orderId, status, reason],
+      );
 
-    return res.json(ok({ ok: true }).body);
-  } catch {
-    const e = apiError("INTERNAL", "Could not update order", 500);
-    return res.status(e.status).json(e.body);
-  }
-});
+      return res.json(ok({ ok: true }).body);
+    } catch {
+      const e = apiError("INTERNAL", "Could not update order", 500);
+      return res.status(e.status).json(e.body);
+    }
+  },
+);
 
 const updateLinesSchema = z.object({
-  lines: z.array(z.object({ itemId: z.string().min(1).max(64), qty: z.number().int().min(1).max(50) })).min(1),
+  lines: z
+    .array(z.object({ itemId: z.string().min(1).max(64), qty: z.number().int().min(1).max(50) }))
+    .min(1),
 });
 
 app.patch("/api/orders/:orderId/lines", authRequired, async (req: AuthedRequest, res: Response) => {
@@ -623,30 +653,36 @@ app.patch("/api/orders/:orderId/lines", authRequired, async (req: AuthedRequest,
 });
 
 // ---------- Vendor toggles ----------
-app.patch("/api/vendors/:vendorId/accepting", authRequired, async (req: AuthedRequest, res: Response) => {
-  const vendorId = String(req.params.vendorId || "");
-  const parsed = z.object({ accepting: z.boolean() }).safeParse(req.body);
-  if (!vendorId || !parsed.success) {
-    const e = apiError("BAD_REQUEST", "Invalid request", 400);
-    return res.status(e.status).json(e.body);
-  }
+app.patch(
+  "/api/vendors/:vendorId/accepting",
+  authRequired,
+  async (req: AuthedRequest, res: Response) => {
+    const vendorId = String(req.params.vendorId || "");
+    const parsed = z.object({ accepting: z.boolean() }).safeParse(req.body);
+    if (!vendorId || !parsed.success) {
+      const e = apiError("BAD_REQUEST", "Invalid request", 400);
+      return res.status(e.status).json(e.body);
+    }
 
-  if (req.user?.role !== "vendor" || req.user.vendorId !== vendorId) {
-    const e = apiError("FORBIDDEN", "Not allowed", 403);
-    return res.status(e.status).json(e.body);
-  }
+    if (req.user?.role !== "vendor" || req.user.vendorId !== vendorId) {
+      const e = apiError("FORBIDDEN", "Not allowed", 403);
+      return res.status(e.status).json(e.body);
+    }
 
-  try {
-    await pool.query(`UPDATE vendors SET accepting = $2 WHERE id = $1`, [vendorId, parsed.data.accepting]);
-    return res.json(ok({ ok: true }).body);
-  } catch {
-    const e = apiError("INTERNAL", "Could not update vendor", 500);
-    return res.status(e.status).json(e.body);
-  }
-});
+    try {
+      await pool.query(`UPDATE vendors SET accepting = $2 WHERE id = $1`, [
+        vendorId,
+        parsed.data.accepting,
+      ]);
+      return res.json(ok({ ok: true }).body);
+    } catch {
+      const e = apiError("INTERNAL", "Could not update vendor", 500);
+      return res.status(e.status).json(e.body);
+    }
+  },
+);
 
 app.listen(PORT, () => {
   // eslint-disable-next-line no-console
   console.log(`Backend listening on http://localhost:${PORT}`);
 });
-

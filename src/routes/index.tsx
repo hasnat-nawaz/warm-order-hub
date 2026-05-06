@@ -8,22 +8,17 @@ import { motion, useMotionValue, useTransform, animate } from "framer-motion";
 import { toast } from "sonner";
 import { useEffect } from "react";
 
-function VendorCardLink({
-  vendor,
-  accepting,
-}: {
-  vendor: Vendor;
-  accepting: boolean;
-}) {
+function VendorCardLink({ vendor, accepting }: { vendor: Vendor; accepting: boolean }) {
   return (
     <Link
       to="/vendors/$vendorId"
       params={{ vendorId: vendor.id }}
       disabled={!accepting}
-      className={`group relative block overflow-hidden rounded-3xl border border-border/60 bg-card ring-1 ring-black/5 [box-shadow:0_4px_0_0_rgba(0,0,0,0.04),0_18px_28px_-12px_rgba(60,30,10,0.18),0_2px_6px_rgba(60,30,10,0.06)] transition-all duration-300 ${accepting
-        ? "hover:-translate-y-1.5 hover:[box-shadow:0_6px_0_0_rgba(0,0,0,0.05),0_28px_40px_-14px_rgba(60,30,10,0.28),0_4px_10px_rgba(60,30,10,0.1)] active:translate-y-0"
-        : "opacity-75"
-        }`}
+      className={`group relative block overflow-hidden rounded-3xl border border-border/60 bg-card ring-1 ring-black/5 [box-shadow:0_4px_0_0_rgba(0,0,0,0.04),0_18px_28px_-12px_rgba(60,30,10,0.18),0_2px_6px_rgba(60,30,10,0.06)] transition-all duration-300 ${
+        accepting
+          ? "hover:-translate-y-1.5 hover:[box-shadow:0_6px_0_0_rgba(0,0,0,0.05),0_28px_40px_-14px_rgba(60,30,10,0.28),0_4px_10px_rgba(60,30,10,0.1)] active:translate-y-0"
+          : "opacity-75"
+      }`}
     >
       {/* subtle top sheen for the 3D feel */}
       <span className="pointer-events-none absolute inset-x-0 top-0 z-10 h-px bg-gradient-to-r from-transparent via-white/70 to-transparent" />
@@ -62,7 +57,8 @@ function VendorCardLink({
           </span>
         </div>
         <div className="mt-4 flex items-center text-sm font-bold text-primary opacity-90 transition-opacity group-hover:opacity-100">
-          View menu <ArrowRight className="ml-1 h-4 w-4 transition-transform group-hover:translate-x-1" />
+          View menu{" "}
+          <ArrowRight className="ml-1 h-4 w-4 transition-transform group-hover:translate-x-1" />
         </div>
       </div>
     </Link>
@@ -114,7 +110,7 @@ function HomePage() {
   const todayStart = new Date();
   todayStart.setHours(0, 0, 0, 0);
   const liveOrdersCount = orders.filter(
-    (o) => o.status !== "Cancelled" && o.placedAt >= todayStart.getTime()
+    (o) => o.status !== "Cancelled" && o.placedAt >= todayStart.getTime(),
   ).length;
 
   const handleQuickOrder = (itemId: string, vendorId: string) => {
@@ -160,10 +156,14 @@ function HomePage() {
   return (
     <motion.main variants={containerVariants} initial="hidden" animate="showSections">
       {/* Hero */}
-      <section className="relative overflow-hidden" style={{ contain: 'paint' }}>
+      <section className="relative overflow-hidden" style={{ contain: "paint" }}>
         <div className="absolute inset-0 bg-gradient-ember" />
         <div className="mx-auto grid max-w-6xl gap-10 px-4 pt-[25px] pb-16 sm:px-6 md:grid-cols-[1.1fr_1fr] md:items-center md:pt-20 md:pb-24">
-          <motion.div variants={blockVariants} style={{ willChange: "transform, opacity" }} className="relative z-10">
+          <motion.div
+            variants={blockVariants}
+            style={{ willChange: "transform, opacity" }}
+            className="relative z-10"
+          >
             <span className="inline-flex items-center gap-2 rounded-full border border-primary/30 bg-primary/10 px-3 py-1 text-xs font-semibold uppercase tracking-wider text-primary">
               <Zap className="h-3.5 w-3.5" /> Built for GIKI students
             </span>
@@ -205,7 +205,11 @@ function HomePage() {
             </dl>
           </motion.div>
 
-          <motion.div variants={blockVariants} style={{ willChange: "transform, opacity" }} className="relative">
+          <motion.div
+            variants={blockVariants}
+            style={{ willChange: "transform, opacity" }}
+            className="relative"
+          >
             <div className="absolute -inset-2 rounded-[2.5rem] bg-gradient-warm opacity-40 blur-3xl sm:-inset-4 md:-inset-6" />
             <img
               src={heroImg}

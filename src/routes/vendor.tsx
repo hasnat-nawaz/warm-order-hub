@@ -188,8 +188,17 @@ function VendorDashboard() {
   };
 
   return (
-    <motion.main variants={containerVariants} initial="hidden" animate="showSections" className="mx-auto max-w-6xl px-4 py-8 sm:px-6 sm:py-10">
-      <motion.div variants={blockVariants} style={{ willChange: "transform, opacity" }} className="flex flex-wrap items-end justify-between gap-4">
+    <motion.main
+      variants={containerVariants}
+      initial="hidden"
+      animate="showSections"
+      className="mx-auto max-w-6xl px-4 py-8 sm:px-6 sm:py-10"
+    >
+      <motion.div
+        variants={blockVariants}
+        style={{ willChange: "transform, opacity" }}
+        className="flex flex-wrap items-end justify-between gap-4"
+      >
         <div className="min-w-0">
           <h1 className="flex flex-wrap items-center gap-3 font-display text-2xl font-bold text-primary sm:text-3xl md:text-4xl">
             <span className="grid h-10 w-10 flex-shrink-0 place-items-center rounded-full bg-primary text-primary-foreground sm:h-12 sm:w-12">
@@ -218,7 +227,9 @@ function VendorDashboard() {
       <AlertDialog open={confirmToggle} onOpenChange={setConfirmToggle}>
         <AlertDialogContent className="max-w-sm">
           <AlertDialogTitle className="flex items-center gap-3">
-            <AlertTriangle className={`h-5 w-5 ${accepting ? "text-destructive" : "text-primary"}`} />
+            <AlertTriangle
+              className={`h-5 w-5 ${accepting ? "text-destructive" : "text-primary"}`}
+            />
             {accepting ? "Close the dhaba?" : "Reopen the dhaba?"}
           </AlertDialogTitle>
           <AlertDialogDescription>
@@ -249,7 +260,11 @@ function VendorDashboard() {
       </AlertDialog>
 
       {/* Stats — 2x2 on mobile, 4-col on lg */}
-      <motion.div variants={blockVariants} style={{ willChange: "transform, opacity" }} className="mt-6 grid grid-cols-2 gap-3 lg:grid-cols-4">
+      <motion.div
+        variants={blockVariants}
+        style={{ willChange: "transform, opacity" }}
+        className="mt-6 grid grid-cols-2 gap-3 lg:grid-cols-4"
+      >
         <StatCard
           icon={<ClipboardList className="h-4 w-4" />}
           label="To accept"
@@ -276,7 +291,11 @@ function VendorDashboard() {
         />
       </motion.div>
 
-      <motion.div variants={blockVariants} style={{ willChange: "transform, opacity" }} className="mt-8">
+      <motion.div
+        variants={blockVariants}
+        style={{ willChange: "transform, opacity" }}
+        className="mt-8"
+      >
         <h2 className="font-display text-2xl font-bold">Orders</h2>
         <p className="mt-1 text-sm text-muted-foreground">
           Filter by day to quickly review what happened on a specific date.
@@ -385,7 +404,9 @@ function VendorDashboard() {
                     <div className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">
                       Order
                     </div>
-                    <div className="font-display text-lg font-black leading-none sm:text-xl">#{o.id}</div>
+                    <div className="font-display text-lg font-black leading-none sm:text-xl">
+                      #{o.id}
+                    </div>
                     <div className="mt-1 truncate text-sm font-semibold">{o.customer}</div>
                   </div>
 
