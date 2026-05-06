@@ -1,5 +1,5 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
-import { vendors } from "@/data/menu";
+import { type Vendor } from "@/data/menu";
 import { useApp, useLiveMenu } from "@/store/useApp";
 import { ArrowRight, Clock, MapPin, Zap } from "lucide-react";
 import heroImg from "@/assets/hero.jpg";
@@ -12,7 +12,7 @@ function VendorCardLink({
   vendor,
   accepting,
 }: {
-  vendor: (typeof vendors)[number];
+  vendor: Vendor;
   accepting: boolean;
 }) {
   return (
@@ -95,6 +95,7 @@ function AnimatedCounter({ value }: { value: number }) {
 }
 
 function HomePage() {
+  const vendors = useApp((s) => s.vendors);
   const favIds = useApp((s) => s.favorites);
   const vendorAccepting = useApp((s) => s.vendorAccepting);
   const liveMenu = useLiveMenu();

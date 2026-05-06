@@ -1,6 +1,5 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useApp } from "@/store/useApp";
-import { addUser } from "@/data/users";
 import { ArrowRight, Eye, EyeOff, Lock, ShieldCheck, User, UserPlus } from "lucide-react";
 import { useState } from "react";
 import { toast } from "sonner";
@@ -20,7 +19,7 @@ export const Route = createFileRoute("/signup")({
 function SignupPage() {
   const search = Route.useSearch();
   const navigate = useNavigate();
-  const setRole = useApp((s) => s.setRole);
+  const signup = useApp((s) => s.signup);
 
   const [name, setName] = useState("");
   const [username, setUsername] = useState("");
@@ -31,7 +30,7 @@ function SignupPage() {
 
   const safeRedirect = search.redirect && search.redirect.startsWith("/") ? search.redirect : null;
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
     if (!name.trim() || !username.trim() || !password) {
@@ -44,26 +43,15 @@ function SignupPage() {
     }
 
     setSubmitting(true);
-    // Fake a brief registration delay for better UX
-    setTimeout(() => {
-      // Save to our in-memory static users list so they can log in later
-      addUser({
-        role: "customer",
-        username: username.trim(),
-        password: password,
-        displayName: name.trim(),
-      });
-
-      // Statically save by logging the user in automatically for this session
-      setRole("customer", {
-        username: username.trim(),
-        customer: name.trim(),
-        displayName: name.trim(),
-      });
-
+    try {
+      await signup(name.trim(), username.trim(), password);
       toast.success(`Account created! Welcome, ${name.trim()}!`);
       navigate({ to: safeRedirect ?? "/" });
-    }, 350);
+    } catch (err: any) {
+      setError(err?.message ?? "Could not create account.");
+    } finally {
+      setSubmitting(false);
+    }
   };
 
   return (

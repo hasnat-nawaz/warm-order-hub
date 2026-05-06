@@ -1,6 +1,5 @@
 import { createFileRoute, Link, redirect } from "@tanstack/react-router";
 import { useApp, format12, useLiveMenu } from "@/store/useApp";
-import { getVendor } from "@/data/menu";
 import { ArrowLeft, CalendarDays, ChevronLeft, ChevronRight, Filter, Edit2, ShoppingBag, XCircle, AlertTriangle } from "lucide-react";
 import { useMemo, useState } from "react";
 import { Calendar } from "@/components/ui/calendar";
@@ -41,6 +40,7 @@ function OrdersPage() {
   const orders = useApp((s) => s.orders);
   const cancelOrder = useApp((s) => s.cancelOrder);
   const liveMenu = useLiveMenu();
+  const vendors = useApp((s) => s.vendors);
   const [filterDate, setFilterDate] = useState<Date | null>(new Date());
   const [popoverOpen, setPopoverOpen] = useState(false);
   const [cancelTarget, setCancelTarget] = useState<string | null>(null);
@@ -203,7 +203,7 @@ function OrdersPage() {
           <motion.div variants={blockVariants} style={{ willChange: "transform, opacity" }} className="mt-6 space-y-3">
             <AnimatePresence initial={false}>
               {filtered.map((o) => {
-                const v = getVendor(o.vendorId);
+                const v = vendors.find((x) => x.id === o.vendorId);
                 const placed = new Date(o.placedAt);
                 return (
                   <motion.div

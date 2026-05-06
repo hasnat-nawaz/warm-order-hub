@@ -1,6 +1,5 @@
 import { createFileRoute, Link, redirect } from "@tanstack/react-router";
 import { useApp, format12, type OrderStatus, useLiveMenu } from "@/store/useApp";
-import { getVendor } from "@/data/menu";
 import {
   CheckCircle2,
   ChefHat,
@@ -75,6 +74,7 @@ function VendorDashboard() {
   const vendorAccepting = useApp((s) => s.vendorAccepting);
   const toggleVendorAccepting = useApp((s) => s.toggleVendorAccepting);
   const liveMenu = useLiveMenu();
+  const vendors = useApp((s) => s.vendors);
 
   // Run hooks unconditionally so React's hook order invariant is preserved
   // even on the bail-out path below.
@@ -123,7 +123,7 @@ function VendorDashboard() {
     );
   }
 
-  const vendor = getVendor(vendorLogin)!;
+  const vendor = vendors.find((v) => v.id === vendorLogin)!;
   const accepting = vendorAccepting[vendor.id] ?? vendor.accepting;
 
   const todayKey = new Date().toDateString();
@@ -139,14 +139,18 @@ function VendorDashboard() {
   const advance = (orderId: string, current: OrderStatus) => {
     const next = NEXT[current];
     if (!next) return;
-    updateOrderStatus(orderId, next);
-    toast.success(`Marked ${next}`);
+    (async () => {
+      await updateOrderStatus(orderId, next);
+      toast.success(`Marked ${next}`);
+    })();
   };
 
   const cancel = (orderId: string) => {
     const cancelOrder = useApp.getState().cancelOrder;
-    cancelOrder(orderId, "vendor");
-    toast.error("Order cancelled");
+    (async () => {
+      await cancelOrder(orderId, "vendor");
+      toast.error("Order cancelled");
+    })();
   };
 
   const stepDay = (delta: number) => {
@@ -226,9 +230,11 @@ function VendorDashboard() {
             <AlertDialogCancel className="rounded-full">Cancel</AlertDialogCancel>
             <AlertDialogAction
               onClick={() => {
-                toggleVendorAccepting(vendor.id);
-                toast(accepting ? "Closed for new orders" : "Now accepting orders");
-                setConfirmToggle(false);
+                (async () => {
+                  await toggleVendorAccepting(vendor.id);
+                  toast(accepting ? "Closed for new orders" : "Now accepting orders");
+                  setConfirmToggle(false);
+                })();
               }}
               className={`rounded-full ${
                 accepting

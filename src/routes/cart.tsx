@@ -7,7 +7,6 @@ import {
   suggestedPickupForVendor,
   useLiveMenu,
 } from "@/store/useApp";
-import { getVendor } from "@/data/menu";
 import { ArrowLeft, Minus, Plus, Trash2, Calendar, MessageSquare, CreditCard, ChevronDown, Clock } from "lucide-react";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { toast } from "sonner";
@@ -158,6 +157,7 @@ function QtyInput({ itemId, qty }: { itemId: string; qty: number }) {
 function CartPage() {
   const cart = useApp((s) => s.cart);
   const cartVendorId = useApp((s) => s.cartVendorId);
+  const vendors = useApp((s) => s.vendors);
   const orders = useApp((s) => s.orders);
   const role = useApp((s) => s.role);
   const setQty = useApp((s) => s.setQty);
@@ -189,7 +189,7 @@ function CartPage() {
     if (!edited) setPickup(suggested);
   }, [suggested, edited]);
 
-  const vendor = cartVendorId ? getVendor(cartVendorId) : null;
+  const vendor = cartVendorId ? vendors.find((v) => v.id === cartVendorId) : null;
   const total = useMemo(() => cartTotal(cart, liveMenu), [cart, liveMenu]);
 
   const timeInvalid = compareTime24(pickup, suggested) < 0;
@@ -208,7 +208,7 @@ function CartPage() {
     setTimePickerOpen(true);
   };
 
-  const handlePlace = () => {
+  const handlePlace = async () => {
     if (!role) {
       toast.message("Please sign in to place an order.");
       navigate({ to: "/login", search: { redirect: "/cart" } });
@@ -218,7 +218,7 @@ function CartPage() {
       toast.error("Pickup time must be at or after the suggested earliest time.");
       return;
     }
-    const order = placeOrder({ pickupTime: pickup, payment, notes });
+    const order = await placeOrder({ pickupTime: pickup, payment, notes });
     if (!order) return;
     toast.success(`Order #${order.id} placed!`, {
       description: `Pickup ${format12(order.pickupTime)} · ${order.payment}`,
