@@ -19,7 +19,9 @@ FROM nginx:stable-alpine AS production
 # Remove default nginx page
 RUN rm -rf /usr/share/nginx/html/*
 
-COPY --from=builder /app/dist /usr/share/nginx/html
+# TanStack Start/Vite build outputs `dist/client` (browser) + `dist/server` (SSR).
+# We serve the browser bundle via nginx.
+COPY --from=builder /app/dist/client /usr/share/nginx/html
 
 # Custom nginx config for SPA routing
 COPY nginx.conf /etc/nginx/conf.d/default.conf
