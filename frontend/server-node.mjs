@@ -13,7 +13,7 @@ const PORT = Number(process.env.PORT ?? 80);
 const HOST = process.env.HOST ?? "0.0.0.0";
 const clientDir = path.join(__dirname, "dist", "client");
 
-const MIME: Record<string, string> = {
+const MIME = {
   ".html": "text/html; charset=utf-8",
   ".js": "application/javascript; charset=utf-8",
   ".css": "text/css; charset=utf-8",
@@ -28,7 +28,7 @@ const MIME: Record<string, string> = {
   ".txt": "text/plain; charset=utf-8",
 };
 
-function toHeaders(nodeHeaders: http.IncomingHttpHeaders) {
+function toHeaders(nodeHeaders) {
   const h = new Headers();
   for (const [k, v] of Object.entries(nodeHeaders)) {
     if (v == null) continue;
@@ -38,14 +38,14 @@ function toHeaders(nodeHeaders: http.IncomingHttpHeaders) {
   return h;
 }
 
-function safeJoin(base: string, reqPath: string) {
+function safeJoin(base, reqPath) {
   const rel = reqPath.replace(/^\/+/, "");
   const full = path.join(base, rel);
   if (!full.startsWith(base)) return null;
   return full;
 }
 
-async function tryServeStatic(url: URL) {
+async function tryServeStatic(url) {
   // Serve built client assets + a couple root files that exist in dist/client.
   const p = url.pathname;
   const isStatic =
