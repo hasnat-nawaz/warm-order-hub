@@ -46,7 +46,6 @@ function safeJoin(base, reqPath) {
 }
 
 async function tryServeStatic(url) {
-  // Serve built client assets + a couple root files that exist in dist/client.
   const p = url.pathname;
   const isStatic =
     p === "/wrangler.json" ||
@@ -62,12 +61,14 @@ async function tryServeStatic(url) {
   try {
     const buf = await readFile(filePath);
     const ext = path.extname(filePath).toLowerCase();
+    const cacheControl = p.startsWith("/assets/")
+      ? "public, max-age=31536000, immutable"
+      : "no-cache";
     return new Response(buf, {
       status: 200,
       headers: {
         "content-type": MIME[ext] ?? "application/octet-stream",
-        // cache-busting assets are hashed; safe to cache aggressively
-        "cache-control": p.startsWith("/assets/") ? "public, max-age=31536000, immutable" : "no-cache",
+        "cache-control": cacheControl,
       },
     });
   } catch {
@@ -85,7 +86,6 @@ const srv = http.createServer(async (req, res) => {
       method: req.method,
       headers: toHeaders(req.headers),
       body: req.method && ["GET", "HEAD"].includes(req.method) ? undefined : req,
-      // @ts-expect-error node fetch accepts duplex
       duplex: "half",
     });
 
@@ -96,7 +96,7 @@ const srv = http.createServer(async (req, res) => {
 
     if (!response.body) return res.end();
     Readable.fromWeb(response.body).pipe(res);
-  } catch (e) {
+  } catch {
     res.statusCode = 500;
     res.setHeader("content-type", "text/plain; charset=utf-8");
     res.end("Internal Server Error");
@@ -104,7 +104,5 @@ const srv = http.createServer(async (req, res) => {
 });
 
 srv.listen(PORT, HOST, () => {
-  // eslint-disable-next-line no-console
   console.log(`Frontend listening on http://${HOST}:${PORT}`);
 });
-
