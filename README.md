@@ -378,7 +378,7 @@ Once the manual deploy works:
 | `PORT`          | no       | `8080`                        | TCP port the Express server listens on.                                   |
 | `DATABASE_URL`  | **yes**  | —                             | Postgres connection string. TLS auto-enabled if it includes `sslmode=require` or `ssl=true`. |
 | `JWT_SECRET`    | **yes**  | —                             | Long random string used to sign and verify JWTs (7-day expiry).           |
-| `CLIENT_ORIGIN` | no       | `http://localhost:5173`       | Comma-separated CORS allow-list. Any `http://localhost:<port>` is also auto-allowed for dev. |
+| `CLIENT_ORIGIN` | no       | `http://localhost:5173`       | Comma-separated CORS allow-list. Any `http://localhost:<port>` is also auto-allowed for dev  |
 
 ### Frontend (`frontend/.env.local` or `--build-arg`)
 
