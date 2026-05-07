@@ -62,10 +62,7 @@ jobs:
 
       - name: Build & push frontend image
         run: |
-          docker build \
-            --build-arg VITE_API_URL=${{ secrets.VITE_API_URL }} \
-            -t ${{ secrets.DOCKERHUB_USERNAME }}/${{ env.DOCKER_IMAGE_FRONTEND }}:latest \
-            ./frontend
+          docker build --build-arg "VITE_API_URL=${{ secrets.VITE_API_URL }}" -t "${{ secrets.DOCKERHUB_USERNAME }}/${{ env.DOCKER_IMAGE_FRONTEND }}:latest" "./frontend"
           docker push ${{ secrets.DOCKERHUB_USERNAME }}/${{ env.DOCKER_IMAGE_FRONTEND }}:latest
 
       - name: Verify pushed images
