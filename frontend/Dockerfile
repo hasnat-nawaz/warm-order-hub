@@ -13,19 +13,19 @@ ENV VITE_API_URL=${VITE_API_URL}
 
 RUN npm run build
 
-# ─── Stage 2: Serve with nginx ───
-FROM nginx:stable-alpine AS production
+# ─── Stage 2: Run SSR preview server ───
+# TanStack Start builds an SSR bundle (no static index.html). The reliable way
+# to serve it on EC2 without Cloudflare workers is `vite preview`.
+FROM node:20-alpine AS production
 
-# Remove default nginx page
-RUN rm -rf /usr/share/nginx/html/*
+WORKDIR /app
+ENV NODE_ENV=production
 
-# TanStack Start/Vite build outputs `dist/client` (browser) + `dist/server` (SSR).
-# We serve the browser bundle via nginx.
-COPY --from=builder /app/dist/client /usr/share/nginx/html
+COPY package.json ./
+RUN npm install --omit=dev --ignore-scripts
 
-# Custom nginx config for SPA routing
-COPY nginx.conf /etc/nginx/conf.d/default.conf
+COPY --from=builder /app/dist ./dist
 
 EXPOSE 80
 
-CMD ["nginx", "-g", "daemon off;"]
+CMD ["npm", "run", "preview", "--", "--host", "0.0.0.0", "--port", "80"]
