@@ -1,6 +1,6 @@
 services:
   backend:
-    image: ${DOCKERHUB_USERNAME:-local}/warm-order-hub-backend:latest
+    image: fammadocker/warm-order-hub-backend:latest
     build:
       context: ./backend
       dockerfile: Dockerfile
@@ -16,7 +16,7 @@ services:
       - app-network
 
   frontend:
-    image: ${DOCKERHUB_USERNAME:-local}/warm-order-hub-frontend:latest
+    image: fammadocker/warm-order-hub-frontend:latest
     build:
       context: ./frontend
       dockerfile: Dockerfile
