@@ -1,5 +1,6 @@
 services:
   backend:
+    image: ${DOCKERHUB_USERNAME:-local}/warm-order-hub-backend:latest
     build:
       context: ./backend
       dockerfile: Dockerfile
@@ -15,11 +16,13 @@ services:
       - app-network
 
   frontend:
+    image: ${DOCKERHUB_USERNAME:-local}/warm-order-hub-frontend:latest
     build:
       context: ./frontend
       dockerfile: Dockerfile
       args:
-        VITE_API_URL: http://localhost:8080
+        # For "separate URL" deployment, set VITE_API_URL like http://<EC2_PUBLIC_IP>:8080
+        VITE_API_URL: ${VITE_API_URL:-http://localhost:8080}
     container_name: warm-order-hub-frontend
     ports:
       - "80:80"

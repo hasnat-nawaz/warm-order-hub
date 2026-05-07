@@ -62,7 +62,10 @@ jobs:
 
       - name: Build & push frontend image
         run: |
-          docker build -t ${{ secrets.DOCKERHUB_USERNAME }}/${{ env.DOCKER_IMAGE_FRONTEND }}:latest ./frontend
+          docker build \
+            --build-arg VITE_API_URL=${{ secrets.VITE_API_URL }} \
+            -t ${{ secrets.DOCKERHUB_USERNAME }}/${{ env.DOCKER_IMAGE_FRONTEND }}:latest \
+            ./frontend
           docker push ${{ secrets.DOCKERHUB_USERNAME }}/${{ env.DOCKER_IMAGE_FRONTEND }}:latest
 
       - name: Verify pushed images
@@ -81,6 +84,17 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
 
+      - name: Create backend .env from GitHub Secrets
+        shell: bash
+        run: |
+          mkdir -p backend
+          cat > backend/.env <<'EOF'
+          PORT=${{ secrets.PORT }}
+          DATABASE_URL=${{ secrets.DATABASE_URL }}
+          JWT_SECRET=${{ secrets.JWT_SECRET }}
+          CLIENT_ORIGIN=${{ secrets.CLIENT_ORIGIN }}
+          EOF
+
       - name: Copy files to EC2
         uses: appleboy/scp-action@v0.1.7
         with:
@@ -98,7 +112,10 @@ jobs:
           key: ${{ secrets.EC2_SSH_KEY }}
           script: |
             cd /home/${{ secrets.EC2_USER }}/warm-order-hub
-            docker compose down || true
-            docker compose up -d --build
-            docker ps
+            # If your DockerHub repos are private, login is required.
+            echo "${{ secrets.DOCKERHUB_TOKEN }}" | docker login -u "${{ secrets.DOCKERHUB_USERNAME }}" --password-stdin
+
+            # Pull prebuilt images from DockerHub and start containers
+            DOCKERHUB_USERNAME="${{ secrets.DOCKERHUB_USERNAME }}" docker compose pull
+            DOCKERHUB_USERNAME="${{ secrets.DOCKERHUB_USERNAME }}" docker compose up -d
 
