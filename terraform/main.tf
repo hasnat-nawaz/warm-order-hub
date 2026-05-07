@@ -1,3 +1,26 @@
+###############################################################################
+# Warm Order Hub — Infrastructure as Code (Terraform)
+#
+# Purpose: Demonstrate the "Terraform" component of the SE202L DevOps project.
+#
+# What this file does (safely):
+#   - Provisions a tagged Security Group in AWS named "warm-order-hub-tf-demo".
+#   - This SG is NOT attached to any running instance, so applying/destroying
+#     this Terraform code does NOT affect the live EC2 deployment in any way.
+#
+# How to demo:
+#   1) cd terraform
+#   2) terraform init
+#   3) terraform plan
+#   4) terraform apply -auto-approve
+#   5) Show the new SG in AWS Console (EC2 -> Security Groups)
+#   6) terraform destroy -auto-approve   (cleans up)
+#
+# Optional EC2 provisioning code is included BELOW (commented out) to show
+# how the full server could also be defined as code. Leave it commented for
+# the demo to avoid creating duplicate instances or extra AWS charges.
+###############################################################################
+
 terraform {
   required_version = ">= 1.0"
 
@@ -17,41 +40,15 @@ provider "aws" {
 variable "aws_region" {
   description = "AWS region to deploy to"
   type        = string
-  default     = "ap-southeast-1"
+  default     = "ap-south-1"
 }
 
-variable "instance_type" {
-  description = "EC2 instance type"
-  type        = string
-  default     = "t2.micro"
-}
+# ─── Demo Security Group (the only thing we actually create) ───
+# Free, visible in AWS Console, and not attached to anything.
+resource "aws_security_group" "warm_order_hub_demo" {
+  name        = "warm-order-hub-tf-demo"
+  description = "Terraform-managed demo SG for SE202L project"
 
-variable "key_name" {
-  description = "Name of the SSH key pair in AWS"
-  type        = string
-}
-
-variable "allowed_ssh_cidr" {
-  description = "CIDR block allowed to SSH into the instance"
-  type        = string
-  default     = "0.0.0.0/0"
-}
-
-# ─── Security Group ───
-resource "aws_security_group" "warm_order_hub_sg" {
-  name        = "warm-order-hub-sg"
-  description = "Security group for Warm Order Hub"
-
-  # SSH
-  ingress {
-    description = "SSH"
-    from_port   = 22
-    to_port     = 22
-    protocol    = "tcp"
-    cidr_blocks = [var.allowed_ssh_cidr]
-  }
-
-  # HTTP (frontend via nginx)
   ingress {
     description = "HTTP"
     from_port   = 80
@@ -60,7 +57,6 @@ resource "aws_security_group" "warm_order_hub_sg" {
     cidr_blocks = ["0.0.0.0/0"]
   }
 
-  # Backend API
   ingress {
     description = "Backend API"
     from_port   = 8080
@@ -69,8 +65,16 @@ resource "aws_security_group" "warm_order_hub_sg" {
     cidr_blocks = ["0.0.0.0/0"]
   }
 
-  # All outbound
+  ingress {
+    description = "SSH"
+    from_port   = 22
+    to_port     = 22
+    protocol    = "tcp"
+    cidr_blocks = ["0.0.0.0/0"]
+  }
+
   egress {
+    description = "All outbound"
     from_port   = 0
     to_port     = 0
     protocol    = "-1"
@@ -78,75 +82,71 @@ resource "aws_security_group" "warm_order_hub_sg" {
   }
 
   tags = {
-    Name    = "warm-order-hub-sg"
-    Project = "SE202L"
-  }
-}
-
-# ─── AMI Lookup (Ubuntu 22.04 LTS) ───
-data "aws_ami" "ubuntu" {
-  most_recent = true
-  owners      = ["099720109477"] # Canonical
-
-  filter {
-    name   = "name"
-    values = ["ubuntu/images/hvm-ssd/ubuntu-jammy-22.04-amd64-server-*"]
-  }
-
-  filter {
-    name   = "virtualization-type"
-    values = ["hvm"]
-  }
-}
-
-# ─── EC2 Instance ───
-resource "aws_instance" "warm_order_hub" {
-  ami                    = data.aws_ami.ubuntu.id
-  instance_type          = var.instance_type
-  key_name               = var.key_name
-  vpc_security_group_ids = [aws_security_group.warm_order_hub_sg.id]
-
-  user_data = <<-EOF
-    #!/bin/bash
-    set -e
-
-    # Update system
-    apt-get update -y
-    apt-get upgrade -y
-
-    # Install Docker
-    apt-get install -y docker.io docker-compose-plugin
-    systemctl enable docker
-    systemctl start docker
-    usermod -aG docker ubuntu
-
-    # Install Git
-    apt-get install -y git
-  EOF
-
-  tags = {
-    Name    = "warm-order-hub-server"
-    Project = "SE202L"
+    Name        = "warm-order-hub-tf-demo"
+    Project     = "warm-order-hub"
+    Course      = "SE202L"
+    ManagedBy   = "terraform"
+    Environment = "demo"
   }
 }
 
 # ─── Outputs ───
-output "instance_public_ip" {
-  description = "Public IP of the EC2 instance"
-  value       = aws_instance.warm_order_hub.public_ip
+# These print to the terminal after `terraform apply`. Great for screenshots.
+output "demo_security_group_id" {
+  description = "ID of the Terraform-managed demo security group"
+  value       = aws_security_group.warm_order_hub_demo.id
 }
 
-output "instance_public_dns" {
-  description = "Public DNS of the EC2 instance"
-  value       = aws_instance.warm_order_hub.public_dns
+output "demo_security_group_name" {
+  description = "Name of the demo security group"
+  value       = aws_security_group.warm_order_hub_demo.name
 }
 
-output "ssh_command" {
-  description = "SSH command to connect to the instance"
-  value       = "ssh -i <your-key>.pem ubuntu@${aws_instance.warm_order_hub.public_ip}"
+output "aws_region" {
+  description = "AWS region the resources are deployed in"
+  value       = var.aws_region
 }
 
-output "app_url" {
-  description = "URL to access the application"
-  value       = "http://${aws_instance.warm_order_hub.public_ip}"
-}
+###############################################################################
+# OPTIONAL — Full EC2 provisioning (commented out)
+#
+# Uncomment the block below to also let Terraform launch a fresh EC2 instance
+# with Docker pre-installed. NOTE: This will create a SECOND server (not your
+# current one), which costs money outside the AWS Free Tier window. Keep it
+# commented for the basic demo.
+###############################################################################
+#
+# data "aws_ami" "ubuntu" {
+#   most_recent = true
+#   owners      = ["099720109477"] # Canonical
+#
+#   filter {
+#     name   = "name"
+#     values = ["ubuntu/images/hvm-ssd/ubuntu-jammy-22.04-amd64-server-*"]
+#   }
+# }
+#
+# resource "aws_instance" "warm_order_hub" {
+#   ami                    = data.aws_ami.ubuntu.id
+#   instance_type          = "t2.micro"
+#   vpc_security_group_ids = [aws_security_group.warm_order_hub_demo.id]
+#
+#   user_data = <<-EOF
+#     #!/bin/bash
+#     set -e
+#     apt-get update -y
+#     apt-get install -y docker.io docker-compose-plugin git
+#     systemctl enable --now docker
+#     usermod -aG docker ubuntu
+#   EOF
+#
+#   tags = {
+#     Name      = "warm-order-hub-tf-server"
+#     Project   = "warm-order-hub"
+#     ManagedBy = "terraform"
+#   }
+# }
+#
+# output "instance_public_ip" {
+#   value = aws_instance.warm_order_hub.public_ip
+# }
