@@ -14,8 +14,9 @@ ENV VITE_API_URL=${VITE_API_URL}
 RUN npm run build
 
 # ─── Stage 2: Run SSR preview server ───
-# TanStack Start builds an SSR bundle (no static index.html). The reliable way
-# to serve it on EC2 without Cloudflare workers is `vite preview`.
+# TanStack Start builds an SSR bundle exporting a fetch() handler.
+# We run a tiny Node HTTP server that forwards requests to that handler and
+# serves dist/client static assets.
 FROM node:20-alpine AS production
 
 WORKDIR /app
@@ -25,7 +26,8 @@ COPY package.json ./
 RUN npm install --omit=dev --ignore-scripts
 
 COPY --from=builder /app/dist ./dist
+COPY --from=builder /app/server-node.mjs ./server-node.mjs
 
 EXPOSE 80
 
-CMD ["npm", "run", "preview", "--", "--host", "0.0.0.0", "--port", "80"]
+CMD ["node", "./server-node.mjs"]
