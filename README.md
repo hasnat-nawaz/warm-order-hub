@@ -455,11 +455,11 @@ The vendor's `users.vendor_id` must match a row in the `vendors` table — the s
 
 ## Group Members
 
-| Name                       | Registration No. | Contributions                                                  |
-| -------------------------- | ---------------- | -------------------------------------------------------------- |
-| Hasnat Nawaz               | <REG_NO>         | Backend, DevOps pipeline, Terraform, deployment.                |
-| Syeda Fatima Tuz Zahra     | <REG_NO>         | Frontend (routes, components), Zustand store, UI/UX.            |
-| Rayyan Hasan               | <REG_NO>         | Database schema, seed data, vendor dashboard, integration.     |
+| Name                       | Contributions                                                  |
+| -------------------------- | -------------------------------------------------------------- |
+| Hasnat Nawaz               | Backend, DevOps pipeline, Terraform, deployment.                |
+| Syeda Fatima Tuz Zahra     | Frontend (routes, components), Zustand store, UI/UX.            |
+| Rayyan Hasan               | Database schema, seed data, vendor dashboard, integration.     |
 
 > Replace `<REG_NO>` with each member's registration number before submission.
 
