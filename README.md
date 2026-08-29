@@ -461,7 +461,6 @@ The vendor's `users.vendor_id` must match a row in the `vendors` table — the s
 | Syeda Fatima Tuz Zahra     | Frontend (routes, components), Zustand store, UI/UX.            |
 | Rayyan Hasan               | Database schema, seed data, vendor dashboard, integration.     |
 
-> Replace `<REG_NO>` with each member's registration number before submission.
 
 ---
 
