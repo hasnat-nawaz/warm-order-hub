@@ -466,4 +466,4 @@ The vendor's `users.vendor_id` must match a row in the `vendors` table — the s
 
 ## License
 
-This project is developed as part of the **SE202L – Development Operations Lab** course at Ghulam Ishaq Khan Institute (GIKI). It is shared for educational and assessment purposes.
+This project is developed as part of the **SE202L – Development Operations Lab** and the **CS-272 – HCI and Computer Graphics** course at Ghulam Ishaq Khan Institute (GIKI). It is shared for educational and assessment purposes.
